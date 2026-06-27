@@ -1,0 +1,34 @@
+[package]
+name = "fleischwolf"
+description = "DocumentConverter and format backends for Fleischwolf (a Rust port of docling)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+rust-version.workspace = true
+# The 25 MB output-regression corpus under tests/ is dev-only — keep it out of
+# the published crate (and under crates.io's size limit).
+exclude = ["tests"]
+
+[dependencies]
+calamine = { version = "0.26", features = ["dates"] }
+csv = "1.4.0"
+fleischwolf-core = { path = "../fleischwolf-core", version = "0.0.1" }
+fleischwolf-pdf = { path = "../fleischwolf-pdf", version = "0.0.1" }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "bmp", "tiff", "webp"] }
+mail-parser = "0.11"
+pulldown-cmark = { version = "0.13.4", default-features = false }
+quick-xml = "0.37"
+regex = "1.11"
+roxmltree = "0.20"
+scraper = "0.27.0"
+serde_json = "1"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+
+[[example]]
+name = "convert"
+path = "examples/convert.rs"

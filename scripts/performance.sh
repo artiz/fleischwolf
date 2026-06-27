@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Compare *processing cost* of Python `docling` vs Rust `docling-crab` for one
+# Compare *processing cost* of Python `docling` vs Rust `fleischwolf` for one
 # input file: wall-clock time, CPU utilization, and peak memory (RSS).
 #
 # Usage:
@@ -42,10 +42,10 @@ RUST_BIN="$(build_rust_release)"
 # Point the Rust PDF pipeline at the fetched libs/models (scripts/pdf_setup.sh)
 # using absolute paths, so it runs the full pipeline no matter the caller's CWD.
 # Harmless for non-PDF inputs (the binary only reads these for PDFs/images).
-[[ -e "$CRAB_DIR/.pdfium/lib/libpdfium.so" ]] && export PDFIUM_DYNAMIC_LIB_PATH="${PDFIUM_DYNAMIC_LIB_PATH:-$CRAB_DIR/.pdfium/lib}"
-[[ -e "$CRAB_DIR/models/layout_heron.onnx" ]] && export DOCLING_LAYOUT_ONNX="${DOCLING_LAYOUT_ONNX:-$CRAB_DIR/models/layout_heron.onnx}"
-[[ -e "$CRAB_DIR/models/ocr_rec.onnx" ]] && export DOCLING_OCR_REC_ONNX="${DOCLING_OCR_REC_ONNX:-$CRAB_DIR/models/ocr_rec.onnx}"
-[[ -e "$CRAB_DIR/models/ppocr_keys_v1.txt" ]] && export DOCLING_OCR_DICT="${DOCLING_OCR_DICT:-$CRAB_DIR/models/ppocr_keys_v1.txt}"
+[[ -e "$WORKSPACE_DIR/.pdfium/lib/libpdfium.so" ]] && export PDFIUM_DYNAMIC_LIB_PATH="${PDFIUM_DYNAMIC_LIB_PATH:-$WORKSPACE_DIR/.pdfium/lib}"
+[[ -e "$WORKSPACE_DIR/models/layout_heron.onnx" ]] && export DOCLING_LAYOUT_ONNX="${DOCLING_LAYOUT_ONNX:-$WORKSPACE_DIR/models/layout_heron.onnx}"
+[[ -e "$WORKSPACE_DIR/models/ocr_rec.onnx" ]] && export DOCLING_OCR_REC_ONNX="${DOCLING_OCR_REC_ONNX:-$WORKSPACE_DIR/models/ocr_rec.onnx}"
+[[ -e "$WORKSPACE_DIR/models/ppocr_keys_v1.txt" ]] && export DOCLING_OCR_DICT="${DOCLING_OCR_DICT:-$WORKSPACE_DIR/models/ppocr_keys_v1.txt}"
 
 # Run a command RUNS times under GNU time; echo "min avg peak_rss_kb cpu%".
 # GNU time format: %e elapsed seconds, %P CPU percent, %M max RSS in KB.
@@ -131,7 +131,7 @@ if ! "$PYBIN" "$PY_RUNNER" "$INPUT" "$probe" >/dev/null 2>&1 || [[ ! -s "$probe"
 fi
 rm -f "$probe"
 
-echo ">> measuring Rust docling-crab (end-to-end process) ..."
+echo ">> measuring Rust fleischwolf (end-to-end process) ..."
 read -r rs_min rs_avg rs_rss rs_cpu < <(bench_process "$RUST_BIN" "$INPUT")
 
 if [[ "$PY_OK" -eq 1 ]]; then
@@ -150,7 +150,7 @@ if [[ "$PY_OK" -eq 1 ]]; then
   echo "================ end-to-end (whole process) ================"
   printf "%-22s %8s %10s %10s %8s %12s\n" "ENGINE" "RUNS" "TIME-min" "TIME-avg" "CPU" "PEAK-MEM"
   printf "%-22s %8s %9ss %9ss %8s %9s MB\n" "docling (python)"   "$RUNS" "$(fmtt "$py_min")" "$(fmtt "$py_avg")" "$py_cpu" "$(mb "$py_rss")"
-  printf "%-22s %8s %9ss %9ss %8s %9s MB\n" "docling-crab (rust)" "$RUNS" "$(fmtt "$rs_min")" "$(fmtt "$rs_avg")" "$rs_cpu" "$(mb "$rs_rss")"
+  printf "%-22s %8s %9ss %9ss %8s %9s MB\n" "fleischwolf (rust)" "$RUNS" "$(fmtt "$rs_min")" "$(fmtt "$rs_avg")" "$rs_cpu" "$(mb "$rs_rss")"
   echo
   echo "  wall-time speedup (avg):  $(ratio "$py_avg" "$rs_avg")x faster (rust)"
   echo "  peak-memory ratio:        $(ratio "$py_rss" "$rs_rss")x less (rust)"
@@ -173,9 +173,9 @@ if [[ "$PY_OK" -eq 1 ]]; then
   fi
 else
   echo
-  echo "================ docling-crab (rust) — whole process ================"
+  echo "================ fleischwolf (rust) — whole process ================"
   printf "%-22s %8s %10s %10s %8s %12s\n" "ENGINE" "RUNS" "TIME-min" "TIME-avg" "CPU" "PEAK-MEM"
-  printf "%-22s %8s %9ss %9ss %8s %9s MB\n" "docling-crab (rust)" "$RUNS" "$(fmtt "$rs_min")" "$(fmtt "$rs_avg")" "$rs_cpu" "$(mb "$rs_rss")"
+  printf "%-22s %8s %9ss %9ss %8s %9s MB\n" "fleischwolf (rust)" "$RUNS" "$(fmtt "$rs_min")" "$(fmtt "$rs_avg")" "$rs_cpu" "$(mb "$rs_rss")"
   echo
   echo "Note: the local Python docling (.venv-compare) can't convert this format —"
   echo "PDF/images/audio need the full torch/ML pipeline it omits — so no head-to-head"

@@ -6,19 +6,19 @@
 #   build_rust_release  — build the release CLI and echo its path
 
 _COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CRAB_DIR="$(cd "$_COMMON_DIR/.." && pwd)"
-REPO_ROOT="$(cd "$CRAB_DIR/.." && pwd)"
-MANIFEST="$CRAB_DIR/Cargo.toml"
-VENV="$CRAB_DIR/.venv-compare"
+WORKSPACE_DIR="$(cd "$_COMMON_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$WORKSPACE_DIR/.." && pwd)"
+MANIFEST="$WORKSPACE_DIR/Cargo.toml"
+VENV="$WORKSPACE_DIR/.venv-compare"
 PYBIN="$VENV/bin/python"
 PY_RUNNER="$_COMMON_DIR/docling_convert.py"
 
 # Heavier sibling env, set up on demand for inputs the lightweight one can't do
 # (PDF, images): the full ML pipeline — torch, layout/table models, OCR.
-VENV_PDF="$CRAB_DIR/.venv-compare-pdf"
+VENV_PDF="$WORKSPACE_DIR/.venv-compare-pdf"
 PYBIN_PDF="$VENV_PDF/bin/python"
 
-# Extras needed to convert the declarative formats docling-crab supports today
+# Extras needed to convert the declarative formats fleischwolf supports today
 # (HTML, Markdown, CSV, AsciiDoc, plus Office: DOCX/PPTX/XLSX) straight from local
 # sources. No torch / ML / model weights — the Python side calls the backend
 # directly (see docling_convert.py).
@@ -78,6 +78,6 @@ ensure_docling_pdf() {
 
 # Build the optimized Rust CLI once and echo the binary path.
 build_rust_release() {
-  cargo build --release --quiet --manifest-path "$MANIFEST" -p docling-crab-cli >&2
-  echo "$CRAB_DIR/target/release/docling-crab"
+  cargo build --release --quiet --manifest-path "$MANIFEST" -p fleischwolf-cli >&2
+  echo "$WORKSPACE_DIR/target/release/fleischwolf"
 }

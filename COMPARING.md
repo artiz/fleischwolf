@@ -1,4 +1,4 @@
-# Comparing `docling` (Python) and `docling-crab` (Rust)
+# Comparing `docling` (Python) and `fleischwolf` (Rust)
 
 This guide explains how to check the Rust port against the original Python
 `docling` so you can track conformance as the migration proceeds.
@@ -16,7 +16,7 @@ There are two axes to compare:
 
 This repo *is* the docling Python source, so the scripts load it from the local
 checkout — you don't need to install the published package. On first run they
-create an isolated, editable install under `docling-crab/.venv-compare` using
+create an isolated, editable install under `fleischwolf/.venv-compare` using
 `uv`, with only the minimal extras for the declarative formats (HTML, Markdown,
 CSV) — **no torch / ML weights**:
 
@@ -27,7 +27,7 @@ scripts/setup-docling.sh      # optional; the other scripts call this automatica
 The Python side calls the format backend directly (see `scripts/docling_convert.py`)
 rather than `DocumentConverter`, because importing the converter eagerly pulls in
 the ML pipeline (`torch`). Calling the backend is the same conversion work, kept
-lightweight and apples-to-apples with what `docling-crab` does.
+lightweight and apples-to-apples with what `fleischwolf` does.
 
 ---
 
@@ -44,7 +44,7 @@ Those `.md` files were produced by Python `docling`, so we can score the Rust
 port against them directly:
 
 ```bash
-cd docling-crab
+cd fleischwolf
 scripts/conformance.sh html          # vs committed groundtruth (no Python needed)
 scripts/conformance.sh html --live   # vs CURRENT docling (regenerates references)
 ```
@@ -78,7 +78,7 @@ To compare on a file that isn't in the corpus — or to confirm the groundtruth
 hasn't drifted — run both implementations and diff:
 
 ```bash
-cd docling-crab
+cd fleischwolf
 scripts/compare.sh ../tests/data/html/sources/example_03.html
 scripts/compare.sh /path/to/your/own.html
 ```
@@ -94,7 +94,7 @@ Do it by hand if you prefer:
 .venv-compare/bin/python scripts/docling_convert.py in.html > py.md
 
 # Rust
-cargo run -p docling-crab-cli -- in.html > rs.md
+cargo run -p fleischwolf-cli -- in.html > rs.md
 
 diff -u py.md rs.md
 ```
@@ -116,7 +116,7 @@ scripts/performance.sh ../tests/data/html/sources/wiki_duck.html 10   # 10 runs
 ================ end-to-end (whole process) ================
 ENGINE                     RUNS   TIME-min   TIME-avg      CPU     PEAK-MEM
 docling (python)              6      1.39s      1.41s     363%     125.5 MB
-docling-crab (rust)           6   0.00755s   0.00755s     100%       4.8 MB
+fleischwolf (rust)           6   0.00755s   0.00755s     100%       4.8 MB
 
   wall-time speedup (avg):  186.8x faster (rust)
   peak-memory ratio:        26.4x less (rust)

@@ -4,7 +4,7 @@
 # clean checkout should report every fixture EXACT; a non-zero diff means the
 # output drifted. Run scripts/pdf_setup.sh first to fetch the libs/models.
 set -euo pipefail
-cd "$(dirname "$0")/.."   # docling-crab/
+cd "$(dirname "$0")/.."   # fleischwolf/
 
 export PDFIUM_DYNAMIC_LIB_PATH="${PDFIUM_DYNAMIC_LIB_PATH:-$(pwd)/.pdfium/lib}"
 export DOCLING_LAYOUT_ONNX="${DOCLING_LAYOUT_ONNX:-$(pwd)/models/layout_heron.onnx}"
@@ -19,7 +19,7 @@ done
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 echo "regenerating PDF output ..."
-cargo run --release -q -p docling-crab-pdf --example snapshot -- ../tests/data "$tmp" 1>&2
+cargo run --release -q -p fleischwolf-pdf --example snapshot -- ../tests/data "$tmp" 1>&2
 
 exact=0; drift=0; tot=0
 while IFS= read -r snap; do

@@ -10,7 +10,7 @@
 # And exports the RT-DETR layout model -> models/layout_heron.onnx
 #   (needs a Python with torch+transformers+onnx; set $PYTHON, default `python3`).
 set -euo pipefail
-cd "$(dirname "$0")/.."   # docling-crab/
+cd "$(dirname "$0")/.."   # fleischwolf/
 mkdir -p .pdfium models
 
 PLATFORM="${PDFIUM_PLATFORM:-linux-x64}"

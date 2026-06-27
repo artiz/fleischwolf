@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Score docling-crab's Markdown output against Python docling across a corpus.
+# Score fleischwolf's Markdown output against Python docling across a corpus.
 #
 # Two reference sources:
 #   (default)  the committed groundtruth under tests/data/<fmt>/groundtruth/*.md
@@ -48,7 +48,7 @@ else
 fi
 
 # Build once up front so per-file timing isn't dominated by compilation.
-cargo build --quiet --manifest-path "$MANIFEST" -p docling-crab-cli
+cargo build --quiet --manifest-path "$MANIFEST" -p fleischwolf-cli
 
 # Write the reference Markdown for a source into $1; returns non-zero to skip.
 # Groundtruth is named "<source>.md" for most formats but "<stem>.md" for PDF
@@ -82,7 +82,7 @@ for src in "$SRC_DIR"/*; do
   reference_into "$src" "$ref" || continue
   total=$((total + 1))
 
-  out="$(cargo run --quiet --manifest-path "$MANIFEST" -p docling-crab-cli -- "$src" 2>/dev/null || echo '<ERROR>')"
+  out="$(cargo run --quiet --manifest-path "$MANIFEST" -p fleischwolf-cli -- "$src" 2>/dev/null || echo '<ERROR>')"
   # Compare trailing-newline-insensitively.
   d="$(diff <(printf '%s' "$out") <(printf '%s' "$(cat "$ref")") | grep -cE '^[<>]' || true)"
 

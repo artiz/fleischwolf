@@ -1,4 +1,4 @@
-# Migrating Docling to Rust — `docling-crab`
+# Migrating Docling to Rust — Fleischwolf
 
 A port of [docling](https://github.com/docling-project/docling) from Python to
 Rust. This document is the **current status**: what is migrated, how it compares
@@ -10,7 +10,7 @@ phased plan is kept at the end as history.)
 > (legacy + a Rust-only *strict* mode), docling-native **JSON** output, and
 > **image extraction**. The declarative formats are pure-Rust and checked
 > byte-for-byte against *live* docling; the PDF/image/METS ML path lives in
-> `docling-crab-pdf` and is checked against a deterministic snapshot baseline.
+> `fleischwolf-pdf` and is checked against a deterministic snapshot baseline.
 > `cargo test` is green (unit tests + a 131-source output-regression suite).
 
 ---
@@ -19,26 +19,26 @@ phased plan is kept at the end as history.)
 
 Four layers, mirroring docling's:
 
-| Layer | docling (Python) | `docling-crab` (Rust) |
+| Layer | docling (Python) | `fleischwolf` (Rust) |
 |---|---|---|
-| **Data model + serializers** | `docling-core` | `docling-crab-core` — `DoclingDocument`, the `Node` tree, Markdown + JSON serializers, base64 |
-| **Converter** | `docling/document_converter.py` | `docling-crab` — `converter.rs` (format dispatch + XML content sniffing) |
-| **Backends** | `docling/backend/*` | `docling-crab` — `backend/*` (one per format) |
-| **PDF/ML pipeline** | `docling/pipeline/*`, `docling/models/*` | `docling-crab-pdf` — pdfium + ONNX layout/OCR + assembly |
-| **CLI** | `docling/cli` | `docling-crab-cli` |
+| **Data model + serializers** | `docling-core` | `fleischwolf-core` — `DoclingDocument`, the `Node` tree, Markdown + JSON serializers, base64 |
+| **Converter** | `docling/document_converter.py` | `fleischwolf` — `converter.rs` (format dispatch + XML content sniffing) |
+| **Backends** | `docling/backend/*` | `fleischwolf` — `backend/*` (one per format) |
+| **PDF/ML pipeline** | `docling/pipeline/*`, `docling/models/*` | `fleischwolf-pdf` — pdfium + ONNX layout/OCR + assembly |
+| **CLI** | `docling/cli` | `fleischwolf-cli` |
 
 ```text
 crates/
-├── docling-crab-core/   # DoclingDocument, Node model, markdown.rs, json.rs, base64.rs, labels.rs
-├── docling-crab/        # DocumentConverter, source/format detection, backend/*.rs, ooxml.rs
-├── docling-crab-pdf/    # pdfium_backend, layout (RT-DETR/ONNX), ocr (PP-OCRv3/ONNX), assemble, mets
-└── docling-crab-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
+├── fleischwolf-core/   # DoclingDocument, Node model, markdown.rs, json.rs, base64.rs, labels.rs
+├── fleischwolf/        # DocumentConverter, source/format detection, backend/*.rs, ooxml.rs
+├── fleischwolf-pdf/    # pdfium_backend, layout (RT-DETR/ONNX), ocr (PP-OCRv3/ONNX), assemble, mets
+└── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
 ```
 
 The public API is unchanged from day one:
 
 ```rust
-use docling_crab::{DocumentConverter, SourceDocument};
+use fleischwolf::{DocumentConverter, SourceDocument};
 
 let result = DocumentConverter::new()
     .convert(SourceDocument::from_file("input.docx")?)?;
@@ -79,7 +79,7 @@ groundtruth `.md` (which predates docling-core's current table serializer — se
 Shared OOXML infrastructure (`ooxml.rs`): a `zip` reader, `.rels` parsing, part
 content-type resolution, and image extraction — reused by DOCX/PPTX/XLSX/EPUB.
 
-### ML formats — `docling-crab-pdf`, snapshot baseline
+### ML formats — `fleischwolf-pdf`, snapshot baseline
 
 These run docling's *discriminative* PDF pipeline ported to ONNX. Output is **not
 byte-for-byte** with docling (different OCR/table models — §4); it is pinned by a
@@ -115,7 +115,7 @@ deterministic snapshot (`scripts/pdf_conformance.sh`, **76/76 exact**).
 
 These are deliberate or unavoidable divergences, not bugs.
 
-1. **Simplified document model.** `docling-crab`'s `Node` enum
+1. **Simplified document model.** `fleischwolf`'s `Node` enum
    (`Heading`/`Paragraph`/`ListItem`/`Code`/`Table`/`Picture`/`Group`) is flatter
    than docling-core's `DocItem` graph. JSON export *reconstructs* the full
    `$ref` wire format from it; JSON input maps the other way.
@@ -134,7 +134,7 @@ These are deliberate or unavoidable divergences, not bugs.
 4. **Tables match *current* docling, not the committed fixtures.** docling-core's
    Markdown table serializer emits padded GitHub tables today; the repo's
    committed groundtruth `.md` corpus predates that and uses a minimal `| - |`
-   format. `docling-crab` matches the **current/live** output — so table-bearing
+   format. `fleischwolf` matches the **current/live** output — so table-bearing
    formats look correct against live docling and "wrong" against the stale `.md`.
 
 5. **The PDF pipeline is discriminative and partial.** Ported from docling's
@@ -192,17 +192,17 @@ Explicitly **not done**, with the reason:
 - **Image extraction for HTML/EPUB.** External `<img src>` files are not fetched
   (same as docling's default `enable_*_fetch=False`); only embedded blobs (DOCX/
   PPTX) and PDF crops are extracted.
-- **PyO3 bindings** (`docling-crab-py`) for a strangler-fig drop-in — not built.
+- **PyO3 bindings** (`fleischwolf-py`) for a strangler-fig drop-in — not built.
 
 ---
 
 ## 6. Testing
 
 - **`cargo test`** — unit tests per backend/serializer **plus an output-
-  regression suite** (`crates/docling-crab/tests/regression.rs`): every
-  declarative source under `crates/docling-crab/tests/data/<fmt>/sources/` is
+  regression suite** (`crates/fleischwolf/tests/regression.rs`): every
+  declarative source under `crates/fleischwolf/tests/data/<fmt>/sources/` is
   converted to legacy Markdown, strict Markdown and docling JSON and compared to
-  committed fixtures (131 sources × 3). `DOCLING_CRAB_REGEN=1` refreshes them.
+  committed fixtures (131 sources × 3). `FLEISCHWOLF_REGEN=1` refreshes them.
   The JSON fixtures double as a docling-core load check.
 - **Snapshot harness** — `scripts/pdf_conformance.sh` regenerates and diffs the
   PDF/image/METS baseline (needs pdfium + the ONNX models; **76/76 exact**).
@@ -223,7 +223,7 @@ CI gate: `cargo test`, `cargo clippy --workspace --all-targets -- -D warnings`,
 - Output byte-compatible with docling-core's serializers where it reasonably can
   be, so the port is a drop-in for downstream Markdown/JSON consumers.
 - The ML stack is *not* reimplemented in PyTorch-equivalent Rust; it is
-  quarantined behind ONNX (`ort`) inference in `docling-crab-pdf`.
+  quarantined behind ONNX (`ort`) inference in `fleischwolf-pdf`.
 
 ---
 
@@ -237,6 +237,9 @@ WebVTT, JSON) → **Phase 5–6** the PDF/image ML pipeline (pdfium + ONNX layou
 Audio/ASR (the old "Phase 7" tail) and PyO3 interop bindings remain the main
 unbuilt pieces.
 
-## Why "crab"? 🦀
+## Why "Fleischwolf"? 🦀
 
-Ferris, the Rust mascot, is a crab. `docling-crab` = docling, in Rust.
+A *Fleischwolf* (German for "meat grinder") is the machine you push anything
+through to get a single, uniform mince — which is exactly what this does to
+documents: PDF, DOCX, HTML, XLSX … all come out as one `DoclingDocument`. And
+it's written in Rust, so Ferris the crab 🦀 still gets a seat.

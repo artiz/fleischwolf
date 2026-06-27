@@ -1,0 +1,19 @@
+[package]
+name = "fleischwolf-cli"
+description = "Command-line interface for Fleischwolf (the `fleischwolf` binary; a Rust port of docling)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories = ["command-line-utilities", "text-processing"]
+rust-version.workspace = true
+
+[[bin]]
+name = "fleischwolf"
+path = "src/main.rs"
+
+[dependencies]
+fleischwolf = { path = "../fleischwolf", version = "0.0.1" }

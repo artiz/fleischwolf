@@ -1,4 +1,4 @@
-# docling-crab 🦀
+# Fleischwolf 🦀
 
 A Rust port of [docling](https://github.com/docling-project/docling): convert
 documents into a unified `DoclingDocument` for downstream AI workflows.
@@ -12,7 +12,7 @@ The public API works end to end across **Markdown, CSV, HTML, AsciiDoc, DOCX,
 PPTX, XLSX, EPUB, ODF, WebVTT, Email, JATS, USPTO, XBRL, LaTeX, JSON, PDF,
 images and METS** — plus Markdown / docling-JSON output and image extraction.
 The discriminative PDF/image pipeline (pdfium + ONNX layout/OCR) lives in
-`docling-crab-pdf`. Audio/ASR is the main format still on the roadmap (see
+`fleischwolf-pdf`. Audio/ASR is the main format still on the roadmap (see
 `MIGRATION.md`).
 
 Output is checked against upstream Python docling — declarative formats
@@ -23,7 +23,7 @@ snapshot baseline. See [`COMPARING.md`](./COMPARING.md) and
 ## The API
 
 ```rust
-use docling_crab::{DocumentConverter, SourceDocument};
+use fleischwolf::{DocumentConverter, SourceDocument};
 
 let converter = DocumentConverter::new();
 let result = converter
@@ -44,7 +44,7 @@ println!("{}", result.document.export_to_json());     // docling DoclingDocument
 back into Python docling-core (`DoclingDocument.load_from_json(...)`) and
 round-trips to the same Markdown.
 
-> Note: docling-crab's model bakes inline formatting (bold, links, inline math)
+> Note: Fleischwolf's model bakes inline formatting (bold, links, inline math)
 > into the text, so for those spans the JSON carries the rendered text rather
 > than docling's structured `formatting` / `hyperlink` fields. Block structure,
 > headings, lists, tables, code and display equations match.
@@ -57,7 +57,7 @@ blobs. Pick how pictures render with an [`ImageMode`] — the analogue of
 docling's `image_mode`:
 
 ```rust
-use docling_crab::ImageMode;
+use fleischwolf::ImageMode;
 
 // self-contained Markdown: ![Image](data:image/png;base64,…)
 let (md, _) = result.document.export_to_markdown_with_images(ImageMode::Embedded, "artifacts");
@@ -97,22 +97,22 @@ Python docling has no such switch.
 
 ## Testing
 
-All commands run from the `docling-crab/` workspace root.
+All commands run from the `fleischwolf/` workspace root.
 
 ```bash
 # everything — unit tests + the output-regression suite (pure Rust; no Python/models)
 cargo test
 
 # just the regression suite: re-convert every source under
-# crates/docling-crab/tests/data/<fmt>/sources/ and assert that legacy Markdown,
+# crates/fleischwolf/tests/data/<fmt>/sources/ and assert that legacy Markdown,
 # strict Markdown and docling JSON match the committed fixtures (catches drift)
-cargo test -p docling-crab --test regression
+cargo test -p fleischwolf --test regression
 
 # refresh the fixtures after an *intentional* output change, then review `git diff`
-DOCLING_CRAB_REGEN=1 cargo test -p docling-crab --test regression
+FLEISCHWOLF_REGEN=1 cargo test -p fleischwolf --test regression
 
 # a single crate / a single test (with output)
-cargo test -p docling-crab-core
+cargo test -p fleischwolf-core
 cargo test outputs_match_fixtures -- --nocapture
 ```
 
@@ -133,19 +133,19 @@ bash scripts/pdf_conformance.sh     # regenerate + diff the snapshot baseline (7
 
 ```bash
 # convert a file from the CLI — Markdown to stdout (add --strict for cleaner MD)
-cargo run -p docling-crab-cli -- crates/docling-crab/sample.html
-cargo run -p docling-crab-cli -- --strict crates/docling-crab/sample.html
+cargo run -p fleischwolf-cli -- crates/fleischwolf/sample.html
+cargo run -p fleischwolf-cli -- --strict crates/fleischwolf/sample.html
 
 # emit docling's native DoclingDocument JSON instead (--to md is the default)
-cargo run -p docling-crab-cli -- --to json crates/docling-crab/sample.html
-cargo run -p docling-crab-cli -- --to json crates/docling-crab/sample.html > out.json
+cargo run -p fleischwolf-cli -- --to json crates/fleischwolf/sample.html
+cargo run -p fleischwolf-cli -- --to json crates/fleischwolf/sample.html > out.json
 
 # extract pictures (PDF/image inputs): embed as data URIs, or write ./artifacts/*.png
-cargo run -p docling-crab-cli -- --images embedded   document.pdf
-cargo run -p docling-crab-cli -- --images referenced document.pdf > out.md
+cargo run -p fleischwolf-cli -- --images embedded   document.pdf
+cargo run -p fleischwolf-cli -- --images referenced document.pdf > out.md
 
 # or via the example
-cargo run -p docling-crab --example convert -- crates/docling-crab/sample.md
+cargo run -p fleischwolf --example convert -- crates/fleischwolf/sample.md
 
 # score HTML output vs docling's groundtruth (no Python), or vs live docling
 scripts/conformance.sh html
@@ -166,9 +166,9 @@ editable install in `.venv-compare`, created automatically) — no
 
 | Crate | Role | Python analogue |
 |---|---|---|
-| `docling-crab-core` | `DoclingDocument` model + serializers | `docling-core` |
-| `docling-crab` | `DocumentConverter`, source loading, backends | `docling` |
-| `docling-crab-cli` | command-line interface | `docling.cli` |
+| `fleischwolf-core` | `DoclingDocument` model + serializers | `docling-core` |
+| `fleischwolf` | `DocumentConverter`, source loading, backends | `docling` |
+| `fleischwolf-cli` | command-line interface | `docling.cli` |
 
 ## License
 
