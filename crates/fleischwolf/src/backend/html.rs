@@ -18,6 +18,17 @@ use crate::backend::DeclarativeBackend;
 use crate::error::ConversionError;
 use crate::source::SourceDocument;
 
+/// Compile a CSS selector once per call site (mirrors `cached_regex!`), returning
+/// a `&'static Selector`. `Selector::parse` is comparatively expensive, so this
+/// matters for selectors evaluated per element — e.g. `has_descendant` runs per
+/// table cell.
+macro_rules! cached_selector {
+    ($sel:literal) => {{
+        static SEL: std::sync::OnceLock<Selector> = std::sync::OnceLock::new();
+        SEL.get_or_init(|| Selector::parse($sel).unwrap())
+    }};
+}
+
 pub struct HtmlBackend;
 
 impl DeclarativeBackend for HtmlBackend {
@@ -43,9 +54,7 @@ pub(crate) fn convert_html(name: &str, html: &str, images: &dyn ImageResolver) -
 pub(crate) fn append_fragment(html: &str, out: &mut Vec<Node>, images: &dyn ImageResolver) {
     let parsed = Html::parse_document(html);
     // Prefer <body>; fall back to the root element for fragments.
-    let body = Selector::parse("body")
-        .ok()
-        .and_then(|s| parsed.select(&s).next());
+    let body = parsed.select(cached_selector!("body")).next();
     let root = body.unwrap_or_else(|| parsed.root_element());
     walk_block(root, out, 0, Fmt::default(), images);
 }
@@ -586,9 +595,9 @@ fn serialize_run(text: &str, fmt: Fmt, hyperlink: Option<&str>) -> String {
 }
 
 fn extract_pre(pre: ElementRef) -> (Option<String>, String) {
-    let mut language = Selector::parse("code")
-        .ok()
-        .and_then(|sel| pre.select(&sel).next())
+    let mut language = pre
+        .select(cached_selector!("code"))
+        .next()
         .and_then(|code| code.value().attr("class").map(str::to_string))
         .and_then(|c| lang_from_class(&c));
     if language.is_none() {
@@ -785,8 +794,7 @@ fn lone_code(p: ElementRef) -> Option<String> {
 /// caption (its non-empty `alt`) and `src`. Used to pull `<a><img></a>` out as a
 /// Picture.
 fn image_wrapper(elem: ElementRef) -> Option<(Option<String>, Option<String>)> {
-    let img_sel = Selector::parse("img").ok()?;
-    let mut imgs = elem.select(&img_sel);
+    let mut imgs = elem.select(cached_selector!("img"));
     let img = imgs.next()?;
     if imgs.next().is_some() || !elem.text().collect::<String>().trim().is_empty() {
         return None;
@@ -802,15 +810,22 @@ fn image_wrapper(elem: ElementRef) -> Option<(Option<String>, Option<String>)> {
 
 /// The `src` of a `<figure>`'s first `<img>`, for image extraction.
 fn figure_img_src(fig: ElementRef) -> Option<String> {
-    Selector::parse("img")
-        .ok()
-        .and_then(|s| fig.select(&s).next())
+    fig.select(cached_selector!("img"))
+        .next()
         .and_then(|img| img.value().attr("src"))
         .map(str::to_string)
 }
 
 fn has_descendant(elem: ElementRef, name: &str) -> bool {
-    Selector::parse(name).is_ok_and(|s| elem.select(&s).next().is_some())
+    // Callers pass a small fixed set of tags; cache those selectors (this runs
+    // per table cell). Anything else falls back to an on-demand parse.
+    let sel = match name {
+        "br" => cached_selector!("br"),
+        "img" => cached_selector!("img"),
+        "input" => cached_selector!("input"),
+        _ => return Selector::parse(name).is_ok_and(|s| elem.select(&s).next().is_some()),
+    };
+    elem.select(sel).next().is_some()
 }
 
 /// Count the inline text runs in `cell` and whether any carries formatting,
@@ -858,41 +873,53 @@ fn cell_richness(cell: ElementRef) -> (usize, bool) {
 }
 
 fn figure_caption(fig: ElementRef) -> Option<String> {
-    if let Some(cap) = Selector::parse("figcaption")
-        .ok()
-        .and_then(|s| fig.select(&s).next())
-    {
+    if let Some(cap) = fig.select(cached_selector!("figcaption")).next() {
         // A figure caption is plain text (formatting/links are stripped).
         let text = normalize_ws(&cap.text().collect::<String>());
         if !text.is_empty() {
             return Some(text);
         }
     }
-    Selector::parse("img")
-        .ok()
-        .and_then(|s| fig.select(&s).next())
+    fig.select(cached_selector!("img"))
+        .next()
         .and_then(|img| img.value().attr("alt"))
         .filter(|a| !a.is_empty())
         .map(str::to_string)
 }
 
-/// Sanitize typographic Unicode to ASCII (docling's HTML text cleanup) and then
-/// collapse all runs of whitespace to single spaces, trimming the ends.
+/// Sanitize typographic Unicode to ASCII (docling's HTML text cleanup) and
+/// collapse all runs of whitespace to single spaces, trimming the ends — in a
+/// single pass (this runs once per text run, so it stays allocation-light).
 fn normalize_ws(s: &str) -> String {
-    let mut clean = String::with_capacity(s.len());
+    let mut out = String::with_capacity(s.len());
+    // A space is pending between emitted words; flushed only before the next
+    // non-space char, so leading/trailing whitespace is trimmed and runs collapse.
+    let mut pending_space = false;
     for ch in s.chars() {
         match ch {
-            '\u{00a0}' | '\u{202f}' => clean.push(' '), // (narrow) non-breaking space
-            '\u{2010}'..='\u{2015}' => clean.push('-'), // hyphens, dashes, horizontal bar
-            '\u{2018}' | '\u{2019}' => clean.push('\''), // single quotation marks
-            '\u{201c}' | '\u{201d}' => clean.push('"'), // double quotation marks
-            '\u{2026}' => clean.push_str("..."),        // ellipsis
-            // Zero-width / soft / joiner characters are dropped.
+            // Zero-width / soft / joiner characters are dropped outright.
             '\u{200b}' | '\u{200c}' | '\u{200d}' | '\u{00ad}' | '\u{feff}' | '\u{2060}' => {}
-            _ => clean.push(ch),
+            // Any whitespace (incl. the (narrow) non-breaking spaces, which are
+            // Unicode-whitespace) collapses to a single pending space.
+            c if c.is_whitespace() => {
+                pending_space = !out.is_empty();
+            }
+            c => {
+                if pending_space {
+                    out.push(' ');
+                    pending_space = false;
+                }
+                match c {
+                    '\u{2010}'..='\u{2015}' => out.push('-'), // hyphens, dashes, horizontal bar
+                    '\u{2018}' | '\u{2019}' => out.push('\''), // single quotation marks
+                    '\u{201c}' | '\u{201d}' => out.push('"'), // double quotation marks
+                    '\u{2026}' => out.push_str("..."),        // ellipsis
+                    _ => out.push(c),
+                }
+            }
         }
     }
-    clean.split_whitespace().collect::<Vec<_>>().join(" ")
+    out
 }
 
 #[cfg(test)]

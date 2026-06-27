@@ -11,8 +11,9 @@ keywords.workspace = true
 categories.workspace = true
 rust-version.workspace = true
 # The 25 MB output-regression corpus under tests/ is dev-only — keep it out of
-# the published crate (and under crates.io's size limit).
-exclude = ["tests"]
+# the published crate (and under crates.io's size limit). benches/ reference that
+# corpus by path, so they're dev-only too.
+exclude = ["tests", "benches"]
 
 [dependencies]
 calamine = { version = "0.26", features = ["dates"] }
@@ -37,3 +38,10 @@ zip = { version = "2.2", default-features = false, features = ["deflate"] }
 [[example]]
 name = "convert"
 path = "examples/convert.rs"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "parse"
+harness = false
