@@ -89,12 +89,12 @@ quirks included (`***x*** .`, dropped code-fence languages, `\_` escaping). Set
 ```rust
 let converter = DocumentConverter::new().strict(true);
 let result = converter.convert(source).unwrap();
-println!("{}", result.document.export_to_markdown()); // ```rust kept, no `***x*** .`
+println!("{}", result.document.export_to_markdown()); // ```rust kept, no `***x*** .`, `_` not escaped
 ```
 
 ```text
-legacy:  Foo ***both*** .   |   ```          (language dropped)
-strict:  Foo ***both***.    |   ```rust      (language kept)
+legacy:  Foo ***both*** .   |   ``` (lang dropped)   |   Name: \_\_\_
+strict:  Foo ***both***.    |   ```rust (lang kept)  |   Name: ___
 ```
 
 `result.document.export_to_markdown_with(strict)` overrides the mode per call.
