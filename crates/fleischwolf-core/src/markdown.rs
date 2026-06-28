@@ -61,6 +61,18 @@ pub fn to_markdown_images(
     (md, ctx.artifacts)
 }
 
+/// In `strict` mode, undo the legacy `\_` underscore escaping the backends bake
+/// into inline text. Legacy output keeps `\_` (byte-for-byte with docling, which
+/// escapes underscores); strict prefers literal `_` for readability. Only inline
+/// text nodes are escaped — code blocks and table cells are left alone.
+fn strict_text(text: &str, strict: bool) -> String {
+    if strict {
+        text.replace("\\_", "_")
+    } else {
+        text.to_string()
+    }
+}
+
 fn render(nodes: &[Node], blocks: &mut Vec<String>, ctx: &mut Ctx) {
     let mut i = 0;
     while i < nodes.len() {
@@ -70,7 +82,7 @@ fn render(nodes: &[Node], blocks: &mut Vec<String>, ctx: &mut Ctx) {
                 while matches!(nodes.get(i), Some(Node::ListItem { .. })) {
                     i += 1;
                 }
-                render_list_run(&nodes[start..i], blocks);
+                render_list_run(&nodes[start..i], blocks, ctx.strict);
             }
             other => {
                 render_one(other, blocks, ctx);
@@ -85,7 +97,7 @@ fn render(nodes: &[Node], blocks: &mut Vec<String>, ctx: &mut Ctx) {
 /// Ordered items use their explicit `number`. A new sibling list (marked by
 /// `first_in_list`) at the same depth is separated by a blank line, matching
 /// docling-core's serializer.
-fn render_list_run(items: &[Node], blocks: &mut Vec<String>) {
+fn render_list_run(items: &[Node], blocks: &mut Vec<String>, strict: bool) {
     let mut lines: Vec<String> = Vec::new();
     // Per level, the previous item's (ordered, number) so we can detect a new
     // sibling list.
@@ -128,7 +140,7 @@ fn render_list_run(items: &[Node], blocks: &mut Vec<String>) {
         } else {
             "-".to_string()
         };
-        lines.push(format!("{indent}{marker} {text}"));
+        lines.push(format!("{indent}{marker} {}", strict_text(text, strict)));
         prev[level] = Some((*ordered, *number));
     }
 
@@ -139,9 +151,9 @@ fn render_one(node: &Node, blocks: &mut Vec<String>, ctx: &mut Ctx) {
     match node {
         Node::Heading { level, text } => {
             let hashes = "#".repeat((*level).clamp(1, 6) as usize);
-            blocks.push(format!("{hashes} {text}"));
+            blocks.push(format!("{hashes} {}", strict_text(text, ctx.strict)));
         }
-        Node::Paragraph { text } => blocks.push(text.clone()),
+        Node::Paragraph { text } => blocks.push(strict_text(text, ctx.strict)),
         Node::Code { language, text } => {
             // Legacy docling never emits a language on the fence; strict keeps it.
             let lang = match language {
@@ -332,5 +344,23 @@ mod tests {
         // Matches tabulate(tablefmt="github"): padded columns, numeric cells
         // right-aligned, separator of width+2 dashes.
         assert_eq!(md, "|   a |   b |\n|-----|-----|\n|   1 |   2 |\n");
+    }
+
+    #[test]
+    fn strict_unescapes_inline_underscores_legacy_keeps_them() {
+        let mut doc = DoclingDocument::new("t");
+        doc.add_heading(1, "a\\_b");
+        doc.add_paragraph("x\\_y");
+        doc.push(Node::ListItem {
+            ordered: false,
+            number: 1,
+            first_in_list: true,
+            text: "i\\_j".into(),
+            level: 0,
+        });
+        // Legacy reproduces docling's `\_` escaping byte-for-byte.
+        assert_eq!(doc.export_to_markdown(), "# a\\_b\n\nx\\_y\n\n- i\\_j\n");
+        // Strict prefers literal underscores (Rust-only readability mode).
+        assert_eq!(doc.export_to_markdown_with(true), "# a_b\n\nx_y\n\n- i_j\n");
     }
 }

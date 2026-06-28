@@ -30,21 +30,21 @@ apples-to-apples with what `fleischwolf` does.
 
 ---
 
-## A. Against the upstream groundtruth corpus (no Python needed)
+## A. Scoring against docling across a corpus
 
 This repo ships a regression corpus under `tests/data/<format>/`:
 
 ```text
 tests/data/html/sources/example_01.html          # input
-tests/data/html/groundtruth/example_01.html.md    # Markdown that Python docling produces
+tests/data/html/groundtruth/example_01.html.md    # older committed reference
 ```
 
-Those `.md` files were produced by Python `docling`, so we can score the Rust
-port against them directly:
+`conformance.sh` scores the Rust port against the **latest published docling**
+(installed from PyPI on first run — see `_common.sh`), per format:
 
 ```bash
-scripts/conformance.sh html          # vs committed groundtruth (no Python needed)
-scripts/conformance.sh html --live   # vs CURRENT docling (regenerates references)
+scripts/conformance.sh html
+scripts/conformance.sh docx
 ```
 
 It prints a per-fixture diff-line count and a summary:
@@ -58,15 +58,10 @@ Exact matches:             10 / 32
 Exact or 1-line-different:  12 / 32
 ```
 
-> **Groundtruth can be stale.** The committed `.md` corpus was generated with an
-> older docling-core serializer; notably it uses a compact table style
-> (`| - |`) whereas current docling pads table columns. So the default
-> (groundtruth) run can *understate* conformance. Use `--live` to score against
-> the docling version actually installed — that's the number that reflects
-> reality (and it's what `compare.sh` shows per file).
-
-The default run is the fastest feedback loop and needs nothing but the Rust
-toolchain; `--live` is the source of truth.
+> The reference is always the installed docling. The committed groundtruth `.md`
+> is used only as a fallback for sources docling can't convert — it predates
+> docling-core's current serializer (e.g. its compact `| - |` tables), so it is
+> not the source of truth.
 
 ---
 
@@ -251,18 +246,13 @@ tail of docling-specific quirks (below), each typically 1–2 lines.
 > no `\_`/entity re-escaping) — it deliberately *diverges* from docling, so don't
 > measure conformance against it.
 
-### HTML, vs committed groundtruth vs live
+### HTML
 
-| Metric | vs committed groundtruth | vs **live** docling (`--live`) |
-|---|---|---|
-| Exact matches | 6 / 32 | **10 / 32** |
-| Exact or one-line different | 7 / 32 | 12 / 32 |
-
-The `--live` column is the one that reflects reality; the groundtruth column is
-lower mainly because that corpus predates docling's padded-table serializer (see
-the note in §A). The remaining real differences trace to a small number of
-*systematic* behaviours below, not to parsing errors — closing each tends to fix
-several fixtures at once.
+Against live docling: **10 / 32** exact, **12 / 32** exact-or-one-line. (The
+older committed groundtruth would report a lower 6/32 — it predates docling's
+padded-table serializer; see §A.) The remaining real differences trace to a
+small number of *systematic* behaviours below, not to parsing errors — closing
+each tends to fix several fixtures at once.
 
 ### Known divergences (tracked conformance gaps)
 
@@ -291,8 +281,7 @@ Already aligned with docling (previously diverged, now fixed):
 - **Tables** rendered exactly like docling-core's `tabulate(tablefmt="github")`:
   padded columns, header `MIN_PADDING=2`, numeric columns right-aligned, separator
   of `width+2` dashes, `|`→`&#124;` cell escaping. (The committed groundtruth still
-  uses the older compact `| - |` style — use `--live` to compare against current
-  docling.)
+  uses the older compact `| - |` style, so it serves only as a fallback.)
 
 ---
 
@@ -303,6 +292,6 @@ shows as `2`. So "≤ 2 diff lines" means "differs by at most one line". The poi
 isn't the absolute score — it's the trend as gaps in the table get closed, and
 catching regressions when a change makes a previously-matching fixture diverge.
 
-For CI, gate on the `--live` summary (e.g. fail if the exact-match count drops):
-it compares against the docling version actually installed, so it won't flag
+For CI, gate on the summary (e.g. fail if the exact-match count drops): it
+compares against the docling version actually installed, so it won't flag
 differences that are really just a stale committed corpus.

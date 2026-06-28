@@ -89,12 +89,12 @@ quirks included (`***x*** .`, dropped code-fence languages, `\_` escaping). Set
 ```rust
 let converter = DocumentConverter::new().strict(true);
 let result = converter.convert(source).unwrap();
-println!("{}", result.document.export_to_markdown()); // ```rust kept, no `***x*** .`
+println!("{}", result.document.export_to_markdown()); // ```rust kept, no `***x*** .`, `_` not escaped
 ```
 
 ```text
-legacy:  Foo ***both*** .   |   ```          (language dropped)
-strict:  Foo ***both***.    |   ```rust      (language kept)
+legacy:  Foo ***both*** .   |   ``` (lang dropped)   |   Name: \_\_\_
+strict:  Foo ***both***.    |   ```rust (lang kept)  |   Name: ___
 ```
 
 `result.document.export_to_markdown_with(strict)` overrides the mode per call.
@@ -152,9 +152,8 @@ cargo run -p fleischwolf-cli -- --images referenced document.pdf > out.md
 # or via the example
 cargo run -p fleischwolf --example convert -- crates/fleischwolf/sample.md
 
-# score HTML output vs docling's groundtruth (no Python), or vs live docling
+# score HTML output against the latest published docling (installed from PyPI)
 scripts/conformance.sh html
-scripts/conformance.sh html --live
 
 # diff Python docling vs Rust on one file (installs published docling from PyPI)
 scripts/compare.sh tests/data/html/sources/example_03.html

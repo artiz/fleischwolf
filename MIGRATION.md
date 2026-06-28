@@ -49,10 +49,10 @@ println!("{}", result.document.export_to_markdown());   // or .export_to_json()
 
 ## 2. Format coverage
 
-Conformance is measured against **live** docling (run from this repo's own
-sources via `scripts/conformance.sh <fmt> --live`), not the committed
-groundtruth `.md` (which predates docling-core's current table serializer — see
-§4). "Exact" = byte-for-byte.
+Conformance is measured against the latest **published** docling (installed from
+PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
+`.md` (which predates docling-core's current table serializer — see §4).
+"Exact" = byte-for-byte.
 
 ### Declarative formats — pure Rust, no models
 
@@ -207,8 +207,8 @@ Explicitly **not done**, with the reason:
   The JSON fixtures double as a docling-core load check.
 - **Snapshot harness** — `scripts/pdf_conformance.sh` regenerates and diffs the
   PDF/image/METS baseline (needs pdfium + the ONNX models; **76/76 exact**).
-- **Live conformance** — `scripts/conformance.sh <fmt> --live` scores a format
-  against the latest published docling (installed from PyPI; see
+- **Conformance** — `scripts/conformance.sh <fmt>` scores a format against the
+  latest published docling (installed from PyPI; see
   [`COMPARING.md`](./COMPARING.md)).
 - **Differential / perf** — `scripts/compare.sh`, `scripts/performance.sh`.
 
