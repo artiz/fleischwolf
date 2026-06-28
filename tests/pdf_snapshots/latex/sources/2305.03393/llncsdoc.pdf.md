@@ -1,4 +1,4 @@
-## Instructions for Using Springer’s llncs Class for Computer Science Proceedings Papers
+## Instructions for Using Springer's llncs Class for Computer Science Proceedings Papers
 
 , Version 2.22, Sep 05, 2022 llncs
 
@@ -14,7 +14,7 @@ The llncs class is an extension of the standard LA LAT ATE TEX EX article class.
 
 If you are already familiar with LA LAT ATE TEX EX, the llncs class should not give you any major difficulties. It basically adjusts the layout to the required standard, defining styles and spacing of headings and captions and setting the printing area to 122mm horizontally by 193mm vertically. To keep the layout consistent, we kindly ask you to refrain from using any LA LAT ATE TEX EX or TE TEX EX command that modifies these settings (i.e. \textheight , \vspace , baselinestretch ,etc.). Such manual layout adjustments should be lim ited to very exceptional cases.
 
-In addition to defining the general layout, the llncs document class pro vides some special commands for typesetting the contribution header, i.e. title, authors, affiliations, abstract, and additional metadata. These special commands are described in Sect. 3 .
+In addition to defining the general layout, the llncs document class provides some special commands for typesetting the contribution header, i.e. title, authors, affiliations, abstract, and additional metadata. These special commands are described in Sect. 3 .
 
 For a more detailed description of how to prepare your text, illustrations, and references, see the Springer Guidelines for Authors of Proceedings .
 
@@ -86,9 +86,9 @@ If you have done this correctly, the author line now reads, for example:
 
 \author{First Author\inst{1}\orcidID{0000-1111-2222-3333} \and Second Author\inst{2,3}\orcidID{1111-2222-3333-4444}}
 
-The given name(s) should always be followed by the family name(s). Au thors who have more than one family name should indicate which part of their name represents the family name(s), for example by non-breaking spaces Jos\’{e} Martinez~Perez or curly braces Jos\’{e} {Martinez Perez} .
+The given name(s) should always be followed by the family name(s). Authors who have more than one family name should indicate which part of their name represents the family name(s), for example by non-breaking spaces Jos\'{e} Martinez~Perez or curly braces Jos\'{e} {Martinez Perez} .
 
-As given name(s) are to be shortened to initials in the running heads, speci fying an abbreviated author list with the optional command:
+As given name(s) are to be shortened to initials in the running heads, specifying an abbreviated author list with the optional command:
 
 \authorrunning
 
@@ -100,7 +100,7 @@ might add some clarity about the correct representation of author names, in the 
 
 \institute Addresses of institutes, companies, etc. should be given in \institute .
 
-Multiple affiliations are separated by \and , which automatically assures cor rect numbering:
+Multiple affiliations are separated by \and , which automatically assures correct numbering:
 
 \and
 
@@ -116,7 +116,7 @@ Multiple affiliations are separated by \and , which automatically assures cor r
 
 \url{<url>}
 
-to provide author email addresses and Web pages. If you need to typeset the tilde character – e.g. for your Web page in your unix system’s home directory – the \homedir command will do this. If multiple authors have the same affiliation, please check that the order of email addresses matches the sequence of (affiliated) author names.
+to provide author email addresses and Web pages. If you need to typeset the tilde character – e.g. for your Web page in your unix system's home directory – the \homedir command will do this. If multiple authors have the same affiliation, please check that the order of email addresses matches the sequence of (affiliated) author names.
 
 Please note that, if email addresses are given in your paper, they will also be included in the metadata of the online version.
 
@@ -142,7 +142,7 @@ The keyword separator will then be properly rendered as a middle dot.
 
 ## 4.1 General Rules
 
-From a technical point of view, the llncs document class does not require any specific LA LAT ATE TEX EX coding in the body of your paper. You can simply use the com mands provided by the ‘article’ document class. For more information about what will be done with your manuscript before publication, please refer to the Springer Guidelines for Authors of Proceedings .
+From a technical point of view, the llncs document class does not require any specific LA LAT ATE TEX EX coding in the body of your paper. You can simply use the commands provided by the 'article' document class. For more information about what will be done with your manuscript before publication, please refer to the Springer Guidelines for Authors of Proceedings .
 
 ## 4.2 Special Math Characters
 
@@ -179,7 +179,7 @@ example ( env. )
 
 ( ) \begin{case} <text> \end{case} exercise env. \begin{conjecture} <text> \end{conjecture} note ( env. ) \begin{example} <text> \end{example} problem ( env. ) ( ) \begin{exercise} <text> \end{exercise} property env. \begin{note} <text> \end{note} question ( env. ) \begin{problem} <text> \end{problem} remark ( env. ) \begin{property} <text> \end{property} ( ) solution env. \begin{question} <text> \end{question} \begin{remark} <text> \end{remark} \begin{solution} <text> \end{solution}
 
-claim ( env. ) Finally, there are also two unnumbered environments that have the run-in head proof ( env. ) ing in italics and the text in upright roman.
+claim ( env. ) Finally, there are also two unnumbered environments that have the run-in headproof ( env. ) ing in italics and the text in upright roman.
 
 \begin{claim} <text> \end{claim} \begin{proof} <text> \end{proof}
 
@@ -229,9 +229,9 @@ citeauthoryear
 
 Please note that this option does not automatically change your citations to the author/year style. It basically redefines the \bibitem command to take the publication year as an optional parameter that is displayed instead of an arabic number. Author name(s) and, if necessary , parentheses are to be typed manually. If your reference reads
 
-\bibitem[2016]{vdaalst:2016} van der Aalst, W.: Process Mining, 2nd ed. Springer, Heidelberg (2016) and is cited as follows: ... is shown by van der Aalst (\cite{vdaalst:2016}) the resulting text will be: “. .. is shown by van der Aalst (2016).”
+\bibitem[2016]{vdaalst:2016} van der Aalst, W.: Process Mining, 2nd ed. Springer, Heidelberg (2016) and is cited as follows: ... is shown by van der Aalst (\cite{vdaalst:2016}) the resulting text will be: ". .. is shown by van der Aalst (2016)."
 
-We encourage you to use Bib TE TEX EX for typesetting your references. For for matting the bibliography according to Springer’s standard (for mathematics, physical sciences, and computer science), please use the bibliography style file splncs04.bst that comes with the llncs document class. You simply need to add \bibliographystyle{splncs04} to your document. DOIs should be pro vided in the doi field of your .bib database. Bib TE TEX EX will then automatically add them to your references. Please note that we do not provide an option to implement
+We encourage you to use Bib TE TEX EX for typesetting your references. For formatting the bibliography according to Springer's standard (for mathematics, physical sciences, and computer science), please use the bibliography style file splncs04.bst that comes with the llncs document class. You simply need to add \bibliographystyle{splncs04} to your document. DOIs should be provided in the doi field of your .bib database. Bib TE TEX EX will then automatically add them to your references. Please note that we do not provide an option to implement
 
 splncs04.bst
 
@@ -245,7 +245,7 @@ The DOI will be expanded to the URL https://doi.org/<DOI> in accordance with the
 
 ## 7 Obsolete Class Options
 
-The document class contains several cl ass options that have become ob llncs solete over the years. We only mention them for completeness:
+The document class contains several cl ass options that have become obllncs solete over the years. We only mention them for completeness:
 
 - orivec – The llncs document class changes the for matting of vectors coded with \vec to boldface italics. If you absolutely need the original LA LAT ATE EX design for TEX vectors, i.e. an arrow above the related variable, you can restore it with the orivec option.
 - – All theorem-like environments share one counter, i.e. Theorem 1, Lemma 2, Corollary 3, etc.
@@ -260,7 +260,7 @@ envcountreset
 
 envcountsect
 
-- – This option produces the “open” bibliography style, in which each block starts on a new line, and succeeding lines in a block are indented by \bibindent .
+- – This option produces the "open" bibliography style, in which each block starts on a new line, and succeeding lines in a block are indented by \bibindent .
 
 openbib
 

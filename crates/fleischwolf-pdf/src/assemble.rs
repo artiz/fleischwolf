@@ -82,6 +82,29 @@ fn order_regions(regions: &mut [Region], page_w: f32) {
     }
 }
 
+/// Clean a region's assembled text: undo soft-hyphen line wraps, map curly
+/// quotes and the ellipsis to ASCII (matching docling), and collapse runs of
+/// whitespace. pdfium emits the line-wrap hyphen as U+0002 in this corpus
+/// (U+00AD elsewhere), so `word\u{2} continuation` is one hyphenated word —
+/// drop the hyphen + the joining space and merge (`com\u{2} pact` → `compact`,
+/// `end-to\u{2} end` → `end-toend`), exactly as docling does.
+///
+/// Token spacing is otherwise left as the geometric join produced it. We do not
+/// tighten punctuation spacing: docling preserves the PDF's own spaces (it keeps
+/// `{ ahn }`, `Name 1 .`, `[ 9 ]`), and a geometric gap heuristic diverges from
+/// it more than a plain single-space join does.
+fn clean_text(text: &str) -> String {
+    text.replace("\u{2} ", "")
+        .replace("\u{ad} ", "")
+        .replace(['\u{2}', '\u{ad}'], "") // any stray wrap hyphens not at a join
+        .replace(['\u{2018}', '\u{2019}'], "'") // ‘ ’ → '
+        .replace(['\u{201c}', '\u{201d}'], "\"") // “ ” → "
+        .replace('\u{2026}', "...") // … → ...
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 /// Cells assigned to a region (best container), in reading order, joined.
 fn region_text(region: &Region, cells: &[TextCell]) -> String {
     let mut inside: Vec<&TextCell> = cells
@@ -100,14 +123,12 @@ fn region_text(region: &Region, cells: &[TextCell]) -> String {
         .fold(0.0f32, f32::max)
         .max(1.0);
     inside.sort_by_key(|c| ((c.t / band).round() as i64, (c.l * 10.0) as i64));
-    inside
+    let joined = inside
         .iter()
         .map(|c| c.text.trim())
         .collect::<Vec<_>>()
-        .join(" ")
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
+        .join(" ");
+    clean_text(&joined)
 }
 
 /// Reconstruct a table's grid geometrically from the text cells inside its
@@ -171,12 +192,13 @@ fn reconstruct_table(region: &Region, cells: &[TextCell]) -> Vec<Vec<String>> {
         let mut cols = vec![String::new(); ncols];
         for c in row {
             let ci = col_of(c.l);
-            let t = c.text.trim();
+            // Strip the wrap-hyphen control char so it never lands in a cell.
+            let t = c.text.trim().replace(['\u{2}', '\u{ad}'], "");
             if cols[ci].is_empty() {
-                cols[ci] = t.to_string();
+                cols[ci] = t;
             } else {
                 cols[ci].push(' ');
-                cols[ci].push_str(t);
+                cols[ci].push_str(&t);
             }
         }
         grid.push(cols);
@@ -234,8 +256,9 @@ pub fn assemble_page(page: &PdfPage, mut regions: Vec<Region>, doc: &mut Docling
             continue;
         }
         match region.label {
-            "title" => doc.push(Node::Heading { level: 1, text }),
-            "section_header" => doc.push(Node::Heading { level: 2, text }),
+            // docling renders both the document title and section headers as
+            // `##` (it never emits a top-level `#` for PDFs), so match that.
+            "title" | "section_header" => doc.push(Node::Heading { level: 2, text }),
             "list_item" => doc.push(Node::ListItem {
                 ordered: false,
                 number: 0,
@@ -257,5 +280,27 @@ pub fn assemble_page(page: &PdfPage, mut regions: Vec<Region>, doc: &mut Docling
             // text, caption, footnote, formula, code → paragraph
             _ => doc.push(Node::Paragraph { text }),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::clean_text;
+
+    #[test]
+    fn clean_text_dehyphenates_and_normalizes_typography() {
+        // U+0002 line-wrap hyphen + the join space → merged word (like docling).
+        assert_eq!(clean_text("com\u{2} pact"), "compact");
+        assert_eq!(clean_text("end-to\u{2} end deep"), "end-toend deep");
+        // A stray wrap hyphen (no following join) is dropped.
+        assert_eq!(clean_text("word\u{2}"), "word");
+        // Typographic punctuation → ASCII.
+        assert_eq!(
+            clean_text("Graph\u{2019}s \u{201c}x\u{201d}"),
+            "Graph's \"x\""
+        );
+        assert_eq!(clean_text("a\u{2026}"), "a...");
+        // Whitespace collapses; a normal space-join is preserved.
+        assert_eq!(clean_text("a   b\nc"), "a b c");
     }
 }

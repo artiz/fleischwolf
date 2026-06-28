@@ -2,7 +2,7 @@
 |-----|---------------------------------------------------------------------------------------|------------------|-------------------------------------------------------|----|
 |     | represent people eligible for legal aid                                               |                  |                                                       |    |
 |    | They coordinate appointments of private practitioners (ex officio, or panel appoint   |                  |                                                       |    |
-|     |                                                                                       |                  |                                                       |   |
+|     |                                                                                       |                  |                                                       |    |
 |     | ments) to legal aid cases                                                             |                  |                                                       |    |
 |    | They supervise, coach or mentor private practitioners who take legal aid cases        |                  |                                                       |    |
 |    | They conduct or organize training sessions for staff lawyers/paralegals               |                  |                                                       |    |
@@ -13,7 +13,7 @@
 |    | Not applicable, there is no institutional legal aid provider                          |                  |                                                       |    |
 
 -  They work in parallel to State funded private practitioners who take assignments to represent people eligible for legal aid
--  They coordinate appointments of private practitioners (ex officio, or panel appoint  ments) to legal aid cases
+-  They coordinate appointments of private practitioners (ex officio, or panel appoint ments) to legal aid cases
 -  They supervise, coach or mentor private practitioners who take legal aid cases
 -  They conduct or organize training sessions for staff lawyers/paralegals
 -  They conduct or organize training sessions for all providers of legal aid, including both staff and private lawyers/paralegals
@@ -44,14 +44,14 @@
 
 | 25.   | If your country has an institutional legal aid provider (e.g. public defender), does it   |                                      |    |
 |-------|-------------------------------------------------------------------------------------------|--------------------------------------|----|
-|       | have specialized providers and/or units for representing child victims, child witness     |                                      |   |
+|       | have specialized providers and/or units for representing child victims, child witness     |                                      |    |
 |       | es or suspected and accused children?                                                     |                                      |    |
 |       |                                                                                          | Yes, at the national (federal) level |    |
 |       |                                                                                          | Yes, at regional (district) level    |    |
 |       |                                                                                          | Yes, at the local (municipal) level  |    |
 |       |                                                                                          | No                                   |    |
 
-- 25. If your country has an institutional legal aid provider (e.g. public defender), does it have specialized providers and/or units for representing child victims, child witness  es or suspected and accused children?
+- 25. If your country has an institutional legal aid provider (e.g. public defender), does it have specialized providers and/or units for representing child victims, child witness es or suspected and accused children?
 -  Yes, at the national (federal) level
 - Yes, at regional (district) level
 -  Yes, at the local (municipal) level
@@ -59,7 +59,7 @@
 -  Yes, there are specific guidelines for non-lawyers providing legal aid services
 -  Yes, there are specific guidelines on faculty/student ratios
 -  No, it is up to the discretion of each university
--  Don’t know
+-  Don't know
 -  There are no university-based student law clinics
 
 | 27.   | If your country allows legal aid services through university-based student law clinics,   |                                                                                         |                  |                                                       |    |
@@ -75,7 +75,7 @@
 |       |                                                                                          | They can provide a full range of legal services in criminal cases regardless of gravity |                  |                                                       |    |
 |       |                                                                                          | They can conduct mediation                                                              |                  |                                                       |    |
 |       |                                                                                          | They are authorized to provide only those services that a faculty member or practic     |                  |                                                       |    |
-|       |                                                                                           |                                                                                         |                  |                                                       |   |
+|       |                                                                                           |                                                                                         |                  |                                                       |    |
 |       |                                                                                           | ing lawyer supervises                                                                   |                  |                                                       |    |
 |       |                                                                                          | Don’t know                                                                              |                  |                                                       |    |
 |       |                                                                                          | Other                                                                                   | (Please specify) |                                                       |    |
@@ -83,7 +83,7 @@
 
 - 27. If your country allows legal aid services through university-based student law clinics, what type of legal aid services is a student authorized to undertake? (Please select all that apply)
 -  They can represent people in administrative or civil law hearings
-- 28. Are specialized legal aid services provided focusing on specific disadvantaged popu  lation groups? If yes, please indicate to whom these services are provided, and whether they are provided by State-funded legal aid, civil society organizations, or both.
+- 28. Are specialized legal aid services provided focusing on specific disadvantaged popu lation groups? If yes, please indicate to whom these services are provided, and whether they are provided by State-funded legal aid, civil society organizations, or both.
 
 (Please select all that apply)
 

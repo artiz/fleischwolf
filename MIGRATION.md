@@ -150,6 +150,13 @@ These are deliberate or unavoidable divergences, not bugs.
    - **Tables** — *geometric* grid reconstruction (cluster cells into rows/cols),
      **not TableFormer** (docling's autoregressive table-structure model). Table
      structure is approximate; complex spans are not recovered.
+   - **Text assembly** — line cells are joined in reading order; soft-hyphen line
+     wraps (pdfium emits the wrap hyphen as the U+0002 control char) are undone so
+     `com-`/`pact` rejoins as `compact`, and curly quotes/ellipsis are mapped to
+     ASCII — both matching docling. Token spacing is a plain single-space join:
+     docling's per-glyph spacing comes from the PDF *text stream*, which the
+     segment-based path can't reproduce, so citation/footnote spacing (e.g.
+     `[ 37 , 36 ]` vs `[37, 36]`) can still differ.
    - Output is therefore a **snapshot baseline**, never byte-for-byte with docling.
 
 6. **Extracted image bytes are real but not byte-identical.** Cropped/embedded

@@ -8,7 +8,7 @@ ibm.com /redbooks
 
 <!-- image -->
 
-# Row and Column Access Control Support in IBM DB2 for i
+## Row and Column Access Control Support in IBM DB2 for i
 
 <!-- image -->
 
@@ -26,10 +26,10 @@ IBM Systems Lab Services and Training Solution Brief
 
 ## Highlights
 
--              
--                    
--       !   " # 
--  ! #      " "      
+-             
+-                   
+-      !   " # 
+- ! #      " "      
 
 <!-- image -->
 
@@ -45,7 +45,7 @@ No one else has the vast consulting experiences, skills sharing and renown servi
 
 Because no one else is IBM.
 
-With combined experiences and direct access to development groups, we’re the experts in IBM DB2® for i. The DB2 for i Center of Excellence (CoE) can help you achieve—perhaps reexamine and exceed—your business requirements and gain more confidence and satisfaction in IBM product data management products and solutions.
+With combined experiences and direct access to development groups, we're the experts in IBM DB2® for i. The DB2 for i Center of Excellence (CoE) can help you achieve—perhaps reexamine and exceed—your business requirements and gain more confidence and satisfaction in IBM product data management products and solutions.
 
 ## Who we are, some of what we do
 
@@ -77,7 +77,7 @@ Jim Bainbridge is a senior DB2 consultant on the DB2 for i Center of Excellence 
 
 <!-- image -->
 
-Hernando Bedoya is a Senior IT Specialist at STG Lab Services and Training in Rochester, Minnesota. He writes extensively and teaches IBM classes worldwide in all areas of DB2 for i. Before jo ining STG Lab Services, he worked in the ITSO for nine years writing multiple IBM Redbooks® publications. He also worked for IBM Colombia as an IBM AS/400® IT Specialist doing presales support for the Andean countries. He has 28 years of experience in the computing field and has taught database classes in Colombian universities. He holds a Master’s degree in Computer Science from EAFIT, Colombia. His areas of expertise are database technology, performance, and data warehousing. Hernando can be contacted at hbedoya@us.ibm.com .
+Hernando Bedoya is a Senior IT Specialist at STG Lab Services and Training in Rochester, Minnesota. He writes extensively and teaches IBM classes worldwide in all areas of DB2 for i. Before jo ining STG Lab Services, he worked in the ITSO for nine years writing multiple IBM Redbooks® publications. He also worked for IBM Colombia as an IBM AS/400® IT Specialist doing presales support for the Andean countries. He has 28 years of experience in the computing field and has taught database classes in Colombian universities. He holds a Master's degree in Computer Science from EAFIT, Colombia. His areas of expertise are database technology, performance, and data warehousing. Hernando can be contacted at hbedoya@us.ibm.com .
 
 <!-- image -->
 
@@ -91,9 +91,9 @@ Businesses must make a seriou s effort to secure their data and recognize that s
 
 This chapter describes how you can secure and protect data in DB2 for i. The following topics are covered in this chapter:
 
--  Security fundamentals
--  Current state of IBM i security
--  DB2 for i security controls
+- Security fundamentals
+- Current state of IBM i security
+- DB2 for i security controls
 
 1 http://www.idtheftcenter.org
 
@@ -103,13 +103,13 @@ This chapter describes how you can secure and protect data in DB2 for i. The fol
 
 Before reviewing database security techniques, there are two fundamental steps in securing information assets that must be described:
 
--  First, and most important, is the definition of a company's security policy. y. Without a security policy, there is no definition of what are acceptable practices for using, accessing, and storing information by who, what, when, where, and how. A security policy should minimally address three things: confidentiality, integrity, and availability.
+- First, and most important, is the definition of a company's security policy. y. Without a security policy, there is no definition of what are acceptable practices for using, accessing, and storing information by who, what, when, where, and how. A security policy should minimally address three things: confidentiality, integrity, and availability.
 
 The monitoring and assessment of adherence to the security policy determines whether your security strategy is working. Often, IBM security consultants are asked to perform security assessments for companies without regard to the security policy. Although these assessments can be useful for observing how the system is defined and how data is being accessed, they cannot determine the level of security without a security policy. Without a security policy, it really is no t an assessment as much as it is a baseline for monitoring the changes in the security settings that are captured.
 
 A security policy is what defines whether the system and its settings are secure (or not).
 
--  The second fundamental in securing data assets is the use of resource security. y. If implemented properly, resource security prevents data breaches from both internal and external intrusions. Resource security controls are closely tied to the part of the security policy that defines who should have access to what information resources. A hacker might be good enough to get through your company firewalls and sift his way through to your system, but if they do not have explicit access to your database, the hacker cannot compromise your information assets.
+- The second fundamental in securing data assets is the use of resource security. y. If implemented properly, resource security prevents data breaches from both internal and external intrusions. Resource security controls are closely tied to the part of the security policy that defines who should have access to what information resources. A hacker might be good enough to get through your company firewalls and sift his way through to your system, but if they do not have explicit access to your database, the hacker cannot compromise your information assets.
 
 With your eyes now open to the importance of securing information assets, the rest of this chapter reviews the methods that are available for securing database resources on IBM i.
 
@@ -117,7 +117,7 @@ With your eyes now open to the importance of securing information assets, the re
 
 Because of the inherently secure nature of IBM i, many clients rely on the default system settings to protect their business data that is stored in DB2 for i. In most cases, this means no data protection because the default setting for the Create default public authority (QCRTAUT) system value is *CHANGE.
 
-Even more disturbing is that many IBM i clients remain in this state, despite the news headlines and the significant costs that are involved with databases being compromised. This default security configuration makes it quite challenging to implement basic security policies. A tighter implementation is required if you really want to protect one of your company’s most valuable assets, which is the data.
+Even more disturbing is that many IBM i clients remain in this state, despite the news headlines and the significant costs that are involved with databases being compromised. This default security configuration makes it quite challenging to implement basic security policies. A tighter implementation is required if you really want to protect one of your company's most valuable assets, which is the data.
 
 Traditionally, IBM i applications have employed menu-based security to counteract this default configuration that gives all users access to the data. The theory is that data is protected by the menu options controlling what database op erations that the user can perform. This approach is ineffective, even if the user profile is restricted from running interactive commands. The reason is that in today's connected world there are a multitude of interfaces into the system, from web browsers to PC clients, that bypass application menus. If there are no object-level controls, users of these newer interfaces have an open door to your data.
 
@@ -139,9 +139,9 @@ Figure 1-2 Existing row and column controls
 
 The following CL commands can be used to work with, display, or change function usage IDs:
 
--  Work Function Usage ( WRKFCNUSG )
--  Change Function Usage ( CHGFCNUSG )
--  Display Function Usage ( DSPFCNUSG )
+- Work Function Usage ( WRKFCNUSG )
+- Change Function Usage ( CHGFCNUSG )
+- Display Function Usage ( DSPFCNUSG )
 
 For example, the following CHGFCNUSG command shows granting authorization to user HBEDOYA to administer and manage RCAC rules:
 
@@ -159,11 +159,11 @@ Table 2-1 FUNCTION_USAGE view
 | USER_NAME VARCHAR(10) Name of the user pr   |           |                                                              | ofile that has a usage setting for this |
 |                                             | function. |                                                              |                                         |
 | USAGE VARCHAR(7) Usage setting:             |           |                                                              |                                         |
-|                                             |          | ALLOWED: The user profile is allowed to use the function.    |                                         |
-|                                             |          | DENIED: The user profile is not allowed to use the function. |                                         |
+|                                             |           | ALLOWED: The user profile is allowed to use the function.    |                                         |
+|                                             |           | DENIED: The user profile is not allowed to use the function. |                                         |
 | USER_TYPE VARCHAR(5) Type of user profile:  |           |                                                              |                                         |
-|                                             |          | USER: The user profile is a user.                            |                                         |
-|                                             |          | GROUP: The user profile is a group.                          |                                         |
+|                                             |           | USER: The user profile is a user.                            |                                         |
+|                                             |           | GROUP: The user profile is a group.                          |                                         |
 
 To discover who has authorization to define and manage RCAC, you can use the query that is shown in Example 2-1.
 
@@ -236,11 +236,11 @@ Table 3-1 Special registers and their corresponding values
 
 Figure 3-5 shows the difference in the special register values when an adopted authority is used:
 
--  A user connects to the server using the user profile ALICE.
--  USER and CURRENT USER initially have the same value of ALICE.
-- ALICE calls an SQL procedure that is named proc1, which is owned by user profile JOE  and was created to adopt JOE's authority when it is called.
--  While the procedure is running, the special register USER still contains the value of ALICE because it excludes any adopted authority. The special register CURRENT USER contains the value of JOE because it includes any adopted authority.
-- When proc1 ends, the session reverts to its original state with both USER and CURRENT  USER having the value of ALICE.
+- A user connects to the server using the user profile ALICE.
+- USER and CURRENT USER initially have the same value of ALICE.
+- ALICE calls an SQL procedure that is named proc1, which is owned by user profile JOE and was created to adopt JOE's authority when it is called.
+- While the procedure is running, the special register USER still contains the value of ALICE because it excludes any adopted authority. The special register CURRENT USER contains the value of JOE because it includes any adopted authority.
+- When proc1 ends, the session reverts to its original state with both USER and CURRENT USER having the value of ALICE.
 
 <!-- image -->
 
@@ -336,7 +336,7 @@ Figure 4-69 Index advice with no RCAC
 
 THEN C . CUSTOMER_TAX_ID WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'TELLER' ) = 1 THEN ( 'XXX-XX-' CONCAT QSYS2 . SUBSTR ( C . CUSTOMER_TAX_ID , 8 , 4 ) ) WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'CUSTOMER' ) = 1 THEN C . CUSTOMER_TAX_ID ELSE 'XXX-XX-XXXX' END ENABLE ; CREATE MASK BANK_SCHEMA.MASK_DRIVERS_LICENSE_ON_CUSTOMERS ON BANK_SCHEMA.CUSTOMERS AS C FOR COLUMN CUSTOMER_DRIVERS_LICENSE_NUMBER RETURN CASE WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'ADMIN' ) = 1 THEN C . CUSTOMER_DRIVERS_LICENSE_NUMBER WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'TELLER' ) = 1 THEN C . CUSTOMER_DRIVERS_LICENSE_NUMBER WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'CUSTOMER' ) = 1 THEN C . CUSTOMER_DRIVERS_LICENSE_NUMBER ELSE '*************' END ENABLE ; CREATE MASK BANK_SCHEMA.MASK_LOGIN_ID_ON_CUSTOMERS ON BANK_SCHEMA.CUSTOMERS AS C FOR COLUMN CUSTOMER_LOGIN_ID RETURN CASE WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'ADMIN' ) = 1 THEN C . CUSTOMER_LOGIN_ID WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'CUSTOMER' ) = 1 THEN C . CUSTOMER_LOGIN_ID ELSE '*****' END ENABLE ; CREATE MASK BANK_SCHEMA.MASK_SECURITY_QUESTION_ON_CUSTOMERS ON BANK_SCHEMA.CUSTOMERS AS C FOR COLUMN CUSTOMER_SECURITY_QUESTION RETURN CASE WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'ADMIN' ) = 1 THEN C . CUSTOMER_SECURITY_QUESTION WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'CUSTOMER' ) = 1 THEN C . CUSTOMER_SECURITY_QUESTION ELSE '*****' END ENABLE ; CREATE MASK BANK_SCHEMA.MASK_SECURITY_QUESTION_ANSWER_ON_CUSTOMERS ON BANK_SCHEMA.CUSTOMERS AS C FOR COLUMN CUSTOMER_SECURITY_QUESTION_ANSWER RETURN CASE WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'ADMIN' ) = 1 THEN C . CUSTOMER_SECURITY_QUESTION_ANSWER WHEN QSYS2 . VERIFY_GROUP_FOR_USER ( SESSION_USER , 'CUSTOMER' ) = 1 THEN C . CUSTOMER_SECURITY_QUESTION_ANSWER ELSE '*****' END ENABLE ; ALTER TABLE BANK_SCHEMA.CUSTOMERS ACTIVATE ROW ACCESS CONTROL ACTIVATE COLUMN ACCESS CONTROL ;
 
-# Row and Column Access Control Support in IBM DB2 for i
+## Row and Column Access Control Support in IBM DB2 for i
 
 Implement roles and separation of duties
 
