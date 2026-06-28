@@ -31,13 +31,19 @@ fn main() {
         let regions = layout
             .predict(&page.image, page.width, page.height)
             .expect("layout");
+        // docling resizes the whole page to 1024px height, then crops the table
+        // bbox out of *that*. Replicate so the model sees the same pixels.
+        let sf = 1024.0 / page.image.height() as f32;
+        let pw1024 = (page.image.width() as f32 * sf).round() as u32;
+        let page1024 = imageops::thumbnail(&page.image, pw1024, 1024);
         for r in regions.iter().filter(|r| r.label == "table") {
-            let s = page.scale;
-            let x = (r.l * s).max(0.0) as u32;
-            let y = (r.t * s).max(0.0) as u32;
-            let w = ((r.r - r.l) * s) as u32;
-            let h = ((r.b - r.t) * s) as u32;
-            let crop = imageops::crop_imm(&page.image, x, y, w, h).to_image();
+            // bbox (points) → 1024px-page coords: scale*sf = 1024/page_h_pt.
+            let k = 1024.0 / page.height;
+            let x = (r.l * k).max(0.0) as u32;
+            let y = (r.t * k).max(0.0) as u32;
+            let w = ((r.r - r.l) * k) as u32;
+            let h = ((r.b - r.t) * k) as u32;
+            let crop = imageops::crop_imm(&page1024, x, y, w, h).to_image();
             let otsl = tf.predict_otsl(&crop).expect("predict");
             let rows = otsl.iter().filter(|&&t| t == 9).count();
             let cols = otsl.iter().take_while(|&&t| t != 9).count();

@@ -4,7 +4,6 @@
 //! autoregressively to emit an OTSL structure-token sequence (the same model
 //! docling runs). See PDF_CONFORMANCE.md.
 
-use image::imageops::FilterType;
 use image::RgbImage;
 use ort::session::Session;
 use ort::value::Tensor;
@@ -65,7 +64,10 @@ impl TableFormer {
     /// Predict the OTSL structure-token sequence for a table-region image.
     pub fn predict_otsl(&mut self, img: &RgbImage) -> Result<Vec<i64>, String> {
         // Preprocess: resize to 448², normalize per channel, lay out CHW.
-        let resized = image::imageops::resize(img, SIDE, SIDE, FilterType::Triangle);
+        // docling's final 448 resize is BILINEAR (the page→1024px step that
+        // box-averages happens earlier, in the caller).
+        let resized =
+            image::imageops::resize(img, SIDE, SIDE, image::imageops::FilterType::Triangle);
         let n = (SIDE * SIDE) as usize;
         let mut data = vec![0f32; 3 * n];
         for (i, px) in resized.pixels().enumerate() {
