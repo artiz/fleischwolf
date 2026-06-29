@@ -139,6 +139,17 @@ fn parse_ordered_marker(s: &str) -> Option<(u64, String)> {
     Some((number, rest.trim_start().to_string()))
 }
 
+/// Escape markdown special characters the way docling-core's markdown serializer
+/// does (`markdown.py` post_process): `_` → `\_`, then HTML-escape `&`, `<`, `>`
+/// (quote=False, so quotes are left). Applied to prose (headings, list items,
+/// paragraphs); code blocks, the formula placeholder, and table cells are left raw.
+fn md_escape(text: &str) -> String {
+    text.replace('_', "\\_")
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
 fn clean_text(text: &str) -> String {
     let replaced = text
         .replace("\u{2} ", "")
@@ -510,7 +521,10 @@ pub fn assemble_page(
         match region.label {
             // docling renders both the document title and section headers as
             // `##` (it never emits a top-level `#` for PDFs), so match that.
-            "title" | "section_header" => doc.push(Node::Heading { level: 2, text }),
+            "title" | "section_header" => doc.push(Node::Heading {
+                level: 2,
+                text: md_escape(&text),
+            }),
             // docling drops the rendered bullet glyph; the Markdown serializer
             // adds its own `- ` marker. An item whose text opens with an `N.`
             // enumeration marker is an ordered item (rendered `N. text`).
@@ -524,7 +538,7 @@ pub fn assemble_page(
                         ordered: true,
                         number,
                         first_in_list: false,
-                        text: rest,
+                        text: md_escape(&rest),
                         level: 0,
                     });
                 } else {
@@ -532,7 +546,7 @@ pub fn assemble_page(
                         ordered: false,
                         number: 0,
                         first_in_list: false,
-                        text: stripped,
+                        text: md_escape(&stripped),
                         level: 0,
                     });
                 }
@@ -582,7 +596,9 @@ pub fn assemble_page(
                 }
             }
             // text, caption, footnote → paragraph
-            _ => doc.push(Node::Paragraph { text }),
+            _ => doc.push(Node::Paragraph {
+                text: md_escape(&text),
+            }),
         }
     }
 }
