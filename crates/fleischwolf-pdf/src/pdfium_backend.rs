@@ -399,6 +399,34 @@ fn glyphs(b: &dyn PdfiumLibraryBindings, tp: FPDF_TEXTPAGE, fetch_font: bool) ->
             out.swap(i, i + 1);
         }
     }
+    // Reconstruct degenerate (zero-width) loose space boxes by spanning the gap to
+    // the next glyph on the same line, so the sanitizer keeps them as word
+    // separators rather than dropping them (which would merge `Information systems`
+    // → `Informationsystems`). pdfium gives generated spaces a zero-width box at a
+    // wrong baseline; a wrap (different baseline) or a touching gap is left alone.
+    for i in 0..out.len() {
+        if out[i].ch != ' ' || (out[i].lr - out[i].ll).abs() >= 0.5 {
+            continue;
+        }
+        let prev = out[..i]
+            .iter()
+            .rev()
+            .find(|g| g.ch != ' ' && g.ll.is_finite())
+            .map(|g| (g.lr, g.lb, g.lt));
+        let next = out[i + 1..]
+            .iter()
+            .find(|g| g.ch != ' ' && g.ll.is_finite())
+            .map(|g| (g.ll, g.lb));
+        if let (Some((plr, plb, plt)), Some((nll, nlb))) = (prev, next) {
+            let line_h = (plt - plb).abs().max(1.0);
+            if (plb - nlb).abs() < line_h * 0.5 && nll > plr + 0.5 {
+                out[i].ll = plr;
+                out[i].lr = nll;
+                out[i].lb = plb;
+                out[i].lt = plt;
+            }
+        }
+    }
     out
 }
 
