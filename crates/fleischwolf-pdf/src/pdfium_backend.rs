@@ -178,13 +178,24 @@ struct FfiText<'a> {
     doc: FPDF_DOCUMENT,
 }
 
-/// One glyph: codepoint + native (bottom-left) box edges.
-struct Glyph {
-    ch: char,
-    l: f32,
-    b: f32,
-    r: f32,
-    t: f32,
+/// One glyph: codepoint + native (y-up) box edges. `l/b/r/t` is pdfium's *tight*
+/// ink box (used by the legacy `lines_from_glyphs`); `ll/lb/lr/lt` is the *loose*
+/// box (font ascent/descent + advance — uniform per font/size), which the
+/// docling-parse-style sanitizer needs so adjacent glyphs share a top edge.
+pub(crate) struct Glyph {
+    pub(crate) ch: char,
+    pub(crate) l: f32,
+    pub(crate) b: f32,
+    pub(crate) r: f32,
+    pub(crate) t: f32,
+    pub(crate) ll: f32,
+    pub(crate) lb: f32,
+    pub(crate) lr: f32,
+    pub(crate) lt: f32,
+    /// Hash of the PDF font name + flags (0 when not fetched). The sanitizer uses
+    /// it for docling-parse's `enforce_same_font` (keeps a bold label and regular
+    /// value as separate line cells, e.g. `LABEL : value`).
+    pub(crate) font: u64,
 }
 
 impl<'a> FfiText<'a> {
@@ -211,10 +222,18 @@ impl<'a> FfiText<'a> {
         let out = if tp.is_null() {
             empty()
         } else {
-            let g = glyphs(b, tp);
+            let dp = std::env::var("DOCLING_DP_LINES").is_ok();
+            let g = glyphs(b, tp, dp);
             b.FPDFText_ClosePage(tp);
+            // Prose line cells: the docling-parse-style sanitizer (behind a flag
+            // while it's validated) or the legacy gap-heuristic reconstruction.
+            let prose = if dp {
+                crate::dp_lines::line_cells(&g, page_h)
+            } else {
+                lines_from_glyphs(&g, page_h, false)
+            };
             (
-                lines_from_glyphs(&g, page_h, false),
+                prose,
                 lines_from_glyphs(&g, page_h, true),
                 words_from_glyphs(&g, page_h),
             )
@@ -240,7 +259,7 @@ impl Drop for FfiText<'_> {
 /// Debug helper: the raw pdfium glyph stream (codepoint + native bottom-left
 /// box) for a page, in pdfium's character order. For comparing against
 /// docling-parse's char cells.
-pub fn debug_glyphs(bytes: &[u8], index: i32) -> Vec<(char, f32, f32, f32, f32)> {
+pub fn debug_glyphs(bytes: &[u8], index: i32) -> Vec<(char, f32, u64)> {
     let Ok(pdfium) = bind() else {
         return Vec::new();
     };
@@ -256,8 +275,8 @@ pub fn debug_glyphs(bytes: &[u8], index: i32) -> Vec<(char, f32, f32, f32, f32)>
     let tp = b.FPDFText_LoadPage(page);
     let mut out = Vec::new();
     if !tp.is_null() {
-        for g in glyphs(b, tp) {
-            out.push((g.ch, g.l, g.b, g.r, g.t));
+        for g in glyphs(b, tp, true) {
+            out.push((g.ch, g.l, g.font));
         }
         b.FPDFText_ClosePage(tp);
     }
@@ -265,7 +284,29 @@ pub fn debug_glyphs(bytes: &[u8], index: i32) -> Vec<(char, f32, f32, f32, f32)>
     out
 }
 
-fn glyphs(b: &dyn PdfiumLibraryBindings, tp: FPDF_TEXTPAGE) -> Vec<Glyph> {
+/// Hash a glyph's PDF font name + flags, for `enforce_same_font`. 0 if unavailable.
+fn font_hash(b: &dyn PdfiumLibraryBindings, tp: FPDF_TEXTPAGE, i: i32) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut flags: std::os::raw::c_int = 0;
+    let len = b.FPDFText_GetFontInfo(tp, i, std::ptr::null_mut(), 0, &mut flags);
+    if len == 0 {
+        return 0;
+    }
+    let mut buf = vec![0u8; len as usize];
+    b.FPDFText_GetFontInfo(
+        tp,
+        i,
+        buf.as_mut_ptr() as *mut std::os::raw::c_void,
+        len,
+        &mut flags,
+    );
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    buf.hash(&mut h);
+    flags.hash(&mut h);
+    h.finish()
+}
+
+fn glyphs(b: &dyn PdfiumLibraryBindings, tp: FPDF_TEXTPAGE, fetch_font: bool) -> Vec<Glyph> {
     let n = b.FPDFText_CountChars(tp);
     let mut out = Vec::with_capacity(n.max(0) as usize);
     for i in 0..n {
@@ -276,18 +317,42 @@ fn glyphs(b: &dyn PdfiumLibraryBindings, tp: FPDF_TEXTPAGE) -> Vec<Glyph> {
         if ch == '\r' || ch == '\n' {
             continue;
         }
+        let font = if fetch_font { font_hash(b, tp, i) } else { 0 };
+        let (mut l, mut r, mut bot, mut top) = (0f64, 0f64, 0f64, 0f64);
+        let has_box = b.FPDFText_GetCharBox(tp, i, &mut l, &mut r, &mut bot, &mut top) != 0;
+        // Loose box: font ascent/descent + glyph advance, uniform per font/size.
+        let mut lr = FS_RECTF {
+            left: 0.0,
+            top: 0.0,
+            right: 0.0,
+            bottom: 0.0,
+        };
+        let (ll, lb, lrt, ltop) = if b.FPDFText_GetLooseCharBox(tp, i, &mut lr) != 0 {
+            (lr.left, lr.bottom, lr.right, lr.top)
+        } else if has_box {
+            (l as f32, bot as f32, r as f32, top as f32)
+        } else {
+            (f32::NAN, 0.0, 0.0, 0.0)
+        };
         if ch.is_whitespace() {
+            // Keep the space *with its box* (the docling-parse-style line sanitizer
+            // needs literal space glyphs); NaN `l` if pdfium reports no box (the
+            // legacy `lines_from_glyphs` ignores the box and only flags a space).
             out.push(Glyph {
                 ch: ' ',
-                l: f32::NAN,
-                b: 0.0,
-                r: 0.0,
-                t: 0.0,
+                l: if has_box { l as f32 } else { f32::NAN },
+                b: if has_box { bot as f32 } else { 0.0 },
+                r: if has_box { r as f32 } else { 0.0 },
+                t: if has_box { top as f32 } else { 0.0 },
+                ll,
+                lb,
+                lr: lrt,
+                lt: ltop,
+                font,
             });
             continue;
         }
-        let (mut l, mut r, mut bot, mut top) = (0f64, 0f64, 0f64, 0f64);
-        if b.FPDFText_GetCharBox(tp, i, &mut l, &mut r, &mut bot, &mut top) == 0 {
+        if !has_box {
             continue;
         }
         out.push(Glyph {
@@ -296,6 +361,11 @@ fn glyphs(b: &dyn PdfiumLibraryBindings, tp: FPDF_TEXTPAGE) -> Vec<Glyph> {
             b: bot as f32,
             r: r as f32,
             t: top as f32,
+            ll,
+            lb,
+            lr: lrt,
+            lt: ltop,
+            font,
         });
     }
     // pdfium splits the Arabic lam-alef ligature into two chars at the *same* x

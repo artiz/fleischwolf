@@ -10,6 +10,7 @@
 //! table-structure and OCR ONNX stages land behind [`Pipeline`] next.
 
 mod assemble;
+mod dp_lines;
 pub mod layout;
 mod mets;
 mod ocr;
