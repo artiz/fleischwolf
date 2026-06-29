@@ -105,9 +105,6 @@ impl Pipeline {
         // is gigabytes for a multi-thousand-page document and drives the machine
         // into swap).
         let mut doc = DoclingDocument::new(name);
-        // The PDF groundtruth corpus predates docling-core's padded table
-        // serializer, so PDF output uses the compact `| a | b |` table form.
-        doc.compact_tables = true;
         pdfium_backend::for_each_page(bytes, password, |n, _total, mut page| {
             self.process_one_page(n, &mut page, &mut doc)
         })?;
@@ -187,7 +184,6 @@ impl Pipeline {
         name: &str,
     ) -> Result<DoclingDocument, PdfError> {
         let mut doc = DoclingDocument::new(name);
-        doc.compact_tables = true; // compact table form for PDF/image/METS output
         for (n, page) in pages.iter_mut().enumerate() {
             self.process_one_page(n, page, &mut doc)?;
         }
