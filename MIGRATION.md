@@ -10,8 +10,11 @@ phased plan is kept at the end as history.)
 > (legacy + a Rust-only *strict* mode), docling-native **JSON** output, and
 > **image extraction**. The declarative formats are pure-Rust and checked
 > byte-for-byte against *live* docling; the PDF/image/METS ML path lives in
-> `fleischwolf-pdf` and is checked against a deterministic snapshot baseline.
-> `cargo test` is green (unit tests + a 131-source output-regression suite).
+> `fleischwolf-pdf` (pdfium + ONNX layout/TableFormer/OCR + a port of
+> docling-parse's line sanitizer) and is also measured byte-for-byte against live
+> docling — **4 / 14 PDF fixtures exact** (see `PDF_CONFORMANCE.md`), with a
+> snapshot baseline guarding against regressions. `cargo test` is green (unit
+> tests + a 131-source output-regression suite).
 
 ---
 
@@ -79,15 +82,17 @@ PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
 Shared OOXML infrastructure (`ooxml.rs`): a `zip` reader, `.rels` parsing, part
 content-type resolution, and image extraction — reused by DOCX/PPTX/XLSX/EPUB.
 
-### ML formats — `fleischwolf-pdf`, snapshot baseline
+### ML formats — `fleischwolf-pdf`
 
-These run docling's *discriminative* PDF pipeline ported to ONNX. Output is **not
-byte-for-byte** with docling (different OCR/table models — §4); it is pinned by a
-deterministic snapshot (`scripts/pdf_conformance.sh`, **76/76 exact**).
+These run docling's *discriminative* PDF pipeline ported to ONNX. They are now
+measured **byte-for-byte against live docling** (the committed PDF groundtruth is
+regenerated from it): **4 / 14 exact**, the rest close — see `PDF_CONFORMANCE.md`.
+A deterministic snapshot baseline (`scripts/pdf_conformance.sh`) still guards
+against regressions.
 
 | Format | How |
 |---|---|
-| PDF | pdfium text cells + page render → RT-DETR layout (ONNX) → PP-OCRv3 OCR for scanned pages → geometric table reconstruction → reading-order assembly |
+| PDF | pdfium glyph cells + page render → RT-DETR layout (ONNX) → **TableFormer** table structure (ONNX) → PP-OCRv3 OCR for scanned pages → **docling-parse line sanitizer** (`dp_lines.rs`) + reading-order assembly |
 | Images (tiff/webp/png/jpeg) | the same pipeline, image as a single page |
 | METS / Google Books | `.tar.gz` of per-page hOCR + TIFF → cells from hOCR → the same layout+assembly path (no OCR needed) |
 
@@ -135,31 +140,33 @@ These are deliberate or unavoidable divergences, not bugs.
    entity re-escaping); `strict` produces cleaner Markdown. docling has no such
    switch. All conformance numbers are measured in **legacy** mode.
 
-4. **Tables use the committed groundtruth's compact `| - |` format.** The whole
-   committed groundtruth corpus (HTML, CSV, LaTeX, PDF, …) uses docling-core's
-   older minimal serializer (`| a | b |` cells, single-dash `| - | - |`
-   separators, no width padding). `fleischwolf` now emits that exact format so it
-   matches the conformance reference byte-for-byte, which is required for the PDF
-   table work (TableFormer) to land conformant output. (Current docling-core emits
-   *padded* GitHub tables; we deliberately target the committed fixtures instead.)
+4. **Tables use docling-core's padded GitHub format.** All backends emit the
+   width-padded `tabulate(tablefmt="github")` tables that current published
+   docling produces (columns padded to header-width+2 or the widest data cell,
+   numeric columns right-aligned). The PDF groundtruth was regenerated from live
+   docling to match. (An earlier compact `| - |` variant — to match a stale
+   committed corpus — was reverted; the `compact_tables` option still exists but
+   no backend sets it.)
 
-5. **The PDF pipeline is discriminative and partial.** Ported from docling's
-   standard pipeline, with substitutions:
+5. **The PDF pipeline is discriminative and byte-measured.** Ported from
+   docling's standard pipeline:
    - **Layout** — RT-DETR (`docling-layout-heron`) exported to ONNX, run via
      `ort`. Same model family as docling.
    - **OCR** — PP-OCRv3 recognition (RapidOCR) via ONNX, *not* docling's default
      EasyOCR; different recognizer → different scanned text.
-   - **Tables** — *geometric* grid reconstruction (cluster cells into rows/cols),
-     **not TableFormer** (docling's autoregressive table-structure model). Table
-     structure is approximate; complex spans are not recovered.
-   - **Text assembly** — line cells are joined in reading order; soft-hyphen line
-     wraps (pdfium emits the wrap hyphen as the U+0002 control char) are undone so
-     `com-`/`pact` rejoins as `compact`, and curly quotes/ellipsis are mapped to
-     ASCII — both matching docling. Token spacing is a plain single-space join:
-     docling's per-glyph spacing comes from the PDF *text stream*, which the
-     segment-based path can't reproduce, so citation/footnote spacing (e.g.
-     `[ 37 , 36 ]` vs `[37, 36]`) can still differ.
-   - Output is therefore a **snapshot baseline**, never byte-for-byte with docling.
+   - **Tables** — **TableFormer** (image encoder + autoregressive OTSL structure
+     decoder + cell-bbox decoder, ported to ONNX), on a cv2-exact preprocessed
+     crop. Reproduces docling's padded GitHub tables — `2305-pg9` is cell-for-cell
+     exact; multi-row headers / spans on the dense papers still differ.
+   - **Text assembly** — a port of docling-parse's line sanitizer (`dp_lines.rs`):
+     3-pass corner-distance contraction with gap-proportional space insertion,
+     `enforce_same_font`, ligature recomposition, loose-box geometry. Plus
+     docling's markdown escaping, wrap dehyphenation, paragraph-continuation
+     merging, and band-aware two-column reading order. Default; set
+     `DOCLING_LEGACY_LINES` for the old gap-heuristic join.
+   - Output is measured **byte-for-byte against live docling** (PDF_CONFORMANCE.md):
+     **4 / 14 exact**, the rest close. The remaining gaps are model-level
+     (TableFormer structure on complex tables, layout classification, RTL).
 
 6. **Extracted image bytes are real but not byte-identical.** Cropped/embedded
    pixels are correct, but the PNG re-encoding differs from docling's, so the
@@ -184,7 +191,10 @@ Explicitly **not done**, with the reason:
 - **VLM pipelines** (SmolDocling / remote VLM) and **enrichment models** (picture
   classification, formula understanding, code understanding). Model-bound; out of
   scope for the discriminative port.
-- **TableFormer.** Replaced by geometric table reconstruction (§4.5).
+
+(**TableFormer is now done** — ported to ONNX and run on every table region; see
+§5 and `PDF_CONFORMANCE.md`. Geometric reconstruction remains only as the fallback
+when the TableFormer graphs aren't present.)
 - **XML DocLang / DocTags** input backend — no `.dclg` sources in the corpus to
   verify against, and not in the requested scope.
 - **Older patent schemas.** USPTO covers the modern `v4x` XML only; the
