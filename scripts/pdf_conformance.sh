@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regenerate PDF output for the test corpus and diff it against the committed
-# snapshot baseline (tests/pdf_snapshots/). The pipeline is deterministic, so a
+# snapshot baseline (tests/snapshots/). The pipeline is deterministic, so a
 # clean checkout should report every fixture EXACT; a non-zero diff means the
 # output drifted. Run scripts/pdf_setup.sh first to fetch the libs/models.
 set -euo pipefail
@@ -23,7 +23,7 @@ cargo run --release -q -p fleischwolf-pdf --example snapshot -- tests/data "$tmp
 
 exact=0; drift=0; tot=0
 while IFS= read -r snap; do
-  rel="${snap#tests/pdf_snapshots/}"
+  rel="${snap#tests/snapshots/}"
   gen="$tmp/$rel"
   tot=$((tot + 1))
   if [ -f "$gen" ] && diff -q "$snap" "$gen" >/dev/null 2>&1; then
@@ -33,7 +33,7 @@ while IFS= read -r snap; do
     d=$(diff "$snap" "$gen" 2>/dev/null | grep -cE '^[<>]' || true)
     printf "  %-55s %s\n" "$rel" "${d:-MISSING}"
   fi
-done < <(find tests/pdf_snapshots -name '*.md' | sort)
+done < <(find tests/snapshots -name '*.md' | sort)
 
 echo "PDF snapshot conformance: $exact/$tot exact ($drift drifted)"
 [ "$drift" -eq 0 ]
