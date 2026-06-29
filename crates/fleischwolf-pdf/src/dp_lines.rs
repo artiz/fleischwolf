@@ -73,15 +73,21 @@ impl Cell {
     /// `merge_with`: absorb `other` (which lies to this cell's right). Insert at
     /// most one separator space when the gap exceeds `delta`. RTL prepends.
     fn merge_with(&mut self, other: &Cell, delta: f64) {
-        let d0 = self.gap(other);
+        // Signed horizontal gap, not the Euclidean corner distance used for
+        // adjacency: pdfium's loose boxes for overhanging glyphs (`f`, etc.) extend
+        // left and overlap the previous glyph, which a Euclidean distance reads as a
+        // positive gap and over-inserts a space (`Self` → `Sel f`, `specify` →
+        // `specif y`). An overlap is a negative gap → no space; a real (justified)
+        // gap is positive → space.
+        let h_gap = other.rx0 - self.rx1;
         if !self.ltr || !other.ltr {
-            if delta < d0 {
+            if delta < h_gap {
                 self.text.insert(0, ' ');
             }
             self.text = format!("{}{}", other.text, self.text);
             self.ltr = false;
         } else {
-            if delta < d0 {
+            if delta < h_gap {
                 self.text.push(' ');
             }
             self.text.push_str(&other.text);

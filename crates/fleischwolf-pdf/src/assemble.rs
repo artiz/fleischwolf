@@ -158,6 +158,7 @@ fn clean_text(text: &str) -> String {
         .replace(['\u{2018}', '\u{2019}'], "'") // ‘ ’ → '
         .replace(['\u{201c}', '\u{201d}'], "\"") // “ ” → "
         .replace(['\u{2013}', '\u{2014}', '\u{2212}'], "-") // – — − → -
+        .replace('\u{2044}', "/") // ⁄ fraction slash → /
         .replace('\u{2026}', "..."); // … → ...
     let out = if crate::pdfium_backend::use_dp_lines() {
         // The docling-parse sanitizer already placed the correct spacing (e.g.
