@@ -177,7 +177,7 @@ case — see the divergence table below.
 | **PPTX** | **7 / 7** ✅ | 7 / 7 |
 | **DOCX** | **25 / 26** | 25 / 26 |
 | **HTML** | **28 / 33** | 28 / 33 |
-| **PDF** | **3 / 14** † | 4 / 14 |
+| **PDF** | **4 / 14** † | 5 / 14 |
 
 > † The pure-parse backends above are scored against **live** docling. **PDF** is
 > scored against the committed groundtruth corpus (`tests/data/pdf/groundtruth`)
@@ -193,15 +193,16 @@ port: image encoder + autoregressive OTSL structure decoder + cell-bbox decoder,
 exported to ONNX — see `tableformer.rs`, with cv2-exact `INTER_AREA`/`INTER_LINEAR`
 preprocessing in `resample.rs`), and **PaddleOCR** recognition for scanned /
 image-only pages — and regions are assembled in reading order into a
-`DoclingDocument`. Byte-exact today: `picture_classification`, `code_and_formula`,
-and `2305.03393v1-pg9` (**including its TableFormer-reconstructed table, cell for
-cell**). The rest are structurally correct but not byte-exact, and the ceiling is
-the **text extractor**: pdfium differs from docling's own `docling-parse` C++
-parser at text-run boundaries (inter-run spacing such as `LABEL :`, `<td>`, and
-fractions) and on right-to-left scripts (bidi reordering + Arabic lam-alef ligature
-decomposition) — differences a pdfium-based port cannot close without porting
-docling-parse itself. Closest non-exact: `right_to_left_01` (within one line),
-`amt_handbook_sample` (~8 lines).
+`DoclingDocument`. Text reconstruction ports **docling-parse's line sanitizer**
+(`dp_lines.rs`, from `cells.h`): the 3-pass corner-distance contraction with
+`merge_with` space insertion, `enforce_same_font`, ligature recomposition, and
+loose-box geometry — fed by pdfium glyphs. This closed the text-run-boundary gap
+that previously capped conformance (inter-run spacing like `LABEL :`, justified
+double-spacing, lam-alef ordering). Byte-exact today: `picture_classification`,
+`code_and_formula`, `2305.03393v1-pg9` (**including its TableFormer-reconstructed
+table, cell for cell**), and `multi_page`. The rest are structurally correct but
+not yet byte-exact — the remaining gaps are justified RTL double-spaces
+(`right_to_left_01`, within one line) and table reading-order on dense papers.
 
 **DOCX** (`*.docx`) is a core port of `MsWordDocumentBackend` (`roxmltree` over
 the `ooxml` helper): paragraphs, headings (by style, incl. Title), **numbered
