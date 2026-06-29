@@ -6,19 +6,23 @@
 # publishes the changed crates. A clean no-op when no release-worthy commit
 # landed since the last tag.
 #
-# The release commit is pushed with the workflow's GITHUB_TOKEN and carries
-# `[skip ci]`, so it does not re-trigger CI (no release loop).
+# The release commit is pushed with RELEASE_PAT (an admin token, so it satisfies
+# the master branch ruleset) and carries `[skip ci]`, so it does not re-trigger CI.
+#
+# Set FORCE_VERSION=X.Y.Z to (re)publish that exact version instead of computing it
+# from the commit history — used to release a version a failed/blocked run skipped.
 #
 # Requires: CARGO_REGISTRY_TOKEN (publish) and push access to master.
 # Usage: scripts/release.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-new="$(scripts/bump_version.sh)"
+new="${FORCE_VERSION:-$(scripts/bump_version.sh)}"
 if [[ -z "$new" ]]; then
   echo "No release-worthy commits since the last tag — nothing to release."
   exit 0
 fi
+[[ -n "${FORCE_VERSION:-}" ]] && echo ">> forced release of v$new"
 
 current="$(grep -m1 '^version = ' Cargo.toml | sed -E 's/.*"([^"]+)".*/\1/')"
 echo ">> releasing v$new (was v$current)"
@@ -36,8 +40,17 @@ done
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git add Cargo.toml crates/*/Cargo.toml
-git commit -m "chore(release): v$new [skip ci]"
-git tag -a "v$new" -m "v$new"
+# Commit only if the bump changed something — a forced re-publish of a version
+# whose manifests are already at $new has nothing to commit.
+if git diff --cached --quiet; then
+  echo ">> manifests already at v$new — re-tagging / re-publishing only"
+else
+  git commit -m "chore(release): v$new [skip ci]"
+fi
+# Tag only if it doesn't already exist (idempotent for a forced re-publish).
+if ! git rev-parse -q --verify "refs/tags/v$new" >/dev/null; then
+  git tag -a "v$new" -m "v$new"
+fi
 git push origin HEAD:master
 git push origin "v$new"
 

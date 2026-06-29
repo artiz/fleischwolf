@@ -5,9 +5,15 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  # Manual re-run from the Actions tab / `gh workflow run`. Runs lint + test only;
-  # the release job is gated to `push` events, so a manual run never publishes.
+  # Manual re-run from the Actions tab / `gh workflow run`. Left blank it runs lint
+  # + test only; set `force_version` to (re)publish that exact version — use it to
+  # release a version a failed/blocked run skipped (e.g. the master-ruleset reject).
   workflow_dispatch:
+    inputs:
+      force_version:
+        description: "Force a release at this exact version (e.g. 0.3.0). Blank = lint+test only, no publish."
+        required: false
+        default: ""
 
 # Cancel superseded PR runs, but never interrupt a master run (it may publish).
 concurrency:
@@ -62,7 +68,9 @@ jobs:
   publish:
     name: release & publish
     needs: [lint, test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.force_version != '')
     runs-on: ubuntu-latest
     permissions:
       contents: write # push the version-bump commit + tag
@@ -70,17 +78,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # full history + tags, for the semantic version bump
+          # Push the release commit + tag as an admin PAT so it satisfies the
+          # `master` ruleset; the default GITHUB_TOKEN can't be granted a bypass.
+          token: ${{ secrets.RELEASE_PAT }}
 
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
 
-      # Decide the next version from conventional commits since the last tag; if
-      # there is one, bump + commit + tag it, push to master, and publish the
-      # crates (in dependency order, skipping any already on crates.io). A no-op
-      # when no release-worthy commit landed. The release commit is pushed with
-      # GITHUB_TOKEN and carries [skip ci], so it does not re-trigger CI.
+      # Decide the next version from conventional commits since the last tag (or
+      # use force_version on a manual dispatch); if there is one, bump + commit +
+      # tag it, push to master, and publish the crates (in dependency order,
+      # skipping any already on crates.io). A no-op when no release-worthy commit
+      # landed. The release commit is pushed with RELEASE_PAT (an admin token, so
+      # it satisfies the master ruleset) and carries [skip ci], so it does not
+      # re-trigger CI.
       - name: Release & publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          FORCE_VERSION: ${{ github.event.inputs.force_version }}
         run: bash scripts/release.sh
