@@ -157,7 +157,7 @@ fn clean_text(text: &str) -> String {
         .replace(['\u{2}', '\u{ad}'], "") // any stray wrap hyphens not at a join
         .replace(['\u{2018}', '\u{2019}'], "'") // ‘ ’ → '
         .replace(['\u{201c}', '\u{201d}'], "\"") // “ ” → "
-        .replace(['\u{2013}', '\u{2014}'], "-") // – — → -
+        .replace(['\u{2013}', '\u{2014}', '\u{2212}'], "-") // – — − → -
         .replace('\u{2026}', "..."); // … → ...
     let out = if crate::pdfium_backend::use_dp_lines() {
         // The docling-parse sanitizer already placed the correct spacing (e.g.
@@ -613,11 +613,11 @@ pub(crate) fn merge_continuations(nodes: &mut Vec<Node>) {
     while i + 1 < nodes.len() {
         let merged = match (&nodes[i], &nodes[i + 1]) {
             (Node::Paragraph { text: a }, Node::Paragraph { text: b }) => {
-                let a_open = a
-                    .trim_end()
-                    .chars()
-                    .next_back()
-                    .is_some_and(|c| c.is_alphabetic());
+                // Open if the fragment ends mid-word (a letter) or with a wrap
+                // hyphen/dash — docling joins `vocab-` + `ulary` → `vocab- ulary`.
+                let a_open = a.trim_end().chars().next_back().is_some_and(|c| {
+                    c.is_alphabetic() || matches!(c, '-' | '\u{2010}' | '\u{2013}' | '\u{2014}')
+                });
                 let b_cont = b
                     .trim_start()
                     .chars()
