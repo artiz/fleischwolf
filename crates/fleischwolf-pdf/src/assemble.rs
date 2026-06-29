@@ -197,6 +197,11 @@ fn fix_arabic_lam_alef(s: &str) -> String {
             && chars.get(i + 1) == Some(&'\u{0644}')
             && i > 0
             && is_arabic_letter(chars[i - 1])
+            // A preceding lam means this alef-variant is *already* the logical
+            // `lam + alef` ligature; the following lam is the next syllable's
+            // letter, not a reversed ligature — swapping it corrupts `لآل` → `للآ`
+            // (e.g. التعلم الآلي → الآلي, not اللآي).
+            && chars[i - 1] != '\u{0644}'
         {
             a.push('\u{0644}');
             a.push(c);
@@ -736,5 +741,22 @@ mod tests {
         // The dp default (the docling-parse sanitizer) preserves internal spacing
         // it placed deliberately; line breaks/tabs normalize to a space, ends trim.
         assert_eq!(clean_text("a   b\nc"), "a   b c");
+    }
+
+    #[test]
+    fn lam_alef_only_swaps_a_genuinely_reversed_ligature() {
+        // A mid-word `alef-variant + lam` is pdfium's reversed lam-alef ligature and
+        // is swapped back to logical `lam + alef-variant` (`ب أ ل` → `ب ل أ`).
+        assert_eq!(
+            clean_text("\u{0628}\u{0623}\u{0644}"),
+            "\u{0628}\u{0644}\u{0623}"
+        );
+        // But when the alef-variant is *already* preceded by a lam it is the logical
+        // ligature `لآ`; the following lam is the next syllable's letter and must not
+        // move. `التعلم الآلي` must stay `الآلي`, not become `اللآي`.
+        assert_eq!(
+            clean_text("\u{0627}\u{0644}\u{0622}\u{0644}\u{064a}"),
+            "\u{0627}\u{0644}\u{0622}\u{0644}\u{064a}"
+        );
     }
 }
