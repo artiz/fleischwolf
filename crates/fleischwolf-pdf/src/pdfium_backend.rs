@@ -627,7 +627,8 @@ fn is_close_punct(c: char) -> bool {
 }
 
 fn is_open_punct(c: char) -> bool {
-    matches!(c, '(' | '[' | '{')
+    // `@` glues to what follows (`mAP @0.5`, `bpf@zurich`, `@decorator`).
+    matches!(c, '(' | '[' | '{' | '@')
 }
 
 fn push_word(word: &mut String, words: &mut Vec<String>) {
