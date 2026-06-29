@@ -55,6 +55,13 @@ pub struct PdfDocument {
 /// Bind to the pdfium dynamic library. Honors `PDFIUM_DYNAMIC_LIB_PATH` (a
 /// directory or file), else the directory of the current exe, else the system
 /// library — mirroring how a deployment ships `libpdfium` alongside the binary.
+/// Whether to use the docling-parse line sanitizer ([`crate::dp_lines`]) for prose
+/// reconstruction — the default. Set `DOCLING_LEGACY_LINES` to fall back to the
+/// older gap-heuristic `lines_from_glyphs`.
+pub(crate) fn use_dp_lines() -> bool {
+    std::env::var("DOCLING_LEGACY_LINES").is_err()
+}
+
 fn bind() -> Result<Pdfium, PdfiumError> {
     if let Ok(path) = std::env::var("PDFIUM_DYNAMIC_LIB_PATH") {
         let name = Pdfium::pdfium_platform_library_name_at_path(&path);
@@ -222,7 +229,7 @@ impl<'a> FfiText<'a> {
         let out = if tp.is_null() {
             empty()
         } else {
-            let dp = std::env::var("DOCLING_DP_LINES").is_ok();
+            let dp = use_dp_lines();
             let g = glyphs(b, tp, dp);
             b.FPDFText_ClosePage(tp);
             // Prose line cells: the docling-parse-style sanitizer (behind a flag

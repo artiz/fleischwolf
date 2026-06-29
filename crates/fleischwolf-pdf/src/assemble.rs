@@ -122,7 +122,7 @@ fn clean_text(text: &str) -> String {
         .replace(['\u{201c}', '\u{201d}'], "\"") // “ ” → "
         .replace(['\u{2013}', '\u{2014}'], "-") // – — → -
         .replace('\u{2026}', "..."); // … → ...
-    let out = if std::env::var("DOCLING_DP_LINES").is_ok() {
+    let out = if crate::pdfium_backend::use_dp_lines() {
         // The docling-parse sanitizer already placed the correct spacing (e.g.
         // justified double spaces); preserve internal runs of spaces, only
         // normalizing line breaks/tabs and trimming the ends.
@@ -226,7 +226,7 @@ fn region_text(region: &Region, cells: &[TextCell]) -> String {
     // label and its value, `LABEL` | `: value` → `LABEL : value`. The legacy
     // reconstruction instead joins same-band cells with a space only across a real
     // gap, because it can split a word into abutting segments (`الت`|`ي` → `التي`).
-    let dp = std::env::var("DOCLING_DP_LINES").is_ok();
+    let dp = crate::pdfium_backend::use_dp_lines();
     let mut joined = String::new();
     let mut prev: Option<&&TextCell> = None;
     for c in &inside {
@@ -578,7 +578,8 @@ mod tests {
             "Graph's \"x\""
         );
         assert_eq!(clean_text("a\u{2026}"), "a...");
-        // Whitespace collapses; a normal space-join is preserved.
-        assert_eq!(clean_text("a   b\nc"), "a b c");
+        // The dp default (the docling-parse sanitizer) preserves internal spacing
+        // it placed deliberately; line breaks/tabs normalize to a space, ends trim.
+        assert_eq!(clean_text("a   b\nc"), "a   b c");
     }
 }
