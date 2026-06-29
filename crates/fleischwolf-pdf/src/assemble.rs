@@ -73,11 +73,37 @@ fn order_regions<T>(items: &mut [T], page_w: f32, reg: impl Fn(&T) -> &Region) {
         && items.iter().any(|t| reg(t).r <= cx)
         && items.iter().any(|t| reg(t).l >= cx);
     if two_col {
+        // Full-width regions (title, figures, wide tables spanning both columns)
+        // break the two-column flow into horizontal bands: within a band the left
+        // column reads fully then the right, and a full-width region reads after
+        // the band above it and before the band below. Band index = number of
+        // full-width regions above a region's top; column 1=left, 2=right,
+        // 3=full-width (so it sorts after that band's columns).
+        // Only a region spanning *most* of the page width is a band break (a
+        // title, a full-width figure/table) — a merely wide column region is not.
+        let full_band = page_w * 0.2;
+        let is_full = |r: &Region| r.l < cx - full_band && r.r > cx + full_band;
+        let full_tops: Vec<f32> = items
+            .iter()
+            .map(&reg)
+            .filter(|r| is_full(r))
+            .map(|r| r.t)
+            .collect();
+        let key = |r: &Region| -> (usize, u8) {
+            let bnd = full_tops.iter().filter(|&&ft| ft < r.t - 1.0).count();
+            let col = if is_full(r) {
+                3
+            } else if (r.l + r.r) / 2.0 >= cx {
+                2
+            } else {
+                1
+            };
+            (bnd, col)
+        };
         items.sort_by(|a, b| {
             let (a, b) = (reg(a), reg(b));
-            let ca = ((a.l + a.r) / 2.0) >= cx;
-            let cb = ((b.l + b.r) / 2.0) >= cx;
-            ca.cmp(&cb)
+            key(a)
+                .cmp(&key(b))
                 .then(a.t.total_cmp(&b.t))
                 .then(a.l.total_cmp(&b.l))
         });
