@@ -151,14 +151,16 @@ impl Cell {
             self.ltr = false;
             // RTL: `other` is logically first, so its words precede self's. The
             // junction is between other's last word and self's first.
-            self.words = merge_word_runs(other.words.clone(), std::mem::take(&mut self.words), space);
+            self.words =
+                merge_word_runs(other.words.clone(), std::mem::take(&mut self.words), space);
         } else {
             if space {
                 self.text.push(' ');
             }
             self.text.push_str(&other.text);
             self.ltr = true;
-            self.words = merge_word_runs(std::mem::take(&mut self.words), other.words.clone(), space);
+            self.words =
+                merge_word_runs(std::mem::take(&mut self.words), other.words.clone(), space);
         }
         // Extend the right edge to `other`.
         self.rx1 = other.rx1;
