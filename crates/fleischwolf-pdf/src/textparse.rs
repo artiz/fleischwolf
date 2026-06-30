@@ -71,6 +71,10 @@ struct Font {
     default_width: f64,
     /// 1-byte fallback decoding when ToUnicode lacks a code (WinAnsi-ish).
     simple_encoding: Option<HashMap<u8, char>>,
+    /// code → raw `/Differences` glyph name, for GID-style names (`g115`) that
+    /// have no Unicode mapping. docling-parse emits these verbatim as `/g115`
+    /// (see the redp5110 bulleted list); matching it keeps no text skipped.
+    fallback_names: HashMap<u8, String>,
     ascent: f64,
     descent: f64,
     hash: u64,
@@ -87,6 +91,11 @@ impl Font {
             return (Some(decompose_ligatures(s)), w);
         }
         if !self.two_byte {
+            // A GID-style `/Differences` name (no Unicode) overrides the base
+            // encoding, matching docling's verbatim `/g115` fallback.
+            if let Some(name) = self.fallback_names.get(&(code as u8)) {
+                return (Some(format!("/{name}")), w);
+            }
             if let Some(enc) = &self.simple_encoding {
                 if let Some(&ch) = enc.get(&(code as u8)) {
                     return (Some(decompose_ligatures(&ch.to_string())), w);
@@ -173,6 +182,11 @@ fn parse_font(doc: &Document, name: &[u8], fdict: &Dictionary) -> Font {
     } else {
         Some(simple_encoding_table(doc, fdict))
     };
+    let fallback_names = if two_byte {
+        HashMap::new()
+    } else {
+        differences_gid_names(doc, fdict)
+    };
 
     let (ascent, descent) = font_ascent_descent(doc, fdict, two_byte);
 
@@ -182,10 +196,69 @@ fn parse_font(doc: &Document, name: &[u8], fdict: &Dictionary) -> Font {
         widths,
         default_width,
         simple_encoding,
+        fallback_names,
         ascent,
         descent,
         hash: hash_name(name),
     }
+}
+
+/// Collect `/Differences` entries whose glyph name is a GID placeholder
+/// (`g115`, `cid42`, `glyph7`, `index9`) with no Unicode mapping. docling-parse
+/// emits such glyphs as the literal name `/g115`; mapping them here keeps the
+/// text from being silently dropped (subsetted fonts with no ToUnicode). The
+/// GID-name restriction keeps real Adobe glyph names on the normal path so this
+/// never invents garbage on the clean files.
+fn differences_gid_names(doc: &Document, fdict: &Dictionary) -> HashMap<u8, String> {
+    let mut map = HashMap::new();
+    let Some(Object::Dictionary(enc)) = fdict.get(b"Encoding").ok().and_then(|o| deref(doc, o))
+    else {
+        return map;
+    };
+    let Some(Object::Array(diffs)) = enc.get(b"Differences").ok().and_then(|o| deref(doc, o)) else {
+        return map;
+    };
+    let mut code = 0u8;
+    for el in diffs {
+        match el {
+            Object::Integer(i) => code = *i as u8,
+            Object::Name(name) => {
+                if glyph_name_to_char(name).is_none() && is_gid_name(name) {
+                    map.insert(code, String::from_utf8_lossy(name).into_owned());
+                }
+                code = code.wrapping_add(1);
+            }
+            _ => {}
+        }
+    }
+    map
+}
+
+/// A glyph name that is a synthetic placeholder, not a real Adobe name:
+/// `g115`, `cid42`, `glyph7`, `index9`, `G12`, or a short-prefix code name like
+/// `SM590000` (IBM BookMaster). These carry no Unicode meaning, and docling-parse
+/// emits them verbatim (`/SM590000`). `afii####` / `uni####` are real Adobe names
+/// and excluded. The restriction keeps genuine glyph names on the Unicode path.
+fn is_gid_name(name: &[u8]) -> bool {
+    let Ok(s) = std::str::from_utf8(name) else {
+        return false;
+    };
+    if s.starts_with("afii") || s.starts_with("uni") {
+        return false;
+    }
+    for prefix in ["g", "G", "cid", "CID", "glyph", "index"] {
+        if let Some(rest) = s.strip_prefix(prefix) {
+            if !rest.is_empty() && rest.bytes().all(|b| b.is_ascii_digit()) {
+                return true;
+            }
+        }
+    }
+    // Short alpha prefix (≤3 letters) followed by a run of ≥3 digits — synthetic
+    // code names like `SM590000`, distinct from real Adobe names (whole words or
+    // letter+`.suffix` variants).
+    let alpha = s.bytes().take_while(|b| b.is_ascii_alphabetic()).count();
+    let digits = s.len() - alpha;
+    (1..=3).contains(&alpha) && digits >= 3 && s.as_bytes()[alpha..].iter().all(|b| b.is_ascii_digit())
 }
 
 fn font_ascent_descent(doc: &Document, fdict: &Dictionary, two_byte: bool) -> (f64, f64) {
@@ -503,20 +576,92 @@ pub fn pdf_textlines(bytes: &[u8]) -> Vec<(f32, f32, Vec<crate::pdfium_backend::
         .collect()
 }
 
+/// The text-state scalars inherited by a Form XObject when it is invoked via
+/// `Do` (the PDF graphics state includes the text parameters, but not the text
+/// matrices, which a form re-establishes inside its own `BT`/`ET`).
+#[derive(Clone, Copy)]
+struct TextState {
+    tc: f64,
+    tw: f64,
+    th: f64,
+    tl: f64,
+    trise: f64,
+    fsize: f64,
+}
+
+impl TextState {
+    const INIT: TextState = TextState {
+        tc: 0.0,
+        tw: 0.0,
+        th: 1.0,
+        tl: 0.0,
+        trise: 0.0,
+        fsize: 0.0,
+    };
+}
+
+/// The effective `/Resources` dictionary for a page (inline or via reference,
+/// falling back to an inherited one from a `/Parent`).
+fn page_res(doc: &Document, page_id: lopdf::ObjectId) -> Option<&Dictionary> {
+    let (inline, ids) = doc.get_page_resources(page_id).ok()?;
+    if let Some(d) = inline {
+        return Some(d);
+    }
+    ids.into_iter().find_map(|id| doc.get_dictionary(id).ok())
+}
+
+/// Build the code→[`Font`] map for a resources dictionary's `/Font` sub-dict.
+fn fonts_from_res(doc: &Document, res: &Dictionary) -> HashMap<Vec<u8>, Font> {
+    let mut map = HashMap::new();
+    let font_dict = res
+        .get(b"Font")
+        .ok()
+        .and_then(|o| deref(doc, o))
+        .and_then(|o| o.as_dict().ok());
+    if let Some(fd) = font_dict {
+        for (name, value) in fd.iter() {
+            if let Some(fdict) = deref(doc, value).and_then(|o| o.as_dict().ok()) {
+                map.insert(name.clone(), parse_font(doc, name, fdict));
+            }
+        }
+    }
+    map
+}
+
 /// Extract every glyph on a page as a native-coordinate [`Glyph`].
 pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph> {
     let mut out = Vec::new();
-    let fonts_raw = doc.get_page_fonts(page_id).unwrap_or_default();
-    let fonts: HashMap<Vec<u8>, Font> = fonts_raw
-        .iter()
-        .map(|(name, dict)| (name.clone(), parse_font(doc, name, dict)))
-        .collect();
     let Ok(content_bytes) = doc.get_page_content(page_id) else {
         return out;
     };
     let Ok(content) = lopdf::content::Content::decode(&content_bytes) else {
         return out;
     };
+    if let Some(res) = page_res(doc, page_id) {
+        run_content(doc, res, &content, Mat::ID, TextState::INIT, 0, &mut out);
+    }
+    out
+}
+
+/// Run a content stream's operators, emitting glyphs into `out`. Recurses into
+/// Form XObjects on `Do` (bulk body text in heavy PDFs lives inside a form, not
+/// the page content stream). `res` is the resources dict in scope (the page's,
+/// or the form's own); `base_ctm` is the CTM at the point of invocation.
+fn run_content(
+    doc: &Document,
+    res: &Dictionary,
+    content: &lopdf::content::Content,
+    base_ctm: Mat,
+    init: TextState,
+    depth: u32,
+    out: &mut Vec<Glyph>,
+) {
+    let fonts = fonts_from_res(doc, res);
+    let xobjects = res
+        .get(b"XObject")
+        .ok()
+        .and_then(|o| deref(doc, o))
+        .and_then(|o| o.as_dict().ok());
 
     // Graphics + text state. `q`/`Q` save and restore the whole graphics state,
     // which includes the text parameters (Tc, Tw, Tz, TL, Tfs, Trise, font) —
@@ -524,16 +669,16 @@ pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph
     // set inside a `q…Q` block leak out and drift every later glyph.
     #[allow(clippy::type_complexity)]
     let mut gstate_stack: Vec<(Mat, f64, f64, f64, f64, f64, f64, Option<&Font>)> = Vec::new();
-    let mut ctm = Mat::ID;
+    let mut ctm = base_ctm;
     let mut tm = Mat::ID;
     let mut tlm = Mat::ID;
     let mut font: Option<&Font> = None;
-    let mut fsize = 0.0f64;
-    let mut tc = 0.0f64; // char spacing
-    let mut tw = 0.0f64; // word spacing
-    let mut th = 1.0f64; // horizontal scale (Tz/100)
-    let mut tl = 0.0f64; // leading
-    let mut trise = 0.0f64;
+    let mut fsize = init.fsize;
+    let mut tc = init.tc; // char spacing
+    let mut tw = init.tw; // word spacing
+    let mut th = init.th; // horizontal scale (Tz/100)
+    let mut tl = init.tl; // leading
+    let mut trise = init.trise;
 
     let op_f = |operands: &[Object], i: usize| operands.get(i).and_then(num).unwrap_or(0.0);
 
@@ -643,7 +788,7 @@ pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph
                     tm = tlm;
                 }
                 if let (Some(f), Some(Object::String(s, _))) = (font, operands.last()) {
-                    show_text(f, s, fsize, tc, tw, th, trise, &mut tm, ctm, &mut out);
+                    show_text(f, s, fsize, tc, tw, th, trise, &mut tm, ctm, out);
                 }
             }
             "TJ" => {
@@ -651,7 +796,7 @@ pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph
                     for el in arr {
                         match el {
                             Object::String(s, _) => {
-                                show_text(f, s, fsize, tc, tw, th, trise, &mut tm, ctm, &mut out)
+                                show_text(f, s, fsize, tc, tw, th, trise, &mut tm, ctm, out)
                             }
                             other => {
                                 if let Some(adj) = num(other) {
@@ -672,10 +817,83 @@ pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph
                     }
                 }
             }
+            "Do" => {
+                // Invoke a Form XObject: bulk body text in many PDFs lives inside
+                // a form, reached only here. Image XObjects are skipped (no text).
+                if depth >= 8 {
+                    continue;
+                }
+                let Some(Object::Name(n)) = operands.first() else {
+                    continue;
+                };
+                let stream = xobjects
+                    .and_then(|d| d.get(n.as_slice()).ok())
+                    .and_then(|o| deref(doc, o))
+                    .and_then(|o| o.as_stream().ok());
+                let Some(stream) = stream else { continue };
+                let is_form = stream
+                    .dict
+                    .get(b"Subtype")
+                    .ok()
+                    .and_then(|o| o.as_name().ok())
+                    == Some(b"Form".as_slice());
+                if !is_form {
+                    continue;
+                }
+                let Ok(data) = stream.decompressed_content() else {
+                    continue;
+                };
+                let Ok(form_content) = lopdf::content::Content::decode(&data) else {
+                    continue;
+                };
+                // The form's /Matrix maps form space into the CTM at invocation.
+                let form_mat = match stream.dict.get(b"Matrix").ok() {
+                    Some(Object::Array(a)) if a.len() == 6 => {
+                        let v: Vec<f64> = a.iter().filter_map(num).collect();
+                        if v.len() == 6 {
+                            Mat {
+                                a: v[0],
+                                b: v[1],
+                                c: v[2],
+                                d: v[3],
+                                e: v[4],
+                                f: v[5],
+                            }
+                        } else {
+                            Mat::ID
+                        }
+                    }
+                    _ => Mat::ID,
+                };
+                // The form's own /Resources, falling back to the inherited ones.
+                let form_res = stream
+                    .dict
+                    .get(b"Resources")
+                    .ok()
+                    .and_then(|o| deref(doc, o))
+                    .and_then(|o| o.as_dict().ok())
+                    .unwrap_or(res);
+                let state = TextState {
+                    tc,
+                    tw,
+                    th,
+                    tl,
+                    trise,
+                    fsize,
+                };
+                run_content(
+                    doc,
+                    form_res,
+                    &form_content,
+                    form_mat.then(ctm),
+                    state,
+                    depth + 1,
+                    out,
+                );
+            }
             _ => {}
         }
     }
-    out
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -785,8 +1003,10 @@ fn simple_encoding_table(doc: &Document, fdict: &Dictionary) -> HashMap<u8, char
     m
 }
 
-/// Resolve common Adobe glyph names to Unicode (the subset our corpus uses):
-/// `uniXXXX`, `bullet`, `space`, single ASCII-letter names, etc.
+/// Resolve an Adobe glyph name to Unicode: `uniXXXX`, single ASCII letters, the
+/// digit/punctuation names from the Adobe Glyph List, and common typographic
+/// names. A `.suffix` (`one.taboldstyle`, `a.sc`) is stripped and the base name
+/// retried — docling renders these as the base character.
 fn glyph_name_to_char(name: &[u8]) -> Option<char> {
     let s = std::str::from_utf8(name).ok()?;
     if let Some(hex) = s.strip_prefix("uni") {
@@ -794,21 +1014,88 @@ fn glyph_name_to_char(name: &[u8]) -> Option<char> {
             return char::from_u32(cp);
         }
     }
-    Some(match s {
+    // Single ASCII letter names (`A`, `m`) map to themselves.
+    if s.len() == 1 {
+        let b = s.as_bytes()[0];
+        if b.is_ascii_alphabetic() {
+            return Some(b as char);
+        }
+    }
+    let resolved = match s {
         "space" => ' ',
+        "exclam" => '!',
+        "quotedbl" => '"',
+        "numbersign" => '#',
+        "dollar" => '$',
+        "percent" => '%',
+        "ampersand" => '&',
+        "quotesingle" => '\'',
+        "parenleft" => '(',
+        "parenright" => ')',
+        "asterisk" => '*',
+        "plus" => '+',
+        "comma" => ',',
+        "hyphen" => '-',
+        "period" => '.',
+        "slash" => '/',
+        "zero" => '0',
+        "one" => '1',
+        "two" => '2',
+        "three" => '3',
+        "four" => '4',
+        "five" => '5',
+        "six" => '6',
+        "seven" => '7',
+        "eight" => '8',
+        "nine" => '9',
+        "colon" => ':',
+        "semicolon" => ';',
+        "less" => '<',
+        "equal" => '=',
+        "greater" => '>',
+        "question" => '?',
+        "at" => '@',
+        "bracketleft" => '[',
+        "backslash" => '\\',
+        "bracketright" => ']',
+        "asciicircum" => '^',
+        "underscore" => '_',
+        "grave" => '`',
+        "braceleft" => '{',
+        "bar" => '|',
+        "braceright" => '}',
+        "asciitilde" => '~',
         "bullet" => '\u{2022}',
         "periodcentered" => '\u{00B7}',
-        "hyphen" => '-',
         "endash" => '\u{2013}',
         "emdash" => '\u{2014}',
         "quoteright" => '\u{2019}',
         "quoteleft" => '\u{2018}',
         "quotedblleft" => '\u{201C}',
         "quotedblright" => '\u{201D}',
+        "quotedblbase" => '\u{201E}',
+        "quotesinglbase" => '\u{201A}',
         "fi" => '\u{FB01}',
         "fl" => '\u{FB02}',
-        _ => return None,
-    })
+        "degree" => '\u{00B0}',
+        "trademark" => '\u{2122}',
+        "registered" => '\u{00AE}',
+        "copyright" => '\u{00A9}',
+        "ellipsis" => '\u{2026}',
+        "minus" => '\u{2212}',
+        "fraction" => '\u{2044}',
+        "nbspace" => '\u{00A0}',
+        _ => {
+            // Strip an AGL `.suffix` (oldstyle/small-cap variant) and retry.
+            if let Some((base, _)) = s.split_once('.') {
+                if !base.is_empty() {
+                    return glyph_name_to_char(base.as_bytes());
+                }
+            }
+            return None;
+        }
+    };
+    Some(resolved)
 }
 
 /// Minimal WinAnsiEncoding (Latin-1-ish) for simple fonts lacking ToUnicode.
