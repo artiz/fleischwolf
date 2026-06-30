@@ -172,14 +172,14 @@ The llncs document class supports some additional special characters:
 
 If you need blackboard bold characters, i.e. for sets of numbers, please load the related A M S -T E Xfonts. If for some reason this is not possible you can also use the following commands from the llncs class:
 
-| \bbbc   | yields   | C   | \bbbf   | yields   | IF   |
-|---------|----------|-----|---------|----------|------|
-| \bbbh   | yields   | IH  | \bbbk   | yields   | IK   |
-| \bbbm   | yields   | IM  | \bbbn   | yields   | IN   |
-| \bbbp   | yields   | IP  | \bbbq   | yields   | Q    |
-| \bbbr   | yields   | IR  | \bbbs   | yields   | S    |
-| \bbbt   | yields   | T   | \bbbz   | yields   | ZZ   |
-| \bbbone | yields   | 1l  |         |          |      |
+| \bbbc   | yields   | C   | \bbbf   | yields   | I F   |
+|---------|----------|-----|---------|----------|-------|
+| \bbbh   | yields   | I H | \bbbk   | yields   | I K   |
+| \bbbm   | yields   | I M | \bbbn   | yields   | I N   |
+| \bbbp   | yields   | I P | \bbbq   | yields   | Q     |
+| \bbbr   | yields   | I R | \bbbs   | yields   | S     |
+| \bbbt   | yields   | T   | \bbbz   | yields   | Z Z   |
+| \bbbone | yields   | 1 l |         |          |       |
 
 Please note that all these characters are only available in math mode.
 

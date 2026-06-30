@@ -76,6 +76,25 @@ pub(crate) fn use_dp_lines() -> bool {
     std::env::var("DOCLING_LEGACY_LINES").is_err()
 }
 
+/// Whether to source **word** cells from the pure-Rust parser (roadmap item 6),
+/// the default. The parser's `word_cells` reproduce docling-parse's word grouping
+/// byte-for-byte — the per-word tokens TableFormer matches table-grid cells
+/// against — which moves table extraction closer to docling on the heavy
+/// multi-column fixtures. Set `DOCLING_PDFIUM_WORDS` to keep pdfium's word cells,
+/// or `DOCLING_PDFIUM_TEXT` to fall back to pdfium for all text.
+pub(crate) fn use_parser_words() -> bool {
+    std::env::var("DOCLING_PDFIUM_WORDS").is_err() && std::env::var("DOCLING_PDFIUM_TEXT").is_err()
+}
+
+/// Whether to source **code** cells from the parser too. Off by default: the
+/// parser's space-glyph-only code grouping drops the inter-token spaces pdfium
+/// recovers in monospace listings (`function add` → `functionadd`), a regression
+/// vs the docling groundtruth. Opt in with `DOCLING_PARSER_CODE` once the parser
+/// emits faithful monospace spacing. `DOCLING_PDFIUM_TEXT` always wins (pdfium).
+pub(crate) fn use_parser_code() -> bool {
+    std::env::var("DOCLING_PARSER_CODE").is_ok() && std::env::var("DOCLING_PDFIUM_TEXT").is_err()
+}
+
 fn bind() -> Result<Pdfium, PdfiumError> {
     if let Ok(path) = std::env::var("PDFIUM_DYNAMIC_LIB_PATH") {
         let name = Pdfium::pdfium_platform_library_name_at_path(&path);
@@ -115,15 +134,12 @@ impl PdfDocument {
 /// to fall back to pdfium's text layer. The parser returns an empty page when a
 /// PDF (or a page) has no parseable text layer; the caller keeps pdfium's cells
 /// in that case, so scanned/edge-case pages are unaffected.
-fn rust_parser_cells(bytes: &[u8]) -> Option<Vec<Vec<TextCell>>> {
+fn rust_parser_cells(bytes: &[u8]) -> Option<Vec<crate::textparse::PageParserCells>> {
     if std::env::var("DOCLING_PDFIUM_TEXT").is_ok() {
         return None;
     }
     Some(crate::timing::timed("textparse", || {
-        crate::textparse::pdf_textlines(bytes)
-            .into_iter()
-            .map(|(_, _, cells)| cells)
-            .collect()
+        crate::textparse::pdf_all_cells(bytes)
     }))
 }
 
@@ -164,22 +180,31 @@ fn extract_page(
     page: &pdfium_render::prelude::PdfPage<'_>,
     ffi: &FfiText<'_>,
     index: i32,
-    rust_cells: Option<Vec<TextCell>>,
+    rust_cells: Option<crate::textparse::PageParserCells>,
 ) -> Result<PdfPage, PdfiumError> {
     let width = page.width().value;
     let height = page.height().value;
 
-    let (mut cells, code_cells, word_cells) =
+    let (mut cells, mut code_cells, mut word_cells) =
         crate::timing::timed("ffi.page_cells", || ffi.page_cells(index, height));
     if cells.is_empty() {
         cells = segment_cells(&page.text()?, height);
     }
-    // Default: use the pure-Rust text parser's prose line cells instead of
-    // pdfium's (override with `DOCLING_PDFIUM_TEXT`). Word/code cells stay on
-    // pdfium so TableFormer cell-matching is unaffected.
+    // Default: use the pure-Rust text parser instead of pdfium's text layer
+    // (override with `DOCLING_PDFIUM_TEXT`). Prose line cells always come from the
+    // parser; word and code cells do too unless `DOCLING_PDFIUM_WORDS` keeps them
+    // on pdfium (the parser's word grouping reproduces docling-parse's, which
+    // TableFormer matches against — roadmap item 6). A page the parser couldn't
+    // read (no text layer) keeps pdfium's cells.
     if let Some(rc) = rust_cells {
-        if !rc.is_empty() {
-            cells = rc;
+        if !rc.prose.is_empty() {
+            cells = rc.prose;
+        }
+        if use_parser_words() && !rc.words.is_empty() {
+            word_cells = rc.words;
+        }
+        if use_parser_code() && !rc.code.is_empty() {
+            code_cells = rc.code;
         }
     }
 
@@ -627,11 +652,19 @@ fn lines_from_glyphs(gs: &[Glyph], page_h: f32, code: bool) -> Vec<TextCell> {
     cells
 }
 
+/// Code line cells from a glyph stream (parser or pdfium): split only at space
+/// glyphs so monospace runs keep their source spacing. Thin wrapper over
+/// [`lines_from_glyphs`] with `code = true`, for the parser text path.
+pub(crate) fn code_cells_from_glyphs(gs: &[Glyph], page_h: f32) -> Vec<TextCell> {
+    lines_from_glyphs(gs, page_h, true)
+}
+
 /// Per-word cells (each word's text + top-left bbox), using the same word/line
 /// splitting as [`lines_from_glyphs`] but emitting one cell per word instead of
-/// joining into lines — the TableFormer matcher places individual words into
-/// grid cells (a table line spans many cells, so line cells can't be matched).
-fn words_from_glyphs(gs: &[Glyph], page_h: f32) -> Vec<TextCell> {
+/// joining into lines — the legacy gap-heuristic word grouping, kept for the
+/// pdfium word path (`DOCLING_PDFIUM_WORDS`). The default parser path uses
+/// [`crate::dp_lines::word_cells`] instead.
+pub(crate) fn words_from_glyphs(gs: &[Glyph], page_h: f32) -> Vec<TextCell> {
     let mut cells = Vec::new();
     let mut word = String::new();
     let inf = (

@@ -163,7 +163,33 @@ numbering and footnote reading order.)
 4. ~~Korean quote normalization~~ — DONE (normal_4pages 74→54).
 5. **Now: 6/14 strict, 7/14 whitespace-normalized.** Blocker B (amt) needs a
    font-metrics layer for strict 7/14.
-6. Long term: drop pdfium's text path (keep it for rasterisation).
+6. **Word cells off pdfium — DONE (parser is now the default word source).** The
+   parser is already the sole *prose* source (item 2); **word** cells now come
+   from it too. The insight: docling-parse's `word_cells` are exactly the line
+   contraction's runs, split at the points where `merge_with` inserts a separator
+   space (`delta < gap`). So instead of the legacy gap-heuristic
+   (`words_from_glyphs`, which blob-joined TJ-spaced runs like
+   `highlydiversesetoftables…`), `dp_lines::word_cells` tracks per-word segments
+   *through the same proven contraction* that already reproduces `textline_cells`.
+   On `2305` pg9 it now emits **377/377 words byte-identical to the docling-parse
+   `word_cells` oracle** (x-coords matching to 0.01 pt; the only residue is the
+   ~3 pt-taller vertical box from the blocker-B font-metrics gap, which the
+   TableFormer matcher tolerates).
+
+   Result vs the docling **groundtruth**: strictly *better* on the heavy
+   multi-column docs (`redp5110` +22, `2206.01062` +16, `2203.01017v2` +7
+   groundtruth-matching lines), neutral on the rest, **no regression** anywhere —
+   so it's the default (opt out with `DOCLING_PDFIUM_WORDS`, or `DOCLING_PDFIUM_TEXT`
+   for full pdfium text). The 7 affected committed snapshots were regenerated to
+   the now docling-faithful output (e.g. `bold ,` / `x 2`, which docling-parse's
+   own `word_cells` confirm — the old `bold,` / `x2` were pdfium punct-gluing).
+
+   **Code cells still pdfium.** The parser's space-glyph-only code grouping drops
+   the inter-token spaces pdfium recovers in monospace listings
+   (`function add` → `functionadd`, a regression vs groundtruth), so code cells
+   stay on pdfium, gated behind `DOCLING_PARSER_CODE` for a future fix (the parser
+   needs faithful monospace spacing before the *code* path can retire too). pdfium
+   thus remains for code cells + page rasterisation + link annotations.
 
 ## Tooling (under `scripts/`)
 

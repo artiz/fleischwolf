@@ -33,6 +33,62 @@ struct Cell {
     active: bool,
     lig_carry: bool, // last_merged_cell_was_ligature
     font: u64,       // hash of the PDF font name+flags (for enforce_same_font)
+    /// Sub-word segments accumulated during contraction, in final logical order.
+    /// A word boundary is recorded wherever `merge_with` inserts a separator space
+    /// (`delta < gap`); within a boundary the glyphs share one segment. Flattening
+    /// these across all cells yields docling-parse's `word_cells` (item 6). The
+    /// line path ignores this; only [`word_cells`] reads it.
+    words: Vec<WordSeg>,
+}
+
+/// One word's accumulated text and native-coordinate bounding box (y up).
+#[derive(Clone)]
+struct WordSeg {
+    text: String,
+    l: f64,
+    b: f64,
+    r: f64,
+    t: f64,
+}
+
+impl WordSeg {
+    fn from_glyph(text: String, l: f64, b: f64, r: f64, t: f64) -> Self {
+        WordSeg { text, l, b, r, t }
+    }
+    /// Absorb `o` into this segment (same word): union the box, append text.
+    fn absorb(&mut self, o: &WordSeg) {
+        self.text.push_str(&o.text);
+        self.l = self.l.min(o.l);
+        self.b = self.b.min(o.b);
+        self.r = self.r.max(o.r);
+        self.t = self.t.max(o.t);
+    }
+    /// Extend the box to cover a single glyph (ligature recompose into one word).
+    fn extend(&mut self, l: f64, b: f64, r: f64, t: f64) {
+        self.l = self.l.min(l);
+        self.b = self.b.min(b);
+        self.r = self.r.max(r);
+        self.t = self.t.max(t);
+    }
+}
+
+/// Concatenate two word runs (in final logical order). With a separator space
+/// the runs stay distinct (a word boundary); without one, `left`'s last word and
+/// `right`'s first word are the same word and merge. Mirrors `merge_with`'s
+/// space decision so word grouping tracks the line contraction exactly.
+fn merge_word_runs(mut left: Vec<WordSeg>, mut right: Vec<WordSeg>, space: bool) -> Vec<WordSeg> {
+    if left.is_empty() {
+        return right;
+    }
+    if right.is_empty() {
+        return left;
+    }
+    if !space {
+        let first = right.remove(0);
+        left.last_mut().unwrap().absorb(&first);
+    }
+    left.extend(right);
+    left
 }
 
 impl Cell {
@@ -86,18 +142,25 @@ impl Cell {
         } else {
             other.rx0 - self.rx1
         };
+        let space = delta < gap;
         if !self.ltr || !other.ltr {
-            if delta < gap {
+            if space {
                 self.text.insert(0, ' ');
             }
             self.text = format!("{}{}", other.text, self.text);
             self.ltr = false;
+            // RTL: `other` is logically first, so its words precede self's. The
+            // junction is between other's last word and self's first.
+            self.words =
+                merge_word_runs(other.words.clone(), std::mem::take(&mut self.words), space);
         } else {
-            if delta < gap {
+            if space {
                 self.text.push(' ');
             }
             self.text.push_str(&other.text);
             self.ltr = true;
+            self.words =
+                merge_word_runs(std::mem::take(&mut self.words), other.words.clone(), space);
         }
         // Extend the right edge to `other`.
         self.rx1 = other.rx1;
@@ -206,8 +269,9 @@ fn contract(cells: &mut Vec<Cell>, euclidean: bool) {
     cells.retain(|c| c.active);
 }
 
-/// Build line cells from a page's glyph stream via the docling-parse contraction.
-pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<TextCell> {
+/// Build per-glyph char cells from a page's glyph stream (shared by the line and
+/// word paths): drop degenerate spaces, recompose ligatures, init word segments.
+fn build_cells(glyphs: &[Glyph], euclidean: bool) -> Vec<Cell> {
     let mut cells: Vec<Cell> = Vec::new();
     for g in glyphs {
         // Use the loose box (uniform font ascent/descent + advance) so adjacent
@@ -241,12 +305,23 @@ pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<
                 }
                 last.text.push(g.ch);
                 last.ltr = !is_right_to_left(&last.text);
+                if let Some(w) = last.words.last_mut() {
+                    w.text.push(g.ch);
+                    w.extend(g.ll as f64, g.lb as f64, g.lr as f64, g.lt as f64);
+                }
                 continue;
             }
         }
         let text = g.ch.to_string();
         let ltr = !is_right_to_left(&text);
         cells.push(Cell {
+            words: vec![WordSeg::from_glyph(
+                text.clone(),
+                g.ll as f64,
+                g.lb as f64,
+                g.lr as f64,
+                g.lt as f64,
+            )],
             text,
             rx0: g.ll as f64,
             ry0: g.lb as f64,
@@ -262,6 +337,12 @@ pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<
             font: g.font,
         });
     }
+    cells
+}
+
+/// Build line cells from a page's glyph stream via the docling-parse contraction.
+pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<TextCell> {
+    let mut cells = build_cells(glyphs, euclidean);
     contract(&mut cells, euclidean);
     cells
         .into_iter()
@@ -279,6 +360,33 @@ pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<
             }
         })
         .collect()
+}
+
+/// Build **word** cells from a page's glyph stream via the same contraction as
+/// [`line_cells`], then split each line into its constituent words at exactly the
+/// points where the contraction inserted a separator space. This reproduces
+/// docling-parse's `word_cells` (the per-word tokens TableFormer matches against
+/// table-grid cells), letting the pipeline drop pdfium's text path entirely
+/// (roadmap item 6). Empty words (overprint-cleared) are skipped.
+pub(crate) fn word_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<TextCell> {
+    let mut cells = build_cells(glyphs, euclidean);
+    contract(&mut cells, euclidean);
+    let mut out = Vec::new();
+    for c in cells {
+        for w in c.words {
+            if w.text.trim().is_empty() {
+                continue;
+            }
+            out.push(TextCell {
+                text: w.text,
+                l: w.l as f32,
+                t: page_h - w.t as f32,
+                r: w.r as f32,
+                b: page_h - w.b as f32,
+            });
+        }
+    }
+    out
 }
 
 fn is_rtl_char(c: char) -> bool {

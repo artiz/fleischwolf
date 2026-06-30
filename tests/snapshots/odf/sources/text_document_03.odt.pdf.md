@@ -1,10 +1,10 @@
 ## Table with rich cells
 
-| Column A                                                                                                            | Column B                                                                           |
-|---------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| This is a list: • A First • A Second • A Third                                                                      | This is a formatted list: • B First • B Second • B Third                           |
-| First Paragraph Second Paragraph Third paragraph before a numbered list 1. Number one 2. Number two 3. Number three | This is simple text with bold, strikethrough and italic formatting with x2 and H2O |
-| This is a paragraph This is another paragraph                                                                       |                                                                                    |
+| Column A                                                                                                            | Column B                                                                             |
+|---------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| This is a list: • A First • A Second • A Third                                                                      | This is a formatted list: • B First • B Second • B Third                             |
+| First Paragraph Second Paragraph Third paragraph before a numbered list 1. Number one 2. Number two 3. Number three | This is simple text with bold , strikethrough and italic formatting with x 2 and H2O |
+| This is a paragraph This is another paragraph                                                                       |                                                                                      |
 
 ## Table with nested table
 
@@ -46,15 +46,15 @@ After table with bold , underline, strikethrough, and italic formatting
 
 ## Multiple columns with lists
 
-| • R1C1 item 1 • R1C1 item 2   | • R1C2 item 1 • R1C2 2   |
-|-------------------------------|--------------------------|
-|                               | item                     |
-| • R2C1 item 1                 | • R2C2 item 1            |
-| • R2C1 item 2                 | • R2C2 item 2            |
+| • R1C1 item 1 R1C1 item 2   | • R1C2 item 1 •   |
+|-----------------------------|-------------------|
+| •                           | R1C2 item 2       |
+| • R2C1 item 1               | • R2C2 item 1     |
+| • R2C1 item 2               | • R2C2 item 2     |
 
 ## Mixed content - list and regular text in different cells
 
-| • List item                 |
+| • List item 1               |
 |-----------------------------|
 | • List item 2               |
 | Regular text in second cell |

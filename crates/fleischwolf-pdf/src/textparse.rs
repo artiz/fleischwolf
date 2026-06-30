@@ -656,6 +656,61 @@ pub fn pdf_textlines(bytes: &[u8]) -> Vec<(f32, f32, Vec<crate::pdfium_backend::
         .collect()
 }
 
+/// Debug/diagnostic entry: per-page (width, height, word cells) for a PDF, via
+/// the Rust parser glyphs run through the docling-parse word grouping. Used to
+/// compare parser word cells against docling-parse's `word_cells` oracle (roadmap
+/// item 6).
+pub fn pdf_words(bytes: &[u8]) -> Vec<(f32, f32, Vec<crate::pdfium_backend::TextCell>)> {
+    let Ok(doc) = Document::load_mem(bytes) else {
+        return Vec::new();
+    };
+    let mut pages: Vec<_> = doc.get_pages().into_iter().collect();
+    pages.sort_by_key(|(n, _)| *n);
+    pages
+        .into_iter()
+        .map(|(_, pid)| {
+            let (w, h) = page_size(&doc, pid);
+            let glyphs = page_glyphs(&doc, pid);
+            let cells = crate::dp_lines::word_cells(&glyphs, h, true);
+            (w, h, cells)
+        })
+        .collect()
+}
+
+/// One page's text cells from the pure-Rust parser: prose line cells, per-word
+/// cells, and code line cells — all from a single glyph parse. Replaces the
+/// pdfium text path (roadmap item 6) when the parser drop is enabled.
+#[derive(Default)]
+pub struct PageParserCells {
+    pub prose: Vec<crate::pdfium_backend::TextCell>,
+    pub words: Vec<crate::pdfium_backend::TextCell>,
+    pub code: Vec<crate::pdfium_backend::TextCell>,
+}
+
+/// Full parser text layer: prose + word + code cells per page, glyphs parsed once.
+/// `prose`/`words` come from the docling-parse contraction ([`crate::dp_lines`]);
+/// `code` splits only at the parser's own space glyphs (monospace keeps its
+/// source spacing). Used by the pipeline to retire pdfium's text path.
+pub fn pdf_all_cells(bytes: &[u8]) -> Vec<PageParserCells> {
+    let Ok(doc) = Document::load_mem(bytes) else {
+        return Vec::new();
+    };
+    let mut pages: Vec<_> = doc.get_pages().into_iter().collect();
+    pages.sort_by_key(|(n, _)| *n);
+    pages
+        .into_iter()
+        .map(|(_, pid)| {
+            let (_w, h) = page_size(&doc, pid);
+            let glyphs = page_glyphs(&doc, pid);
+            PageParserCells {
+                prose: crate::dp_lines::line_cells(&glyphs, h, true),
+                words: crate::dp_lines::word_cells(&glyphs, h, true),
+                code: crate::pdfium_backend::code_cells_from_glyphs(&glyphs, h),
+            }
+        })
+        .collect()
+}
+
 /// The text-state scalars inherited by a Form XObject when it is invoked via
 /// `Do` (the PDF graphics state includes the text parameters, but not the text
 /// matrices, which a form re-establishes inside its own `BT`/`ET`).
