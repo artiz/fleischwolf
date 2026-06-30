@@ -75,6 +75,10 @@ struct Font {
     /// have no Unicode mapping. docling-parse emits these verbatim as `/g115`
     /// (see the redp5110 bulleted list); matching it keeps no text skipped.
     fallback_names: HashMap<u8, String>,
+    /// code → char from the embedded Type1 font program's own `/Encoding` vector,
+    /// used only as a last resort for glyphs the base encoding leaves unmapped
+    /// (standard TeX math fonts: `λ`, `≤`, …).
+    program_encoding: HashMap<u8, char>,
     ascent: f64,
     descent: f64,
     hash: u64,
@@ -100,6 +104,16 @@ impl Font {
                 if let Some(&ch) = enc.get(&(code as u8)) {
                     return (Some(decompose_ligatures(&ch.to_string())), w);
                 }
+            }
+            // Last resort: the embedded Type1 font program's own `/Encoding`
+            // vector (`dup N /glyphname put`). Standard TeX math fonts (CMMI, CMSY,
+            // …) ship no PDF `/Encoding` and no ToUnicode, so a glyph like `λ`
+            // (CMMI code 21 → `/lambda`) or `≤` (CMSY code 20 → `/lessequal`) has
+            // no other mapping and would otherwise be silently dropped. docling
+            // recovers these from the same font program. This only fills codes the
+            // base encoding left unmapped, so it never changes an existing decode.
+            if let Some(&ch) = self.program_encoding.get(&(code as u8)) {
+                return (Some(decompose_ligatures(&ch.to_string())), w);
             }
         }
         (None, w)
@@ -187,6 +201,11 @@ fn parse_font(doc: &Document, name: &[u8], fdict: &Dictionary) -> Font {
     } else {
         differences_gid_names(doc, fdict)
     };
+    let program_encoding = if two_byte {
+        HashMap::new()
+    } else {
+        type1_program_encoding(doc, fdict)
+    };
 
     let (ascent, descent) = font_ascent_descent(doc, fdict, two_byte);
 
@@ -197,6 +216,7 @@ fn parse_font(doc: &Document, name: &[u8], fdict: &Dictionary) -> Font {
         default_width,
         simple_encoding,
         fallback_names,
+        program_encoding,
         ascent,
         descent,
         hash: hash_name(name),
@@ -230,6 +250,54 @@ fn differences_gid_names(doc: &Document, fdict: &Dictionary) -> HashMap<u8, Stri
                 code = code.wrapping_add(1);
             }
             _ => {}
+        }
+    }
+    map
+}
+
+/// Parse the embedded Type1 font program's built-in `/Encoding` vector
+/// (`dup <code> /<glyphname> put` entries in the clear-text header before
+/// `eexec`) into `code → char`. This is how docling recovers glyphs from
+/// standard TeX math fonts (CMMI/CMSY/…) that carry no PDF `/Encoding` and no
+/// ToUnicode — e.g. CMMI's `dup 21 /lambda` or CMSY's `dup 20 /lessequal`.
+/// Only `FontFile` (Type1) is parsed; CFF (`FontFile3`) and TrueType
+/// (`FontFile2`) store their encoding in a binary table and are left alone.
+fn type1_program_encoding(doc: &Document, fdict: &Dictionary) -> HashMap<u8, char> {
+    let mut map = HashMap::new();
+    let Some(desc) = fdict
+        .get(b"FontDescriptor")
+        .ok()
+        .and_then(|o| deref(doc, o))
+        .and_then(|o| o.as_dict().ok())
+    else {
+        return map;
+    };
+    let Some(data) = desc
+        .get(b"FontFile")
+        .ok()
+        .and_then(|o| deref(doc, o))
+        .and_then(|o| o.as_stream().ok())
+        .and_then(|s| s.decompressed_content().ok())
+    else {
+        return map;
+    };
+    // The clear-text header (PostScript) ends at `eexec`; the rest is encrypted.
+    let head_end = data
+        .windows(5)
+        .position(|w| w == b"eexec")
+        .unwrap_or(data.len());
+    let head = String::from_utf8_lossy(&data[..head_end]);
+    // Scan for `dup <code> /<name> put` tokens.
+    let toks: Vec<&str> = head.split_whitespace().collect();
+    for w in toks.windows(4) {
+        if w[0] == "dup" && w[3] == "put" {
+            if let (Ok(code), Some(name)) = (w[1].parse::<u32>(), w[2].strip_prefix('/')) {
+                if code <= 255 {
+                    if let Some(ch) = glyph_name_to_char(name.as_bytes()) {
+                        map.insert(code as u8, ch);
+                    }
+                }
+            }
         }
     }
     map
@@ -1106,6 +1174,77 @@ fn glyph_name_to_char(name: &[u8]) -> Option<char> {
         "minus" => '\u{2212}',
         "fraction" => '\u{2044}',
         "nbspace" => '\u{00A0}',
+        // Greek + math glyph names (standard Adobe Glyph List). Standard TeX math
+        // fonts (CMMI/CMSY/…) name their glyphs this way in the embedded font
+        // program's `/Encoding`; without these a `λ`/`≤` decodes to nothing and is
+        // dropped from body text (`and λ set to 0.5` → `and set to 0.5`).
+        "alpha" => '\u{03B1}',
+        "beta" => '\u{03B2}',
+        "gamma" => '\u{03B3}',
+        "delta" => '\u{03B4}',
+        "epsilon" | "epsilon1" => '\u{03B5}',
+        "zeta" => '\u{03B6}',
+        "eta" => '\u{03B7}',
+        "theta" | "theta1" => '\u{03B8}',
+        "iota" => '\u{03B9}',
+        "kappa" => '\u{03BA}',
+        "lambda" => '\u{03BB}',
+        "mu" => '\u{03BC}',
+        "nu" => '\u{03BD}',
+        "xi" => '\u{03BE}',
+        "omicron" => '\u{03BF}',
+        "pi" | "pi1" => '\u{03C0}',
+        "rho" | "rho1" => '\u{03C1}',
+        "sigma" => '\u{03C3}',
+        "sigma1" => '\u{03C2}',
+        "tau" => '\u{03C4}',
+        "upsilon" => '\u{03C5}',
+        "phi" | "phi1" => '\u{03C6}',
+        "chi" => '\u{03C7}',
+        "psi" => '\u{03C8}',
+        "omega" | "omega1" => '\u{03C9}',
+        "Gamma" => '\u{0393}',
+        "Delta" => '\u{0394}',
+        "Theta" => '\u{0398}',
+        "Lambda" => '\u{039B}',
+        "Xi" => '\u{039E}',
+        "Pi" => '\u{03A0}',
+        "Sigma" => '\u{03A3}',
+        "Upsilon" => '\u{03A5}',
+        "Phi" => '\u{03A6}',
+        "Psi" => '\u{03A8}',
+        "Omega" => '\u{03A9}',
+        "lessequal" => '\u{2264}',
+        "greaterequal" => '\u{2265}',
+        "notequal" => '\u{2260}',
+        "approxequal" => '\u{2248}',
+        "equivalence" => '\u{2261}',
+        "element" => '\u{2208}',
+        "plusminus" => '\u{00B1}',
+        "multiply" => '\u{00D7}',
+        "divide" => '\u{00F7}',
+        "infinity" => '\u{221E}',
+        "partialdiff" => '\u{2202}',
+        "gradient" => '\u{2207}',
+        "summation" => '\u{2211}',
+        "product" => '\u{220F}',
+        "integral" => '\u{222B}',
+        "radical" => '\u{221A}',
+        "proportional" => '\u{221D}',
+        "arrowright" => '\u{2192}',
+        "arrowleft" => '\u{2190}',
+        "arrowup" => '\u{2191}',
+        "arrowdown" => '\u{2193}',
+        "arrowboth" => '\u{2194}',
+        "arrowdblright" => '\u{21D2}',
+        "logicaland" => '\u{2227}',
+        "logicalor" => '\u{2228}',
+        "intersection" => '\u{2229}',
+        "union" => '\u{222A}',
+        "similar" => '\u{223C}',
+        "congruent" => '\u{2245}',
+        "dotmath" => '\u{22C5}',
+        "asteriskmath" => '\u{2217}',
         _ => {
             // Strip an AGL `.suffix` (oldstyle/small-cap variant) and retry.
             if let Some((base, _)) = s.split_once('.') {
