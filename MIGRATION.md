@@ -220,11 +220,19 @@ when the TableFormer graphs aren't present.)
 - **HTML browser-render subsystem** — nav/visibility suppression (`wiki_duck`),
   form key-value-pair regions (`kvp_data_example`), deep nested-table cell padding
   from rendered bounding boxes. ~4 HTML fixtures + KVP.
-- **PyO3 bindings** (`fleischwolf-py`) for a strangler-fig drop-in — not built.
+
 
 ---
 
-## 6. Testing
+## 6. Extensions
+
+- Support **MHTML** format, check if https://crates.io/crates/mail-parser has support for it.
+- **PyO3 bindings** (`fleischwolf-py`) for a strangler-fig drop-in.
+- **nodejs/bun TypeScript** bindings
+- **C++** bindings
+- `fleischwolf-rag` - basic documents processing/chunking/vectorization/semantic-search system with pluggable DB support, PostgreSQL/SQLite, embedding with small ONNX local model (test options, dimensions >= 1024). 
+  
+## 7. Testing
 
 - **`cargo test`** — unit tests per backend/serializer **plus an output-
   regression suite** (`crates/fleischwolf/tests/regression.rs`): every
@@ -253,7 +261,7 @@ dependency order — skipping any version already on crates.io.
 
 ---
 
-## 7. Goals & design rules (unchanged)
+## 8. Goals & design rules (unchanged)
 
 - A tiny, obvious public API — one `DocumentConverter`, one `convert`, one
   `DoclingDocument` you can `export_to_markdown()` / `export_to_json()`.
