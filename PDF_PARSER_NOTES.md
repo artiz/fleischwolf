@@ -52,17 +52,44 @@ The 6/14 ceiling used docling-parse's *post-sanitizer* textlines. So reaching it
 needs `dp_lines` to match docling-parse's C++ contraction on those cases — a
 separate fidelity effort, independent of the parser.
 
-## Roadmap
+## Progress: sanitizer fidelity (commit f5a80ef)
 
-1. **Sanitizer fidelity** (`dp_lines.rs`): reproduce docling-parse's tanwin /
-   combining-mark spacing and the line-wrap double-space → amt + rtl_01 exact → 6/14.
-2. **`right_to_left_02` layout**: the top `11` page number is mis-classified as a
-   picture and the recovered orphan lands at the bottom; docling labels it `text`
-   first → fix → 7/14.
-3. Parser hardening for the heavy docs (2203/2206/redp5110): more font edge cases,
-   reading order; validate against docling-parse char cells per file.
-4. Once the parser matches pdfium everywhere, make it the default and drop
-   pdfium's text path (keep pdfium for rasterisation only).
+The parser path now reproduces docling-parse's char cells *and* most of its
+spacing. Two `dp_lines`/`textparse` fixes landed:
+- **Euclidean d0** for space insertion on the clean-box parser path (matches
+  docling-parse's `merge_with`); fixed the standalone tanwin.
+- **q/Q restore the full text state** (Tc/Tw/Tz/TL/Tfs/Trise/font); fixed the
+  character-spacing drift that broke multi_page.
+
+Parser path now: code_and_formula / multi_page / picture_classification exact;
+**amt = 2**, **right_to_left_01 = 2**. The two remaining diffs are precisely:
+
+### Remaining blocker A — bidi-neutral ordering (right_to_left_01)
+A period (or other neutral) *between two RTL letters* must take RTL direction so
+it orders with the word (`…ت . space…` → `العمل.` + trailing space). My
+contraction creates the period cell as LTR (`ltr = !is_right_to_left(".")`), so
+`space+period` merge as `" ."` and the space lands *before* the period
+(`العمل .`). Fix: resolve a neutral cell's direction from its RTL neighbours
+(Unicode bidi rule) before/within the contraction. Char cells already match
+docling exactly — this is purely contraction ordering.
+
+### Remaining blocker B — fraction line-wrap double space (amt)
+`up to  1 / 4` (double) only on the two fractions that fall at a **column line
+wrap**; docling's textline ends at the wrapped `1` with a double space. Needs the
+line-wrap join to reproduce docling's trailing-space behaviour.
+
+## Roadmap to 7/14
+
+1. Fix blocker A (bidi neutral) → right_to_left_01 exact.
+2. Fix blocker B (fraction wrap) → amt exact → **6/14**.
+3. **`right_to_left_02` layout**: top `11` page number mis-classified as a
+   picture; the recovered orphan lands at the bottom; docling labels it `text`
+   first → fix → **7/14**.
+4. Make the parser the default for the conformance path (it keeps the 3 text-
+   exact files and pdfium word cells for tables; validate the heavy docs
+   2203/2206/redp5110 don't regress the exact count — they're far from exact
+   either way).
+5. Long term: drop pdfium's text path entirely (keep it for rasterisation).
 
 ## Tooling (under `scripts/`)
 
