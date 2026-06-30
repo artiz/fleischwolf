@@ -823,6 +823,15 @@ pub(crate) fn merge_continuations(nodes: &mut Vec<Node>) {
             i += 1;
             continue;
         };
+        // A figure/table caption is a self-contained unit; body text resuming
+        // after a figure is the continuation case, not the caption itself. Never
+        // stitch *from* a caption — otherwise a caption that ends in a lone glyph
+        // (`Fig. 5. … PubTabNet. μ`) would swallow a following stray figure label
+        // (a standalone `μ`) into `… μ μ`.
+        if looks_like_caption(a) {
+            i += 1;
+            continue;
+        }
         // Open if the fragment ends mid-word (a letter) or with a wrap hyphen/dash
         // — docling joins `vocab-` + `ulary` → `vocab- ulary`.
         let a_open = a.trim_end().chars().next_back().is_some_and(|c| {
