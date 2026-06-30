@@ -7,7 +7,7 @@
 use crate::pdfium_backend::TextCell;
 use image::RgbImage;
 use ort::session::Session;
-use ort::value::Tensor;
+use ort::value::{Tensor, TensorRef};
 
 const SIDE: u32 = 448;
 // Verbatim from docling's tm_config.json image_normalization (more digits than
@@ -118,7 +118,10 @@ impl TableFormer {
         while out.len() < MAX_STEPS {
             let tags_t = Tensor::from_array(([tags.len(), 1usize], tags.clone()))
                 .map_err(|e| format!("tableformer: tags: {e}"))?;
-            let mem_t = Tensor::from_array((mshape.clone(), mem.clone()))
+            // The cross-attention memory is constant across decode steps; pass it as
+            // a zero-copy view instead of re-cloning the (large) encoder output and
+            // re-allocating a tensor on every one of the autoregressive steps.
+            let mem_t = TensorRef::from_array_view((mshape.as_slice(), mem.as_slice()))
                 .map_err(|e| format!("tableformer: mem: {e}"))?;
             let dout = self
                 .decoder
@@ -179,7 +182,8 @@ impl TableFormer {
         while otsl.len() < MAX_STEPS {
             let tags_t = Tensor::from_array(([tags.len(), 1usize], tags.clone()))
                 .map_err(|e| format!("tableformer: tags: {e}"))?;
-            let mem_t = Tensor::from_array((mshape.clone(), mem.clone()))
+            // Zero-copy view of the constant cross-attention memory (see `predict_otsl`).
+            let mem_t = TensorRef::from_array_view((mshape.as_slice(), mem.as_slice()))
                 .map_err(|e| format!("tableformer: mem: {e}"))?;
             let dout = self
                 .decoder
