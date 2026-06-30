@@ -49,7 +49,7 @@ pub fn report() {
     }
     let g = store().lock().unwrap();
     let mut rows: Vec<_> = g.iter().map(|(k, v)| (*k, v.0, v.1)).collect();
-    rows.sort_by(|a, b| b.1.cmp(&a.1));
+    rows.sort_by_key(|r| std::cmp::Reverse(r.1));
     let total: u128 = rows.iter().map(|r| r.1).sum();
     eprintln!("=== FLEISCHWOLF timing (per stage, wall-clock) ===");
     for (stage, nanos, calls) in &rows {
