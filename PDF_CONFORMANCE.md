@@ -13,7 +13,7 @@ The groundtruth is regenerated from **live published docling**, so it agrees wit
 
 ## Current state
 
-**6 / 14 strict** · **7 / 14 whitespace-normalized.**
+**6 / 16 strict** · **7 / 16 whitespace-normalized.**
 
 | PDF | diff | dominant remaining blocker |
 |---|---:|---|
@@ -24,19 +24,27 @@ The groundtruth is regenerated from **live published docling**, so it agrees wit
 | right_to_left_01 | **exact** | — (RTL period attachment) |
 | right_to_left_02 | **exact** | — (kashida dedup + page-number layout) |
 | amt_handbook_sample | 2 *(ws-ok)* | docling's spurious fraction double space — ours is more faithful |
+| 2305.03393v1 | 32 | title-page reading order + author-ID run spacing |
+| skipped_1page | 40 | image/diagram page (Korean); layout picture-detection |
+| skipped_2pages | 44 | image/diagram pages (Korean); layout picture-detection |
 | normal_4pages | 54 | reading order (heading numbering, footnote order) |
 | right_to_left_03 | 66 | RTL bidi |
-| 2305.03393v1 | 93 | title-page reading order + author-ID run spacing |
 | table_mislabeled_as_picture | 108 | layout over-detects tables (survey rendered as tables) |
-| 2206.01062 | 198 | TableFormer multi-row headers + title-page reading order |
-| 2203.01017v2 | 209 | TableFormer structure + reading order |
-| redp5110_sampled | 226 | TOC mis-classified as a picture; cover-page ordering |
+| 2206.01062 | 164 | TableFormer multi-row headers + title-page reading order |
+| redp5110_sampled | 173 | TOC mis-classified as a picture; cover-page ordering |
+| 2203.01017v2 | 183 | TableFormer structure + reading order |
 
 `amt` is the 7th under the whitespace-normalized metric: its only diff is
 docling's spurious double space before the `1⁄4` fraction, where our single-spaced
 output is the more faithful rendering. The remaining non-exact PDFs are heavy
 multi-column / table docs whose gaps are model-level (TableFormer structure,
 layout classification, title-page reading order), not text-layer.
+
+The heavy table docs improved with the docling-parse **word-cell** grouping now
+feeding TableFormer (2305.03393v1 93→32, 2203.01017v2 209→183, 2206.01062
+198→164, redp5110 226→173): the parser's per-word cells reproduce docling-parse's
+`word_cells` byte-for-byte, so cell-to-grid matching tracks docling more closely.
+See "Text reconstruction" below and `PDF_PARSER_NOTES.md` item 6.
 
 ## How the pipeline works
 
@@ -79,8 +87,9 @@ on `lopdf`) that reconstructs each glyph's box from the *font's own advance
 widths* and the PDF text/graphics matrices — the same information docling-parse
 uses. It is the **default** text layer; set `DOCLING_PDFIUM_TEXT=1` to fall back
 to pdfium. Pages without a parseable text layer fall back to pdfium
-automatically, so scanned/OCR pages are unaffected. (pdfium still provides page
-rasters and word/code cells for TableFormer.)
+automatically, so scanned/OCR pages are unaffected. The parser also supplies the
+**word cells** TableFormer matches against (`DOCLING_PDFIUM_WORDS` keeps pdfium's);
+pdfium still provides page rasters, code cells, and link annotations.
 
 The parser handles Type0/CID + Identity-H and simple Type1/TrueType fonts,
 ToUnicode CMaps (`bfchar`/`bfrange`), WinAnsi/MacRoman + `/Differences`
@@ -98,6 +107,16 @@ gap exceeds 0.33×avg-char-width, plus literal space glyphs), `enforce_same_font
 ligature recomposition, and loose-box geometry. On the clean parser boxes it uses
 the Euclidean corner gap (matching docling); on pdfium's loose boxes it keeps the
 signed horizontal gap.
+
+The same contraction also produces **word cells** (`dp_lines::word_cells`): a word
+is a maximal run of glyphs the contraction merges *without* inserting a separator
+space, so the per-word segments split at exactly the `delta < gap` points — which
+reproduces docling-parse's `word_cells` byte-for-byte (377/377 on 2305-pg9). These
+are the per-word tokens TableFormer matches against table-grid cells, replacing
+pdfium's word cells (roadmap item 6). Code cells stay on pdfium for now — the
+parser's space-glyph-only code grouping drops monospace spacing
+(`function add` → `functionadd`); opt into the parser code path with
+`DOCLING_PARSER_CODE` once that's fixed.
 
 Other text/serializer/layout fixes matching docling: markdown escaping (`_`→`\_`,
 then HTML-escape `&`/`<`/`>`), typographic-punctuation normalization
