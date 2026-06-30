@@ -442,6 +442,23 @@ fn page_size(doc: &Document, page_id: lopdf::ObjectId) -> (f32, f32) {
     (612.0, 792.0)
 }
 
+/// Debug: raw glyph stream `(ch, ll, lr, lb, lt)` (native coords) for page
+/// `index`, before the sanitizer. For comparing char cells to docling-parse.
+pub fn debug_glyphs(bytes: &[u8], index: usize) -> Vec<(char, f32, f32, f32, f32)> {
+    let Ok(doc) = Document::load_mem(bytes) else {
+        return Vec::new();
+    };
+    let mut pages: Vec<_> = doc.get_pages().into_iter().collect();
+    pages.sort_by_key(|(n, _)| *n);
+    let Some((_, pid)) = pages.get(index) else {
+        return Vec::new();
+    };
+    page_glyphs(&doc, *pid)
+        .into_iter()
+        .map(|g| (g.ch, g.ll, g.lr, g.lb, g.lt))
+        .collect()
+}
+
 /// Public entry: per-page (width, height, line cells) for a PDF, via the Rust
 /// text parser + the docling-parse line sanitizer. Used by the pipeline and the
 /// `textparse_dump` example.
@@ -456,7 +473,7 @@ pub fn pdf_textlines(bytes: &[u8]) -> Vec<(f32, f32, Vec<crate::pdfium_backend::
         .map(|(_, pid)| {
             let (w, h) = page_size(&doc, pid);
             let glyphs = page_glyphs(&doc, pid);
-            let cells = crate::dp_lines::line_cells(&glyphs, h);
+            let cells = crate::dp_lines::line_cells(&glyphs, h, true);
             (w, h, cells)
         })
         .collect()
@@ -477,8 +494,12 @@ pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph
         return out;
     };
 
-    // Graphics + text state.
-    let mut ctm_stack: Vec<Mat> = Vec::new();
+    // Graphics + text state. `q`/`Q` save and restore the whole graphics state,
+    // which includes the text parameters (Tc, Tw, Tz, TL, Tfs, Trise, font) —
+    // *not* the text matrix (that is reset by BT). Saving only the CTM let a Tc
+    // set inside a `q…Q` block leak out and drift every later glyph.
+    #[allow(clippy::type_complexity)]
+    let mut gstate_stack: Vec<(Mat, f64, f64, f64, f64, f64, f64, Option<&Font>)> = Vec::new();
     let mut ctm = Mat::ID;
     let mut tm = Mat::ID;
     let mut tlm = Mat::ID;
@@ -495,10 +516,17 @@ pub(crate) fn page_glyphs(doc: &Document, page_id: lopdf::ObjectId) -> Vec<Glyph
     for op in &content.operations {
         let operands = &op.operands;
         match op.operator.as_str() {
-            "q" => ctm_stack.push(ctm),
+            "q" => gstate_stack.push((ctm, tc, tw, th, tl, trise, fsize, font)),
             "Q" => {
-                if let Some(m) = ctm_stack.pop() {
-                    ctm = m;
+                if let Some((c, a, b, h, l, r, fs, f)) = gstate_stack.pop() {
+                    ctm = c;
+                    tc = a;
+                    tw = b;
+                    th = h;
+                    tl = l;
+                    trise = r;
+                    fsize = fs;
+                    font = f;
                 }
             }
             "cm" => {

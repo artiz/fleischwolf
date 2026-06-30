@@ -310,7 +310,7 @@ impl<'a> FfiText<'a> {
             // Prose line cells: the docling-parse-style sanitizer (behind a flag
             // while it's validated) or the legacy gap-heuristic reconstruction.
             let prose = if dp {
-                crate::dp_lines::line_cells(&g, page_h)
+                crate::dp_lines::line_cells(&g, page_h, false)
             } else {
                 lines_from_glyphs(&g, page_h, false)
             };
