@@ -91,7 +91,7 @@ bench_process() {
 # Warm, in-process Python: import once, then time RUNS conversions; report
 # avg seconds/conversion and peak RSS (KB).
 bench_python_warm() {
-  "$PY_USED" - "$INPUT" "$PY_RUNNER" "$RUNS" <<'PY'
+  "$PYBIN" - "$INPUT" "$PY_RUNNER" "$RUNS" <<'PY'
 import importlib.util, resource, sys, time
 from pathlib import Path
 
@@ -111,28 +111,22 @@ print(f"{avg:.6f} {rss_kb}")
 PY
 }
 
-# Pick the Python docling that can convert this input and label which pipeline it
-# runs. The env (`.venv-compare`) now does everything, so the label is driven by
-# the input format, not by which env answered: a PDF/image/audio input goes
-# through docling's full ML pipeline (layout + tables + OCR), every other format
-# through the torch-free declarative backend. A probe still gates whether a
-# head-to-head is shown at all (some formats the local docling can't convert).
+# The single `.venv-compare` env (installed by `ensure_docling` above) handles
+# every format, so the pipeline label is driven by the input format, not by which
+# env answered: a PDF/image/audio input goes through docling's full ML pipeline
+# (layout + tables + OCR), every other format through the torch-free declarative
+# backend. A probe gates whether a head-to-head is shown at all — some formats the
+# locally-installed docling can't convert, in which case we report Rust-only.
 case "${INPUT,,}" in
   *.pdf | *.png | *.jpg | *.jpeg | *.tif | *.tiff | *.bmp | *.webp | *.gif | *.wav | *.mp3 | *.flac | *.m4a)
     PY_KIND="full ML pipeline (layout + tables + OCR)" ;;
   *)
     PY_KIND="declarative backend (no torch)" ;;
 esac
-PY_USED="$PYBIN"
 PY_OK=1
 probe="$(mktemp)"
 if ! "$PYBIN" "$PY_RUNNER" "$INPUT" "$probe" >/dev/null 2>&1 || [[ ! -s "$probe" ]]; then
-  : >"$probe"
-  if ensure_docling_pdf && "$PYBIN_PDF" "$PY_RUNNER" "$INPUT" "$probe" >/dev/null 2>&1 && [[ -s "$probe" ]]; then
-    PY_USED="$PYBIN_PDF"
-  else
-    PY_OK=0
-  fi
+  PY_OK=0
 fi
 rm -f "$probe"
 
@@ -141,7 +135,7 @@ read -r rs_min rs_avg rs_rss rs_cpu < <(bench_process "$RUST_BIN" "$INPUT")
 
 if [[ "$PY_OK" -eq 1 ]]; then
   echo ">> measuring Python docling [$PY_KIND] (end-to-end process) ..."
-  read -r py_min py_avg py_rss py_cpu < <(bench_process "$PY_USED" "$PY_RUNNER" "$INPUT")
+  read -r py_min py_avg py_rss py_cpu < <(bench_process "$PYBIN" "$PY_RUNNER" "$INPUT")
   echo ">> measuring Python docling (warm, in-process) ..."
   read -r pyw_avg pyw_rss < <(bench_python_warm 2>/dev/null) || { pyw_avg=""; pyw_rss=0; }
 fi
