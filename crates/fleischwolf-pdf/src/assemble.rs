@@ -5,7 +5,7 @@
 //! assigned to its best-containing region, regions are ordered in reading order
 //! (two-column aware), and each becomes a typed node by its layout label.
 
-use fleischwolf_core::{DoclingDocument, Node, PictureImage, Table};
+use fleischwolf_core::{Node, PictureImage, Table};
 
 use crate::layout::Region;
 use crate::pdfium_backend::{PdfPage, TextCell};
@@ -455,20 +455,27 @@ fn region_text(region: &Region, cells: &[TextCell]) -> String {
             let h = (c.b - c.t).abs().max((p.b - p.t).abs()).max(1.0);
             let gap = if rtl { p.l - c.r } else { c.l - p.r };
             // Dehyphenate a wrapped word: a line ending in a hyphen/dash followed
-            // by a lowercase continuation joins without the dash or a space
-            // (`platforms—` + `reflects` → `platformsreflects`). The dash is still
-            // raw here (clean_text normalizes em/en dashes later), so match them all.
+            // by a continuation joins without the dash or a space (`platforms—` +
+            // `reflects` → `platformsreflects`). The dash is still raw here
+            // (clean_text normalizes em/en dashes later), so match them all.
             let ends_dash = matches!(
                 joined.chars().last(),
                 Some('-' | '\u{2010}' | '\u{2013}' | '\u{2014}')
             );
+            let before = joined.chars().nth_back(1); // char before the dash
+            let next = t.chars().next();
             let dehyph = dp
                 && ends_dash
-                && joined
-                    .chars()
-                    .nth_back(1)
-                    .is_some_and(|c| c.is_alphabetic())
-                && t.chars().next().is_some_and(|c| c.is_lowercase());
+                && before.is_some_and(|c| c.is_alphabetic())
+                && next.is_some_and(|n| {
+                    // Ordinary hyphenation (lowercase continuation), or a CamelCase
+                    // compound name wrapped at the hyphen — a lowercase letter before
+                    // the dash continuing with an uppercase one (`PubTab-Net` →
+                    // `PubTabNet`, `Table-Former` → `TableFormer`). Excludes runs like
+                    // `MS-COCO` (uppercase before the dash) and `PubTables-1M` (digit).
+                    n.is_lowercase()
+                        || (n.is_uppercase() && before.is_some_and(|b| b.is_lowercase()))
+                });
             if dehyph {
                 joined.pop();
             } else if dp || !same_band || gap > h * 0.25 {
@@ -656,10 +663,10 @@ pub fn assemble_page(
     page: &PdfPage,
     regions: Vec<Region>,
     table_rows: &[Option<Vec<Vec<String>>>],
-    doc: &mut DoclingDocument,
-) {
+) -> (Vec<Node>, Vec<(String, String)>) {
+    let mut nodes: Vec<Node> = Vec::new();
     // Recover this page's hyperlinks (rendered only in strict Markdown).
-    doc.links.extend(resolve_link_anchors(page));
+    let links = resolve_link_anchors(page);
     // Pair each region with its precomputed TableFormer grid (indexed by original
     // order) and order by reading order together, so they stay aligned.
     let mut items: Vec<(Region, Option<Vec<Vec<String>>>)> = regions
@@ -697,9 +704,9 @@ pub fn assemble_page(
             let caption = caption_for[i]
                 .map(|ci| region_text(&regions[ci], &page.cells))
                 .filter(|t| !t.is_empty());
-            doc.push(Node::Picture {
+            nodes.push(Node::Picture {
                 caption,
-                image: crop_region(page, region),
+                image: crate::timing::timed("crop_region", || crop_region(page, region)),
             });
             continue;
         }
@@ -710,7 +717,7 @@ pub fn assemble_page(
         match region.label {
             // docling renders both the document title and section headers as
             // `##` (it never emits a top-level `#` for PDFs), so match that.
-            "title" | "section_header" => doc.push(Node::Heading {
+            "title" | "section_header" => nodes.push(Node::Heading {
                 level: 2,
                 text: md_escape(&text),
             }),
@@ -723,7 +730,7 @@ pub fn assemble_page(
                     .trim_start()
                     .to_string();
                 if let Some((number, rest)) = parse_ordered_marker(&stripped) {
-                    doc.push(Node::ListItem {
+                    nodes.push(Node::ListItem {
                         ordered: true,
                         number,
                         first_in_list: false,
@@ -731,7 +738,7 @@ pub fn assemble_page(
                         level: 0,
                     });
                 } else {
-                    doc.push(Node::ListItem {
+                    nodes.push(Node::ListItem {
                         ordered: false,
                         number: 0,
                         first_in_list: false,
@@ -752,11 +759,11 @@ pub fn assemble_page(
                         vec![vec![text.clone()]]
                     }
                 });
-                doc.push(Node::Table(Table { rows }));
+                nodes.push(Node::Table(Table { rows }));
             }
             // docling does not decode formulas in the standard pipeline; it emits
             // a placeholder comment rather than the (garbled) raw glyph text.
-            "formula" => doc.push(Node::Paragraph {
+            "formula" => nodes.push(Node::Paragraph {
                 text: "<!-- formula-not-decoded -->".into(),
             }),
             // Code blocks: use the space-glyph-only grouping (monospace keeps its
@@ -772,7 +779,7 @@ pub fn assemble_page(
                     .replace(" ;", ";")
                     .replace(" )", ")")
                     .replace(" (", "(");
-                doc.push(Node::Code {
+                nodes.push(Node::Code {
                     language: None,
                     text: code,
                 });
@@ -780,16 +787,17 @@ pub fn assemble_page(
                 if let Some(ci) = code_caption_for[i] {
                     let cap = region_text(&regions[ci], &page.cells);
                     if !cap.is_empty() {
-                        doc.push(Node::Paragraph { text: cap });
+                        nodes.push(Node::Paragraph { text: cap });
                     }
                 }
             }
             // text, caption, footnote → paragraph
-            _ => doc.push(Node::Paragraph {
+            _ => nodes.push(Node::Paragraph {
                 text: md_escape(&text),
             }),
         }
     }
+    (nodes, links)
 }
 
 /// Merge paragraph fragments split across a column or page break. docling joins a
@@ -800,6 +808,15 @@ pub fn assemble_page(
 /// past a figure resumes below it (`…The wing type that is` ⟶[figure]⟶ `the most
 /// common…`), and docling emits the whole paragraph before the figure. A heading,
 /// table, or list between them ends the paragraph (no merge).
+/// A paragraph that is really a figure/table caption (`Fig. 1. …`, `Table 2 …`).
+/// Used to skip an unpaired caption when stitching a paragraph that wraps around
+/// a figure.
+fn looks_like_caption(text: &str) -> bool {
+    let head: String = text.trim_start().chars().take(14).collect();
+    (head.starts_with("Fig") || head.starts_with("Table"))
+        && head.contains(|c: char| c.is_ascii_digit())
+}
+
 pub(crate) fn merge_continuations(nodes: &mut Vec<Node>) {
     let mut i = 0;
     while i + 1 < nodes.len() {
@@ -807,6 +824,15 @@ pub(crate) fn merge_continuations(nodes: &mut Vec<Node>) {
             i += 1;
             continue;
         };
+        // A figure/table caption is a self-contained unit; body text resuming
+        // after a figure is the continuation case, not the caption itself. Never
+        // stitch *from* a caption — otherwise a caption that ends in a lone glyph
+        // (`Fig. 5. … PubTabNet. μ`) would swallow a following stray figure label
+        // (a standalone `μ`) into `… μ μ`.
+        if looks_like_caption(a) {
+            i += 1;
+            continue;
+        }
         // Open if the fragment ends mid-word (a letter) or with a wrap hyphen/dash
         // — docling joins `vocab-` + `ulary` → `vocab- ulary`.
         let a_open = a.trim_end().chars().next_back().is_some_and(|c| {
@@ -817,9 +843,13 @@ pub(crate) fn merge_continuations(nodes: &mut Vec<Node>) {
             continue;
         }
         // The continuation is the next paragraph, looking past any figures the
-        // text wraps around (but nothing else).
+        // text wraps around — and a figure/table caption that was emitted as its
+        // own paragraph (an above-the-figure caption that didn't pair), since the
+        // body text resumes after the whole figure+caption block.
         let mut j = i + 1;
-        while matches!(nodes.get(j), Some(Node::Picture { .. })) {
+        while matches!(nodes.get(j), Some(Node::Picture { .. }))
+            || matches!(nodes.get(j), Some(Node::Paragraph { text }) if looks_like_caption(text))
+        {
             j += 1;
         }
         let cont = matches!(nodes.get(j), Some(Node::Paragraph { text: b })
