@@ -298,6 +298,15 @@ fn font_ascent_descent(doc: &Document, fdict: &Dictionary, two_byte: bool) -> (f
                 .or_else(|| o.as_i64().ok().map(|i| i as f32))
         })
         .unwrap_or(-250.0) as f64;
+    // Some subsetted fonts carry a degenerate FontDescriptor (`/Ascent 0
+    // /Descent 0`) — the real metrics live in the font program. That collapses
+    // the loose box to zero height, so the line cells get zero area and the
+    // layout's region/text assignment drops them (2305's References list lost
+    // every prose line, keeping only the URLs). Fall back to typical text metrics
+    // so the box has height.
+    if asc - desc <= 1.0 {
+        return (750.0, -250.0);
+    }
     (asc, desc)
 }
 
@@ -1078,8 +1087,17 @@ fn glyph_name_to_char(name: &[u8]) -> Option<char> {
         "quotedblright" => '\u{201D}',
         "quotedblbase" => '\u{201E}',
         "quotesinglbase" => '\u{201A}',
+        // Latin f-ligatures named in `/Differences` (e.g. 2305's body font). These
+        // map to the presentation-form code points, which `decompose_ligatures`
+        // then spells back out (`ff`→"ff") — without them the glyph decodes to
+        // nothing and the sanitizer fills the gap with a space (`di erences`).
+        "ff" => '\u{FB00}',
         "fi" => '\u{FB01}',
         "fl" => '\u{FB02}',
+        "ffi" => '\u{FB03}',
+        "ffl" => '\u{FB04}',
+        "ft" => '\u{FB05}',
+        "st" => '\u{FB06}',
         "degree" => '\u{00B0}',
         "trademark" => '\u{2122}',
         "registered" => '\u{00AE}',
