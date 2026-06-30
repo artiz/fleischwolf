@@ -107,19 +107,29 @@ impl Cell {
     }
 }
 
-/// `applicable_for_merge`: both active, same font (ligatures bridge fonts), and
-/// same reading orientation.
-fn applicable(a: &Cell, b: &Cell) -> bool {
+/// `applicable_for_merge`: both active and same reading orientation. A different
+/// font normally blocks the merge (keeps a bold label and its value as separate
+/// line cells). On the clean-box parser path, **punctuation/space cells bridge
+/// fonts** so a sentence period set in a separate punctuation font joins its word
+/// instead of fragmenting (`العمل .` → `العمل.`); letters still enforce the font.
+fn applicable(a: &Cell, b: &Cell, parser: bool) -> bool {
     if !a.active || !b.active {
         return false;
     }
-    // font 0 = unknown/space (font-neutral); ligatures bridge fonts too.
-    if a.font != 0
-        && b.font != 0
-        && a.font != b.font
-        && !is_ligature(&a.text)
-        && !is_ligature(&b.text)
-    {
+    // A lone punctuation glyph (not a space) set in a separate punctuation font
+    // bridges fonts so it joins its word — but only next to RTL text. In LTR a
+    // different-font punctuation (e.g. a bold `:`) is a real run boundary docling
+    // keeps spaced (`Laboratories :`); in Arabic the sentence period sits in a
+    // Latin punctuation font yet attaches (`العمل.`). Parser path only.
+    let lone_punct = |s: &str| {
+        let mut ch = s.chars();
+        matches!(ch.next(), Some(c) if c != ' ' && is_punct_or_space(&c.to_string()))
+            && ch.next().is_none()
+    };
+    let punct_bridge =
+        parser && ((lone_punct(&a.text) && !b.ltr) || (lone_punct(&b.text) && !a.ltr));
+    let font_neutral = is_ligature(&a.text) || is_ligature(&b.text) || punct_bridge;
+    if a.font != 0 && b.font != 0 && a.font != b.font && !font_neutral {
         return false;
     }
     a.same_orientation(b)
@@ -133,7 +143,7 @@ fn pass_ltr(cells: &mut [Cell], allow_reverse: bool, euclidean: bool) {
         }
         let mut j = i + 1;
         while j < cells.len() {
-            if !applicable(&cells[i], &cells[j]) {
+            if !applicable(&cells[i], &cells[j], euclidean) {
                 break;
             }
             let i_lig = is_ligature(&cells[i].text) || cells[i].lig_carry;
@@ -170,7 +180,7 @@ fn pass_rtl(cells: &mut [Cell], euclidean: bool) {
             continue;
         }
         let j = i - 1;
-        if !applicable(&cells[i], &cells[j]) {
+        if !applicable(&cells[i], &cells[j], euclidean) {
             continue;
         }
         let i_lig = is_ligature(&cells[i].text) || cells[i].lig_carry;
