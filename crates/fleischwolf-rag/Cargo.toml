@@ -1,0 +1,66 @@
+[package]
+name = "fleischwolf-rag"
+description = "Pluggable RAG subsystem for Fleischwolf: chunking, embeddings, vector store, and semantic search."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["rag", "embeddings", "semantic-search", "vector", "docling"]
+categories = ["text-processing", "database"]
+# MSRV is raised over the workspace default by tokio/sqlx/reqwest; kept in step
+# with fleischwolf-pdf (ort) which already needs a recent toolchain.
+rust-version = "1.82"
+
+[[bin]]
+name = "fleischwolf-rag"
+path = "src/bin/fleischwolf-rag.rs"
+
+[features]
+# The default build is fully offline-testable: bundled SQLite + HTTP embedders.
+default = ["sqlite", "ollama"]
+sqlite = ["sqlx/sqlite"]
+postgres = ["sqlx/postgres"]
+# HTTP-only backends ride on reqwest (no native deps) and always compile; the
+# feature flags below just gate the small amount of provider-specific code.
+ollama = []
+gemini = []
+openrouter = []
+# Heavy / native-dependency backends. Real code, but not exercised in offline CI.
+onnx-embed = ["dep:ort", "dep:tokenizers"]
+remote-sources = ["dep:suppaftp", "dep:ssh2"]
+rabbitmq = ["dep:lapin", "dep:futures-lite"]
+redis = ["dep:redis", "dep:futures-lite"]
+
+[dependencies]
+fleischwolf = { path = "../fleischwolf", version = "0.10.0" }
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "time", "signal"] }
+async-trait = "0.1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dotenvy = "0.15"
+clap = { version = "4", features = ["derive", "env"] }
+# rustls-tls so the crypto/TLS stack matches what the workspace already builds via
+# `ort` (tls-rustls) and sqlx below — no OpenSSL system dependency.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls"] }
+pulldown-cmark = { version = "0.13", default-features = false }
+uuid = { version = "1", features = ["v4"] }
+sha2 = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# --- feature-gated / optional backends ---
+ort = { version = "2.0.0-rc.12", default-features = false, features = ["std", "download-binaries", "tls-rustls"], optional = true }
+tokenizers = { version = "0.20", default-features = false, features = ["onig"], optional = true }
+suppaftp = { version = "6", optional = true }
+ssh2 = { version = "0.9", optional = true }
+lapin = { version = "2", optional = true }
+futures-lite = { version = "2", optional = true }
+redis = { version = "0.27", default-features = false, features = ["tokio-comp"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
