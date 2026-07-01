@@ -39,9 +39,6 @@
         "$ref": "#/groups/0"
       },
       {
-        "$ref": "#/groups/3"
-      },
-      {
         "$ref": "#/texts/14"
       },
       {
@@ -67,6 +64,9 @@
         },
         {
           "$ref": "#/texts/7"
+        },
+        {
+          "$ref": "#/texts/12"
         }
       ],
       "content_layer": "body",
@@ -109,20 +109,6 @@
     },
     {
       "self_ref": "#/groups/3",
-      "parent": {
-        "$ref": "#/body"
-      },
-      "children": [
-        {
-          "$ref": "#/texts/12"
-        }
-      ],
-      "content_layer": "body",
-      "name": "list",
-      "label": "list"
-    },
-    {
-      "self_ref": "#/groups/4",
       "parent": {
         "$ref": "#/texts/12"
       },
@@ -307,11 +293,11 @@
     {
       "self_ref": "#/texts/12",
       "parent": {
-        "$ref": "#/groups/3"
+        "$ref": "#/groups/0"
       },
       "children": [
         {
-          "$ref": "#/groups/4"
+          "$ref": "#/groups/3"
         }
       ],
       "content_layer": "body",
@@ -319,13 +305,13 @@
       "prov": [],
       "orig": "numbered list 3",
       "text": "numbered list 3",
-      "enumerated": false,
-      "marker": "-"
+      "enumerated": true,
+      "marker": "3."
     },
     {
       "self_ref": "#/texts/13",
       "parent": {
-        "$ref": "#/groups/4"
+        "$ref": "#/groups/3"
       },
       "children": [],
       "content_layer": "body",
@@ -358,8 +344,8 @@
       "content_layer": "body",
       "label": "text",
       "prov": [],
-      "orig": "\nContrary to popular belief,  **Lorem Ipsum is not simply random text** . Richard McClintock,  *a Latin professor at Hampden-Sydney College in Virginia* , looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage,  and going through the cites of the word in classical literature , discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" ( ~~The Extremes of Good and Evil~~ ) by Cicero, written in 45 BC.",
-      "text": "\nContrary to popular belief,  **Lorem Ipsum is not simply random text** . Richard McClintock,  *a Latin professor at Hampden-Sydney College in Virginia* , looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage,  and going through the cites of the word in classical literature , discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" ( ~~The Extremes of Good and Evil~~ ) by Cicero, written in 45 BC."
+      "orig": "Contrary to popular belief,  **Lorem Ipsum is not simply random text** . Richard McClintock,  *a Latin professor at Hampden-Sydney College in Virginia* , looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage,  and going through the cites of the word in classical literature , discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" ( ~~The Extremes of Good and Evil~~ ) by Cicero, written in 45 BC.",
+      "text": "Contrary to popular belief,  **Lorem Ipsum is not simply random text** . Richard McClintock,  *a Latin professor at Hampden-Sydney College in Virginia* , looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage,  and going through the cites of the word in classical literature , discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" ( ~~The Extremes of Good and Evil~~ ) by Cicero, written in 45 BC."
     },
     {
       "self_ref": "#/texts/16",

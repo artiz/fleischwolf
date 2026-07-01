@@ -9,9 +9,11 @@
 //! Rich table cells (multiple paragraphs, nested tables, formatting) render
 //! their full block content, flattened into the cell.
 //!
-//! Out of scope for now (tracked in COMPARING.md): the docling-core inline-group
-//! spacing for rich cells, drawing-embedded text and anchored/grouped image
-//! layout, text boxes, checkboxes, and the full list-continuation state machine.
+//! Inline equations reproduce docling's inline-group spacing and stay attached to
+//! their list item (`_handle_equations_in_text`); the OMML → LaTeX port is in
+//! `omml.rs`. Out of scope for now (tracked in MIGRATION.md §5): position-sorted
+//! layout of grouped/anchored drawings and the `<mc:AlternateContent>` image
+//! de-duplication for grouped shapes.
 
 use std::collections::HashMap;
 
@@ -214,28 +216,23 @@ fn handle_paragraph_inner(
         }
     }
 
-    // Equations: a paragraph whose only content is OMML is emitted as one or
-    // more standalone formulas (`$$…$$`); otherwise equations are inlined (`$…$`).
-    // `<m:oMath>` may sit directly in the paragraph or inside `<m:oMathPara>`.
-    let omaths: Vec<XmlNode> = p
-        .descendants()
-        .filter(|c| c.has_tag_name("oMath"))
-        .collect();
-    if !omaths.is_empty() {
-        let non_math = paragraph_markdown(p, ctx);
-        if non_math.trim().is_empty() {
-            for m in &omaths {
-                let eq = crate::backend::omml::to_latex(*m);
+    // Equations. A paragraph whose only content is OMML becomes one or more
+    // standalone `$$…$$` formulas; otherwise its equations are woven inline
+    // (`$…$`) into the surrounding text while the paragraph keeps its list /
+    // heading role — mirroring docling's `_handle_equations_in_text` and the
+    // inline-group serialization that puts a space between every child (so an
+    // inline formula picks up a space on each side, doubling the space that the
+    // preceding text run already carries).
+    let eq_parts = collect_equation_parts(p);
+    let has_equations = eq_parts.iter().any(|part| matches!(part, EqPart::Eq(_)));
+    if has_equations && run_text(&eq_parts).trim().is_empty() {
+        for part in &eq_parts {
+            if let EqPart::Eq(eq) = part {
                 if !eq.is_empty() {
                     doc.push(Node::Paragraph {
                         text: format!("$${eq}$$"),
                     });
                 }
-            }
-        } else {
-            let text = paragraph_with_equations(p, ctx);
-            if !text.is_empty() {
-                doc.push(Node::Paragraph { text });
             }
         }
         state.list_run_base = None;
@@ -259,7 +256,11 @@ fn handle_paragraph_inner(
         return;
     }
 
-    let text = paragraph_markdown(p, ctx);
+    let text = if has_equations {
+        serialize_inline_equations(&eq_parts)
+    } else {
+        paragraph_markdown(p, ctx)
+    };
 
     // Numbering can come from the paragraph (a direct `numId` of 0 turns it off
     // and overrides the style) or be inherited from the paragraph's style.
@@ -351,7 +352,7 @@ fn handle_paragraph_inner(
     }
 
     if !text.is_empty() {
-        if rich {
+        if rich && !has_equations {
             // In a rich cell each format segment is its own block (joined with
             // blank lines, i.e. double spaces once flattened into the cell).
             let mut runs = Vec::new();
@@ -526,37 +527,117 @@ fn group_runs(runs: Vec<(String, Fmt, Option<String>)>) -> String {
     run_segments(runs).join(" ")
 }
 
-/// A paragraph with inline equations: run groups and `$…$` equations in document
-/// order, joined with spaces (docling's inline-group serialization).
-fn paragraph_with_equations(p: XmlNode, ctx: &Ctx) -> String {
-    let mut parts: Vec<String> = Vec::new();
-    let mut runs: Vec<(String, Fmt, Option<String>)> = Vec::new();
-    for child in child_elements(p) {
-        let omaths = omaths_of(child);
-        if omaths.is_empty() {
-            collect_one(child, Fmt::default(), None, ctx, &mut runs);
-        } else {
-            let grouped = group_runs(std::mem::take(&mut runs));
-            if !grouped.is_empty() {
-                parts.push(grouped);
-            }
-            for m in omaths {
-                let eq = crate::backend::omml::to_latex(m);
+/// One ordered fragment of a paragraph that mixes text and OMML: a raw text run
+/// (`<w:t>`), or a converted `<m:oMath>` LaTeX string. Text keeps its original
+/// whitespace — docling reconstructs the paragraph verbatim before splitting it.
+enum EqPart {
+    Text(String),
+    Eq(String),
+}
+
+/// Whether a node lives inside an OMML subtree (its `<m:t>` is math, not text).
+fn in_math(n: XmlNode) -> bool {
+    n.ancestors()
+        .any(|a| a.has_tag_name("oMath") || a.has_tag_name("oMathPara"))
+}
+
+/// Split a paragraph into ordered text/equation fragments — a port of docling's
+/// `_handle_equations_in_text`. Direct `<m:oMath>` children are preferred (to
+/// keep sibling order); otherwise a deep walk picks up OMML wrapped in
+/// `<m:oMathPara>` or other elements.
+fn collect_equation_parts(p: XmlNode) -> Vec<EqPart> {
+    let mut parts = Vec::new();
+    let has_direct = child_elements(p).any(|c| c.has_tag_name("oMath"));
+    if has_direct {
+        for child in child_elements(p) {
+            if child.has_tag_name("oMath") {
+                let eq = crate::backend::omml::to_latex(child);
                 if !eq.is_empty() {
-                    parts.push(format!("${eq}$"));
+                    parts.push(EqPart::Eq(eq));
+                }
+            } else {
+                for t in child
+                    .descendants()
+                    .filter(|n| n.has_tag_name("t") && !in_math(*n))
+                {
+                    if let Some(txt) = t.text() {
+                        parts.push(EqPart::Text(txt.to_string()));
+                    }
+                }
+            }
+        }
+    } else {
+        for node in p.descendants() {
+            if node.has_tag_name("t") && !in_math(node) {
+                if let Some(txt) = node.text() {
+                    parts.push(EqPart::Text(txt.to_string()));
+                }
+            } else if node.has_tag_name("oMath") {
+                let eq = crate::backend::omml::to_latex(node);
+                if !eq.is_empty() {
+                    parts.push(EqPart::Eq(eq));
                 }
             }
         }
     }
-    let grouped = group_runs(runs);
-    if !grouped.is_empty() {
-        parts.push(grouped);
-    }
     parts
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join(" ")
+}
+
+/// The paragraph's plain (non-math) run text — empty means the paragraph holds
+/// only equations, which are then emitted as standalone `$$…$$` blocks.
+fn run_text(parts: &[EqPart]) -> String {
+    parts
+        .iter()
+        .filter_map(|p| match p {
+            EqPart::Text(t) => Some(t.as_str()),
+            EqPart::Eq(_) => None,
+        })
+        .collect()
+}
+
+/// Serialize a mixed text/equation paragraph the way docling's inline group does:
+/// consecutive text runs are merged, the whole is stripped at its ends (and the
+/// final text fragment fully stripped), then fragments — text escaped, equations
+/// as `$…$` — are joined with single spaces.
+fn serialize_inline_equations(parts: &[EqPart]) -> String {
+    // Merge consecutive text fragments (docling splits the reconstructed text on
+    // each equation marker, so text between two equations is a single element).
+    let mut merged: Vec<EqPart> = Vec::new();
+    for part in parts {
+        match part {
+            EqPart::Text(t) => {
+                if let Some(EqPart::Text(last)) = merged.last_mut() {
+                    last.push_str(t);
+                } else {
+                    merged.push(EqPart::Text(t.clone()));
+                }
+            }
+            EqPart::Eq(e) => merged.push(EqPart::Eq(e.clone())),
+        }
+    }
+
+    let n = merged.len();
+    let mut out: Vec<String> = Vec::new();
+    for (i, part) in merged.iter().enumerate() {
+        match part {
+            EqPart::Eq(e) => out.push(format!("${e}$")),
+            EqPart::Text(t) => {
+                // The whole reconstructed text is stripped at its ends; the final
+                // text fragment is additionally stripped in full.
+                let s = if i == n - 1 {
+                    t.trim()
+                } else if i == 0 {
+                    t.trim_start()
+                } else {
+                    t.as_str()
+                };
+                if !s.is_empty() {
+                    out.push(escape_text(s));
+                }
+            }
+        }
+    }
+    out.join(" ")
 }
 
 #[derive(Clone, Copy, Default, PartialEq)]

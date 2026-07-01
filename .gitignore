@@ -19,3 +19,7 @@ models/
 # Python bytecode cache from the comparison scripts
 __pycache__/
 *.pyc
+
+# Local docling ground-truth env & scratch dir for this migration work
+/.venv-gt
+/scratch-gt

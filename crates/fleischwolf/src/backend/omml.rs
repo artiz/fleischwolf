@@ -12,12 +12,21 @@ use roxmltree::Node as XmlNode;
 /// Characters LaTeX-escaped by `escape_latex`.
 const ESCAPE_CHARS: &[char] = &['{', '}', '_', '^', '#', '&', '$', '%', '~'];
 
-/// Convert an `<m:oMath>` element to a LaTeX string (trimmed, double-spaces
-/// collapsed — matching `str(oMath2Latex(...)).strip()`).
+/// Convert an `<m:oMath>` element to a LaTeX string. `oMath2Latex.__str__`
+/// applies a **single** pass of `"  " -> " "` (not a full whitespace collapse):
+/// symbols carry two-space padding, so a lone symbol collapses to one space
+/// while a symbol adjacent to another (giving 3–4 spaces) keeps a double space.
+/// docling then `.strip()`s the result.
 pub fn to_latex(omath: XmlNode) -> String {
-    let s = process_children(omath);
-    s.replace("  ", " ").trim().to_string()
+    process_children(omath)
+        .replace("  ", " ")
+        .trim()
+        .to_string()
 }
+
+/// Characters that mark a limit/label as mathematical (so its spaces are *not*
+/// escaped) — docling's `MATH_CHARS`.
+const MATH_CHARS: &[char] = &['\\', '<', '>', '=', '+', '*', '/', '^', '_', '{', '}'];
 
 fn local<'i>(n: XmlNode<'_, 'i>) -> &'i str {
     n.tag_name().name()
@@ -51,7 +60,7 @@ fn dispatch(e: XmlNode) -> String {
         "eqArr" => do_eqarr(e),
         "limLow" => do_limlow(e),
         "limUpp" => do_limupp(e),
-        "lim" => process_children(e),
+        "lim" => do_lim(e),
         "m" => do_m(e),
         "mr" => do_mr(e),
         "nary" => do_nary(e),
@@ -222,22 +231,64 @@ fn do_eqarr(e: XmlNode) -> String {
         .join("\\\\")
 }
 
+/// Grouping commands (underbrace/overbrace/…) that accept a subscript label.
+const GROUPING_FUNCS: &[&str] = &[
+    "\\underbrace",
+    "\\overbrace",
+    "\\underparen",
+    "\\overparen",
+    "\\underbracket",
+    "\\overbracket",
+];
+
 fn do_limlow(e: XmlNode) -> String {
     let base = child(e, "e").unwrap_or_default();
     let lim = child(e, "lim").unwrap_or_default();
-    let name = base.trim();
-    match name {
-        "lim" => format!("\\lim_{{{lim}}}"),
-        "max" => format!("\\max_{{{lim}}}"),
-        "min" => format!("\\min_{{{lim}}}"),
-        _ => format!("{base}_{{{lim}}}"),
+    // Known limit functions map to a dedicated template.
+    if let Some(tmpl) = lim_func(&base) {
+        return tmpl.replace("%(lim)s", &lim);
     }
+    // Grouping commands (already-formatted LaTeX) just take a subscript.
+    if GROUPING_FUNCS
+        .iter()
+        .any(|f| base.starts_with(&format!("{f}{{")))
+    {
+        return format!("{base}_{{{lim}}}");
+    }
+    format!("{base}_{{{lim}}}")
+}
+
+/// docling's `LIM_FUNC` table.
+fn lim_func(base: &str) -> Option<&'static str> {
+    Some(match base {
+        "lim" => "\\lim_{%(lim)s}",
+        "max" => "\\max_{%(lim)s}",
+        "min" => "\\min_{%(lim)s}",
+        "argmax" => "\\operatorname{argmax}_{%(lim)s}",
+        "argmin" => "\\operatorname{argmin}_{%(lim)s}",
+        _ => return None,
+    })
 }
 
 fn do_limupp(e: XmlNode) -> String {
     let base = child(e, "e").unwrap_or_default();
     let lim = child(e, "lim").unwrap_or_default();
     format!("\\overset{{{lim}}}{{{base}}}")
+}
+
+/// A limit/label content (`<m:lim>`): `\rightarrow` → `\to`, trailing line-break
+/// and whitespace stripped, and — for a plain-text label with no math chars —
+/// spaces escaped as `\ ` (docling's `do_lim`).
+fn do_lim(e: XmlNode) -> String {
+    let mut result = process_children(e).replace("\\rightarrow", "\\to");
+    result = result.trim_end().to_string();
+    if let Some(stripped) = result.strip_suffix("\\\\") {
+        result = stripped.trim_end().to_string();
+    }
+    if !result.is_empty() && !result.chars().any(|c| MATH_CHARS.contains(&c)) {
+        result = result.replace(' ', "\\ ");
+    }
+    result
 }
 
 fn do_ssub(e: XmlNode) -> String {
@@ -318,21 +369,28 @@ fn do_r(e: XmlNode) -> String {
     proc
 }
 
-/// Per-character Unicode → LaTeX for the symbols the corpus uses (the exact
-/// strings docling's pylatexenc-based `process_unicode` returns).
+/// Per-character Unicode → LaTeX for the symbols the corpus uses — the exact
+/// strings docling's `process_unicode` returns (`_MATH_CHAR_MAP` first, else
+/// pylatexenc's `\ensuremath{…}`/`{…}` unwrapped to a **two-space**-padded macro;
+/// the two-space padding is load-bearing, see [`to_latex`]).
 fn process_unicode(c: char) -> String {
     match c {
+        // _MATH_CHAR_MAP (returned verbatim, no padding).
         '\u{2013}' | '\u{2014}' | '\u{2212}' => "-".to_string(),
+        '\u{005e}' => "^".to_string(),
         '\u{00d7}' => "\\times ".to_string(),
-        '\u{00b1}' => " \\pm ".to_string(),
-        '\u{03c0}' => " \\pi ".to_string(),
-        '\u{03c4}' => " \\tau ".to_string(),
-        '\u{03f5}' => " \\epsilon ".to_string(),
+        // pylatexenc `\ensuremath{…}` → two-space-padded macro.
+        '\u{00b1}' => "  \\pm  ".to_string(),
+        '\u{03c0}' => "  \\pi  ".to_string(),
+        '\u{03c4}' => "  \\tau  ".to_string(),
+        '\u{03f5}' => "  \\epsilon  ".to_string(),
+        '\u{221e}' => "  \\infty  ".to_string(),
+        '\u{2229}' => "  \\cap  ".to_string(),
+        '\u{2264}' => "  \\leq  ".to_string(),
+        '\u{22c5}' => "  \\cdot  ".to_string(),
+        '\u{003c}' => "  <  ".to_string(),
+        // `{\textellipsis}` → one-space-padded `\text{ … }`.
         '\u{2026}' => " \\text{ \\textellipsis } ".to_string(),
-        '\u{221e}' => " \\infty ".to_string(),
-        '\u{2229}' => " \\cap ".to_string(),
-        '\u{2264}' => " \\leq ".to_string(),
-        '\u{22c5}' => " \\cdot ".to_string(),
         other => other.to_string(),
     }
 }
@@ -414,5 +472,36 @@ fn greek_or(key: Option<&str>, default: &str) -> String {
     match key {
         None => default.to_string(),
         Some(k) => k.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use roxmltree::Document;
+
+    fn latex(xml: &str) -> String {
+        let doc = Document::parse(xml).unwrap();
+        let omath = doc.descendants().find(|n| n.has_tag_name("oMath")).unwrap();
+        to_latex(omath)
+    }
+
+    #[test]
+    fn argmax_limit_with_escaped_label() {
+        // A `limLow` whose base is `argmax` maps to `\operatorname{argmax}`, and a
+        // plain-text limit label (no math chars) has its spaces escaped as `\ `.
+        let xml = r#"<r xmlns:m="m"><m:oMath><m:limLow>
+            <m:e><m:r><m:t>argmax</m:t></m:r></m:e>
+            <m:lim><m:r><m:t>x y</m:t></m:r></m:lim>
+          </m:limLow></m:oMath></r>"#;
+        assert_eq!(latex(xml), r"\operatorname{argmax}_{x\ y}");
+    }
+
+    #[test]
+    fn symbol_padding_survives_single_collapse() {
+        // `∞` and `<` each carry two-space padding; a single `"  " -> " "` pass
+        // leaves a double space where two padded symbols meet.
+        let xml = r#"<r xmlns:m="m"><m:oMath><m:r><m:t>&#8734;&#60;x</m:t></m:r></m:oMath></r>"#;
+        assert_eq!(latex(xml), r"\infty  < x");
     }
 }

@@ -148,7 +148,7 @@ fn fetch_remote(url: &str) -> Option<PictureImage> {
 
 /// Build a [`PictureImage`] from explicit mimetype + bytes, reading the pixel
 /// size from the header. `None` for empty data or a format `image` can't read.
-fn build_picture(mimetype: impl Into<String>, data: Vec<u8>) -> Option<PictureImage> {
+pub(crate) fn build_picture(mimetype: impl Into<String>, data: Vec<u8>) -> Option<PictureImage> {
     if data.is_empty() {
         return None;
     }

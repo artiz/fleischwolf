@@ -45,16 +45,25 @@
         "$ref": "#/texts/5"
       },
       {
+        "$ref": "#/tables/3"
+      },
+      {
         "$ref": "#/texts/6"
+      },
+      {
+        "$ref": "#/tables/4"
       },
       {
         "$ref": "#/texts/7"
       },
       {
+        "$ref": "#/tables/5"
+      },
+      {
         "$ref": "#/texts/8"
       },
       {
-        "$ref": "#/tables/3"
+        "$ref": "#/tables/6"
       }
     ],
     "content_layer": "body",
@@ -228,7 +237,7 @@
             "end_row_offset_idx": 2,
             "start_col_offset_idx": 0,
             "end_col_offset_idx": 1,
-            "text": "This is a list:",
+            "text": "This is a list:  - A First - A Second - A Third",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -241,7 +250,7 @@
             "end_row_offset_idx": 2,
             "start_col_offset_idx": 1,
             "end_col_offset_idx": 2,
-            "text": "This is a formatted list:",
+            "text": "This is a formatted list:  - B  **First** - B  *Second* - B  Third",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -254,7 +263,7 @@
             "end_row_offset_idx": 3,
             "start_col_offset_idx": 0,
             "end_col_offset_idx": 1,
-            "text": "First Paragraph\n\nSecond Paragraph \nThird paragraph before a numbered list",
+            "text": "First Paragraph  Second Paragraph  Third paragraph before a numbered list  1. Number one 2. Number two 3. Number three",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -267,7 +276,7 @@
             "end_row_offset_idx": 3,
             "start_col_offset_idx": 1,
             "end_col_offset_idx": 2,
-            "text": "This is simple text with  **bold** ,  ~~strikethrough~~  and  *italic*  formatting with x 2  and H 2 O",
+            "text": "This is simple text with bold, strikethrough and italic formatting with x2 and H2O",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -280,7 +289,7 @@
             "end_row_offset_idx": 4,
             "start_col_offset_idx": 0,
             "end_col_offset_idx": 1,
-            "text": "This is a paragraph This is another paragraph",
+            "text": "This is a paragraph  This is another paragraph",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -339,7 +348,7 @@
               "end_row_offset_idx": 2,
               "start_col_offset_idx": 0,
               "end_col_offset_idx": 1,
-              "text": "This is a list:",
+              "text": "This is a list:  - A First - A Second - A Third",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -352,7 +361,7 @@
               "end_row_offset_idx": 2,
               "start_col_offset_idx": 1,
               "end_col_offset_idx": 2,
-              "text": "This is a formatted list:",
+              "text": "This is a formatted list:  - B  **First** - B  *Second* - B  Third",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -367,7 +376,7 @@
               "end_row_offset_idx": 3,
               "start_col_offset_idx": 0,
               "end_col_offset_idx": 1,
-              "text": "First Paragraph\n\nSecond Paragraph \nThird paragraph before a numbered list",
+              "text": "First Paragraph  Second Paragraph  Third paragraph before a numbered list  1. Number one 2. Number two 3. Number three",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -380,7 +389,7 @@
               "end_row_offset_idx": 3,
               "start_col_offset_idx": 1,
               "end_col_offset_idx": 2,
-              "text": "This is simple text with  **bold** ,  ~~strikethrough~~  and  *italic*  formatting with x 2  and H 2 O",
+              "text": "This is simple text with bold, strikethrough and italic formatting with x2 and H2O",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -395,7 +404,7 @@
               "end_row_offset_idx": 4,
               "start_col_offset_idx": 0,
               "end_col_offset_idx": 1,
-              "text": "This is a paragraph This is another paragraph",
+              "text": "This is a paragraph  This is another paragraph",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -462,19 +471,6 @@
           {
             "row_span": 1,
             "col_span": 1,
-            "start_row_offset_idx": 0,
-            "end_row_offset_idx": 1,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "",
-            "column_header": true,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
             "start_row_offset_idx": 1,
             "end_row_offset_idx": 2,
             "start_col_offset_idx": 0,
@@ -492,20 +488,7 @@
             "end_row_offset_idx": 2,
             "start_col_offset_idx": 1,
             "end_col_offset_idx": 2,
-            "text": "Simple cell with  **bold**  and  *italic*  text",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 1,
-            "end_row_offset_idx": 2,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "",
+            "text": "Simple cell with bold and italic text",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -518,7 +501,7 @@
             "end_row_offset_idx": 3,
             "start_col_offset_idx": 0,
             "end_col_offset_idx": 1,
-            "text": "",
+            "text": "A B C Cell 1 Cell 2 Cell 3",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -531,184 +514,15 @@
             "end_row_offset_idx": 3,
             "start_col_offset_idx": 1,
             "end_col_offset_idx": 2,
-            "text": "Rich cell\nA nested table",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 2,
-            "end_row_offset_idx": 3,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 3,
-            "end_row_offset_idx": 4,
-            "start_col_offset_idx": 0,
-            "end_col_offset_idx": 1,
-            "text": "A",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 3,
-            "end_row_offset_idx": 4,
-            "start_col_offset_idx": 1,
-            "end_col_offset_idx": 2,
-            "text": "B",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 3,
-            "end_row_offset_idx": 4,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "C",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 4,
-            "end_row_offset_idx": 5,
-            "start_col_offset_idx": 0,
-            "end_col_offset_idx": 1,
-            "text": "*Cell 1*",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 4,
-            "end_row_offset_idx": 5,
-            "start_col_offset_idx": 1,
-            "end_col_offset_idx": 2,
-            "text": "Cell 2",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 4,
-            "end_row_offset_idx": 5,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "Cell 3",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 5,
-            "end_row_offset_idx": 6,
-            "start_col_offset_idx": 0,
-            "end_col_offset_idx": 1,
-            "text": "A",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 5,
-            "end_row_offset_idx": 6,
-            "start_col_offset_idx": 1,
-            "end_col_offset_idx": 2,
-            "text": "B",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 5,
-            "end_row_offset_idx": 6,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "C",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 6,
-            "end_row_offset_idx": 7,
-            "start_col_offset_idx": 0,
-            "end_col_offset_idx": 1,
-            "text": "~~Cell 1~~",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 6,
-            "end_row_offset_idx": 7,
-            "start_col_offset_idx": 1,
-            "end_col_offset_idx": 2,
-            "text": "Cell 2",
-            "column_header": false,
-            "row_header": false,
-            "row_section": false,
-            "fillable": false
-          },
-          {
-            "row_span": 1,
-            "col_span": 1,
-            "start_row_offset_idx": 6,
-            "end_row_offset_idx": 7,
-            "start_col_offset_idx": 2,
-            "end_col_offset_idx": 3,
-            "text": "Cell 3",
+            "text": "Rich cell A nested table  A B C Cell 1 Cell 2 Cell 3",
             "column_header": false,
             "row_header": false,
             "row_section": false,
             "fillable": false
           }
         ],
-        "num_rows": 7,
-        "num_cols": 3,
+        "num_rows": 3,
+        "num_cols": 2,
         "grid": [
           [
             {
@@ -736,19 +550,6 @@
               "row_header": false,
               "row_section": false,
               "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 0,
-              "end_row_offset_idx": 1,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "",
-              "column_header": true,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
             }
           ],
           [
@@ -772,20 +573,7 @@
               "end_row_offset_idx": 2,
               "start_col_offset_idx": 1,
               "end_col_offset_idx": 2,
-              "text": "Simple cell with  **bold**  and  *italic*  text",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 1,
-              "end_row_offset_idx": 2,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "",
+              "text": "Simple cell with bold and italic text",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -800,7 +588,7 @@
               "end_row_offset_idx": 3,
               "start_col_offset_idx": 0,
               "end_col_offset_idx": 1,
-              "text": "",
+              "text": "A B C Cell 1 Cell 2 Cell 3",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -813,184 +601,7 @@
               "end_row_offset_idx": 3,
               "start_col_offset_idx": 1,
               "end_col_offset_idx": 2,
-              "text": "Rich cell\nA nested table",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 2,
-              "end_row_offset_idx": 3,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            }
-          ],
-          [
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 3,
-              "end_row_offset_idx": 4,
-              "start_col_offset_idx": 0,
-              "end_col_offset_idx": 1,
-              "text": "A",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 3,
-              "end_row_offset_idx": 4,
-              "start_col_offset_idx": 1,
-              "end_col_offset_idx": 2,
-              "text": "B",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 3,
-              "end_row_offset_idx": 4,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "C",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            }
-          ],
-          [
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 4,
-              "end_row_offset_idx": 5,
-              "start_col_offset_idx": 0,
-              "end_col_offset_idx": 1,
-              "text": "*Cell 1*",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 4,
-              "end_row_offset_idx": 5,
-              "start_col_offset_idx": 1,
-              "end_col_offset_idx": 2,
-              "text": "Cell 2",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 4,
-              "end_row_offset_idx": 5,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "Cell 3",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            }
-          ],
-          [
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 5,
-              "end_row_offset_idx": 6,
-              "start_col_offset_idx": 0,
-              "end_col_offset_idx": 1,
-              "text": "A",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 5,
-              "end_row_offset_idx": 6,
-              "start_col_offset_idx": 1,
-              "end_col_offset_idx": 2,
-              "text": "B",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 5,
-              "end_row_offset_idx": 6,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "C",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            }
-          ],
-          [
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 6,
-              "end_row_offset_idx": 7,
-              "start_col_offset_idx": 0,
-              "end_col_offset_idx": 1,
-              "text": "~~Cell 1~~",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 6,
-              "end_row_offset_idx": 7,
-              "start_col_offset_idx": 1,
-              "end_col_offset_idx": 2,
-              "text": "Cell 2",
-              "column_header": false,
-              "row_header": false,
-              "row_section": false,
-              "fillable": false
-            },
-            {
-              "row_span": 1,
-              "col_span": 1,
-              "start_row_offset_idx": 6,
-              "end_row_offset_idx": 7,
-              "start_col_offset_idx": 2,
-              "end_col_offset_idx": 3,
-              "text": "Cell 3",
+              "text": "Rich cell A nested table  A B C Cell 1 Cell 2 Cell 3",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -1061,7 +672,7 @@
             "end_row_offset_idx": 2,
             "start_col_offset_idx": 1,
             "end_col_offset_idx": 2,
-            "text": "",
+            "text": "<!-- image -->  Owner avatar",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -1074,7 +685,7 @@
             "end_row_offset_idx": 3,
             "start_col_offset_idx": 0,
             "end_col_offset_idx": 1,
-            "text": "Text and picture",
+            "text": "Text and picture  <!-- image -->  Owner avatar",
             "column_header": false,
             "row_header": false,
             "row_section": false,
@@ -1146,7 +757,7 @@
               "end_row_offset_idx": 2,
               "start_col_offset_idx": 1,
               "end_col_offset_idx": 2,
-              "text": "",
+              "text": "<!-- image -->  Owner avatar",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -1161,7 +772,7 @@
               "end_row_offset_idx": 3,
               "start_col_offset_idx": 0,
               "end_col_offset_idx": 1,
-              "text": "Text and picture",
+              "text": "Text and picture  <!-- image -->  Owner avatar",
               "column_header": false,
               "row_header": false,
               "row_section": false,
@@ -1206,14 +817,27 @@
             "end_row_offset_idx": 1,
             "start_col_offset_idx": 0,
             "end_col_offset_idx": 1,
-            "text": "Regular text in second cell",
+            "text": "- Cell 1 item 1 - Cell 1 item 2",
             "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "- Cell 2 item 1 - Cell 2 item 2",
+            "column_header": false,
             "row_header": false,
             "row_section": false,
             "fillable": false
           }
         ],
-        "num_rows": 1,
+        "num_rows": 2,
         "num_cols": 1,
         "grid": [
           [
@@ -1224,8 +848,309 @@
               "end_row_offset_idx": 1,
               "start_col_offset_idx": 0,
               "end_col_offset_idx": 1,
-              "text": "Regular text in second cell",
+              "text": "- Cell 1 item 1 - Cell 1 item 2",
               "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "- Cell 2 item 1 - Cell 2 item 2",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ]
+        ]
+      },
+      "annotations": []
+    },
+    {
+      "self_ref": "#/tables/4",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "table",
+      "prov": [],
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "data": {
+        "table_cells": [
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 0,
+            "end_row_offset_idx": 1,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "- Cell 1 item 1 - Cell 1 item 2",
+            "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "- Cell 2 item 1 - Cell 2 item 2",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          }
+        ],
+        "num_rows": 2,
+        "num_cols": 1,
+        "grid": [
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 0,
+              "end_row_offset_idx": 1,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "- Cell 1 item 1 - Cell 1 item 2",
+              "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "- Cell 2 item 1 - Cell 2 item 2",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ]
+        ]
+      },
+      "annotations": []
+    },
+    {
+      "self_ref": "#/tables/5",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "table",
+      "prov": [],
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "data": {
+        "table_cells": [
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 0,
+            "end_row_offset_idx": 1,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "- R1C1 item 1 - R1C1 item 2",
+            "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 0,
+            "end_row_offset_idx": 1,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "- R1C2 item 1 - R1C2 item 2",
+            "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "- R2C1 item 1 - R2C1 item 2",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "- R2C2 item 1 - R2C2 item 2",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          }
+        ],
+        "num_rows": 2,
+        "num_cols": 2,
+        "grid": [
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 0,
+              "end_row_offset_idx": 1,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "- R1C1 item 1 - R1C1 item 2",
+              "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 0,
+              "end_row_offset_idx": 1,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "- R1C2 item 1 - R1C2 item 2",
+              "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "- R2C1 item 1 - R2C1 item 2",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "- R2C2 item 1 - R2C2 item 2",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ]
+        ]
+      },
+      "annotations": []
+    },
+    {
+      "self_ref": "#/tables/6",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "table",
+      "prov": [],
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "data": {
+        "table_cells": [
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 0,
+            "end_row_offset_idx": 1,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "- List item 1 - List item 2",
+            "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "Regular text in second cell",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          }
+        ],
+        "num_rows": 2,
+        "num_cols": 1,
+        "grid": [
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 0,
+              "end_row_offset_idx": 1,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "- List item 1 - List item 2",
+              "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "Regular text in second cell",
+              "column_header": false,
               "row_header": false,
               "row_section": false,
               "fillable": false

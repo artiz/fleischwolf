@@ -7,14 +7,15 @@ phased plan is kept at the end as history.)
 
 > **Status: the format migration is essentially complete.** Every document
 > format in docling's pipeline except **audio/ASR** is supported, plus Markdown
-> (legacy + a Rust-only *strict* mode), docling-native **JSON** output, and
-> **image extraction**. The declarative formats are pure-Rust and checked
-> byte-for-byte against *live* docling; the PDF/image/METS ML path lives in
-> `fleischwolf-pdf` (a pure-Rust PDF text parser + pdfium rasterization + ONNX
+> (legacy + a Rust-only *strict* mode), docling-native **JSON** output, **image
+> extraction**, and **MHTML** (a fleischwolf-only extension docling doesn't
+> have). The declarative formats are pure-Rust and checked byte-for-byte
+> against *live* docling; the PDF/image/METS ML path lives in `fleischwolf-pdf`
+> (a pure-Rust PDF text parser + pdfium rasterization + ONNX
 > layout/TableFormer/OCR + a port of docling-parse's line sanitizer) and is also
 > measured byte-for-byte against live docling — **6 / 14 PDF fixtures exact, 7 / 14
 > whitespace-normalized** (see `PDF_CONFORMANCE.md`), with a snapshot baseline
-> guarding against regressions. `cargo test` is green (unit tests + a 131-source
+> guarding against regressions. `cargo test` is green (unit tests + a 133-source
 > output-regression suite).
 
 ---
@@ -36,7 +37,8 @@ crates/
 ├── fleischwolf-core/   # DoclingDocument, Node model, markdown.rs, json.rs, base64.rs, labels.rs
 ├── fleischwolf/        # DocumentConverter, source/format detection, backend/*.rs, ooxml.rs
 ├── fleischwolf-pdf/    # pdfium_backend, layout (RT-DETR/ONNX), ocr (PP-OCRv3/ONNX), assemble, mets
-└── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
+├── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
+└── fleischwolf-node/   # Node.js/Bun N-API bindings (napi-rs), published to npm as `fleischwolf`
 ```
 
 The public API is unchanged from day one:
@@ -73,12 +75,13 @@ PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
 | WebVTT | `webvtt.rs` | **4/4 exact** |
 | Email (.eml) | `email.rs` (mail-parser) | **2/2 exact** |
 | EPUB | `epub.rs` → HTML backend | core exact (shares HTML residual) |
-| ODF (odt/ods/odp) | `odf.rs` | core; residual in §5 |
-| JATS | `jats.rs` (roxmltree) | core ~60% (metadata + sections + paragraphs) |
+| ODF (odt/ods/odp) | `odf.rs` | core + list continuation + rich table cells + ODS table regions; residual in §5 |
+| JATS | `jats.rs` (roxmltree) | metadata + full `<body>`/`<back>` (tables, figures, references, lists, footnotes, formulas) |
 | USPTO | `uspto.rs` | modern `us-patent-*-v4x` core; residual in §5 |
 | XBRL | `xbrl.rs` | arelle-free core (dei facts → title, `*TextBlock` → HTML) |
 | JSON-docling | `docling_json.rs` (serde_json) | reads docling's native JSON; ~51/145 round-trip exact |
 | LaTeX | `latex.rs` (scanner) | simple `.tex` ≈ live; multi-file arxiv out of scope |
+| MHTML (.mhtml/.mht) | `mhtml.rs` (mail-parser) → HTML backend | **fleischwolf extension — no docling backend to compare against**; embedded images resolved by `Content-Location`/`cid:` |
 
 Shared OOXML infrastructure (`ooxml.rs`): a `zip` reader, `.rels` parsing, part
 content-type resolution, and image extraction — reused by DOCX/PPTX/XLSX/EPUB.
@@ -208,15 +211,23 @@ when the TableFormer graphs aren't present.)
 - **Older patent schemas.** USPTO covers the modern `v4x` XML only; the
   `pap-v1` / 2001-era `pa`/`pg` schemas and the legacy **APS text** (`pftaps`)
   format are not handled (two files even use HTML entities roxmltree rejects).
-- **JATS article-body machinery** — tables, figures, references/citations, lists
-  and formula rendering inside `<body>` (metadata + sections + paragraphs are
-  done).
-- **ODF deep quirks** — mixed-style list continuation, empty-list-item level
-  collapse, ODS sheet→table region detection with numeric alignment, rich table
-  cells.
-- **DOCX long tail** — full Word multilevel list/heading *shared* numbering,
-  position-sorted textbox/shape-text layout, advanced OMML + inline-equation
-  spacing.
+- **ODF presentation title/shape/notes** — slide-title heading detection, free
+  shape-text extraction and the drop of speaker-notes on `.odp` slides. The
+  mixed-style **list continuation**, empty-list-item level collapse,
+  **ODS sheet→table region detection with numeric alignment**, and **rich table
+  cells** are now done (a flood-fill splits a sheet into its disconnected data
+  regions; `<text:list>` siblings continue numbering across an empty nested item;
+  a cell holding lists/nested tables/images/multiple paragraphs renders its full
+  block content flattened into the cell while a plain cell stays unformatted, and
+  merged cells leave their covered columns blank). What remains on `.odt` is
+  charts/embedded-object frames (`text_document_02`).
+- **DOCX grouped/anchored drawings** — position-sorted layout of grouped shapes
+  and `<mc:AlternateContent>` image de-duplication (`drawingml` fixture). The
+  Word multilevel list/heading *shared* numbering and **advanced OMML +
+  inline-equation spacing** are now done (inline equations reproduce docling's
+  inline-group spacing and stay attached to their list item; `\operatorname`
+  functions, limit-label space escaping and the two-space symbol padding match
+  pylatexenc byte-for-byte).
 - **HTML browser-render subsystem** — nav/visibility suppression (`wiki_duck`),
   form key-value-pair regions (`kvp_data_example`), deep nested-table cell padding
   from rendered bounding boxes. ~4 HTML fixtures + KVP.
@@ -226,9 +237,7 @@ when the TableFormer graphs aren't present.)
 
 ## 6. Extensions
 
-- Support **MHTML** format, check if https://crates.io/crates/mail-parser has support for it.
 - **PyO3 bindings** (`fleischwolf-py`) for a strangler-fig drop-in.
-- **nodejs/bun TypeScript** bindings
 - **C++** bindings
 - `fleischwolf-rag` - basic documents processing/chunking/vectorization/semantic-search system with pluggable DB support, PostgreSQL/SQLite, embedding with small ONNX local model (test options, dimensions >= 1024). 
   
@@ -238,7 +247,7 @@ when the TableFormer graphs aren't present.)
   regression suite** (`crates/fleischwolf/tests/regression.rs`): every
   declarative source under `crates/fleischwolf/tests/data/<fmt>/sources/` is
   converted to legacy Markdown, strict Markdown and docling JSON and compared to
-  committed fixtures (131 sources × 3). `FLEISCHWOLF_REGEN=1` refreshes them.
+  committed fixtures (133 sources × 3). `FLEISCHWOLF_REGEN=1` refreshes them.
   The JSON fixtures double as a docling-core load check.
 - **Snapshot harness** — `scripts/pdf_conformance.sh` regenerates and diffs the
   PDF/image/METS baseline (needs pdfium + the ONNX models; **91/91 exact**).
