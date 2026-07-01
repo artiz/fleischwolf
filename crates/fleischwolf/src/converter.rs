@@ -5,8 +5,8 @@ use std::collections::HashSet;
 use crate::backend::{
     is_deepseek_markdown, AsciiDocBackend, CsvBackend, DeclarativeBackend, DeepSeekBackend,
     DoclingJsonBackend, DocxBackend, EmailBackend, EpubBackend, HtmlBackend, JatsBackend,
-    LatexBackend, MarkdownBackend, OdfBackend, PptxBackend, UsptoBackend, WebVttBackend,
-    XbrlBackend, XlsxBackend,
+    LatexBackend, MarkdownBackend, MhtmlBackend, OdfBackend, PptxBackend, UsptoBackend,
+    WebVttBackend, XbrlBackend, XlsxBackend,
 };
 
 /// Pick the concrete XML backend for a generic `.xml` source by sniffing its
@@ -175,6 +175,7 @@ impl DocumentConverter {
             InputFormat::Docx => DocxBackend.convert(&source)?,
             InputFormat::Vtt => WebVttBackend.convert(&source)?,
             InputFormat::Email => EmailBackend.convert(&source)?,
+            InputFormat::Mhtml => MhtmlBackend.convert(&source)?,
             InputFormat::Epub => EpubBackend {
                 fetch_images: self.fetch_images,
             }

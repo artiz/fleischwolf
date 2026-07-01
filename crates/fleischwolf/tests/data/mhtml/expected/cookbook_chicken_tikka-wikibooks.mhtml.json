@@ -1,0 +1,3369 @@
+{
+  "schema_name": "DoclingDocument",
+  "version": "1.10.0",
+  "name": "cookbook_chicken_tikka-wikibooks",
+  "origin": {
+    "mimetype": "text/plain",
+    "binary_hash": 18234972208670080260,
+    "filename": "cookbook_chicken_tikka-wikibooks"
+  },
+  "furniture": {
+    "self_ref": "#/furniture",
+    "children": [],
+    "content_layer": "furniture",
+    "name": "_root_",
+    "label": "unspecified"
+  },
+  "body": {
+    "self_ref": "#/body",
+    "children": [
+      {
+        "$ref": "#/texts/0"
+      },
+      {
+        "$ref": "#/texts/1"
+      },
+      {
+        "$ref": "#/texts/2"
+      },
+      {
+        "$ref": "#/texts/3"
+      },
+      {
+        "$ref": "#/texts/4"
+      },
+      {
+        "$ref": "#/groups/0"
+      },
+      {
+        "$ref": "#/texts/15"
+      },
+      {
+        "$ref": "#/groups/1"
+      },
+      {
+        "$ref": "#/texts/21"
+      },
+      {
+        "$ref": "#/texts/22"
+      },
+      {
+        "$ref": "#/texts/23"
+      },
+      {
+        "$ref": "#/texts/24"
+      },
+      {
+        "$ref": "#/groups/2"
+      },
+      {
+        "$ref": "#/texts/28"
+      },
+      {
+        "$ref": "#/groups/3"
+      },
+      {
+        "$ref": "#/texts/32"
+      },
+      {
+        "$ref": "#/texts/33"
+      },
+      {
+        "$ref": "#/groups/4"
+      },
+      {
+        "$ref": "#/texts/36"
+      },
+      {
+        "$ref": "#/groups/5"
+      },
+      {
+        "$ref": "#/texts/39"
+      },
+      {
+        "$ref": "#/groups/6"
+      },
+      {
+        "$ref": "#/texts/44"
+      },
+      {
+        "$ref": "#/texts/45"
+      },
+      {
+        "$ref": "#/texts/46"
+      },
+      {
+        "$ref": "#/texts/47"
+      },
+      {
+        "$ref": "#/groups/7"
+      },
+      {
+        "$ref": "#/texts/52"
+      },
+      {
+        "$ref": "#/groups/8"
+      },
+      {
+        "$ref": "#/texts/61"
+      },
+      {
+        "$ref": "#/groups/9"
+      },
+      {
+        "$ref": "#/texts/73"
+      },
+      {
+        "$ref": "#/groups/10"
+      },
+      {
+        "$ref": "#/texts/77"
+      },
+      {
+        "$ref": "#/groups/11"
+      },
+      {
+        "$ref": "#/texts/81"
+      },
+      {
+        "$ref": "#/texts/82"
+      },
+      {
+        "$ref": "#/texts/83"
+      },
+      {
+        "$ref": "#/groups/12"
+      },
+      {
+        "$ref": "#/texts/85"
+      },
+      {
+        "$ref": "#/texts/86"
+      },
+      {
+        "$ref": "#/groups/13"
+      },
+      {
+        "$ref": "#/texts/88"
+      },
+      {
+        "$ref": "#/texts/89"
+      },
+      {
+        "$ref": "#/groups/14"
+      },
+      {
+        "$ref": "#/texts/91"
+      },
+      {
+        "$ref": "#/texts/92"
+      },
+      {
+        "$ref": "#/tables/0"
+      },
+      {
+        "$ref": "#/texts/93"
+      },
+      {
+        "$ref": "#/texts/94"
+      },
+      {
+        "$ref": "#/texts/95"
+      },
+      {
+        "$ref": "#/texts/96"
+      },
+      {
+        "$ref": "#/groups/15"
+      },
+      {
+        "$ref": "#/texts/111"
+      },
+      {
+        "$ref": "#/texts/112"
+      },
+      {
+        "$ref": "#/groups/16"
+      },
+      {
+        "$ref": "#/texts/118"
+      },
+      {
+        "$ref": "#/texts/119"
+      },
+      {
+        "$ref": "#/groups/17"
+      },
+      {
+        "$ref": "#/texts/125"
+      },
+      {
+        "$ref": "#/texts/126"
+      },
+      {
+        "$ref": "#/groups/18"
+      },
+      {
+        "$ref": "#/texts/129"
+      },
+      {
+        "$ref": "#/texts/130"
+      },
+      {
+        "$ref": "#/groups/19"
+      },
+      {
+        "$ref": "#/texts/148"
+      },
+      {
+        "$ref": "#/groups/20"
+      },
+      {
+        "$ref": "#/texts/163"
+      },
+      {
+        "$ref": "#/texts/164"
+      },
+      {
+        "$ref": "#/texts/165"
+      },
+      {
+        "$ref": "#/texts/166"
+      }
+    ],
+    "content_layer": "body",
+    "name": "_root_",
+    "label": "unspecified"
+  },
+  "groups": [
+    {
+      "self_ref": "#/groups/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/5"
+        },
+        {
+          "$ref": "#/texts/6"
+        },
+        {
+          "$ref": "#/texts/7"
+        },
+        {
+          "$ref": "#/texts/8"
+        },
+        {
+          "$ref": "#/texts/9"
+        },
+        {
+          "$ref": "#/texts/10"
+        },
+        {
+          "$ref": "#/texts/11"
+        },
+        {
+          "$ref": "#/texts/12"
+        },
+        {
+          "$ref": "#/texts/13"
+        },
+        {
+          "$ref": "#/texts/14"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/1",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/16"
+        },
+        {
+          "$ref": "#/texts/17"
+        },
+        {
+          "$ref": "#/texts/18"
+        },
+        {
+          "$ref": "#/texts/19"
+        },
+        {
+          "$ref": "#/texts/20"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/2",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/25"
+        },
+        {
+          "$ref": "#/texts/26"
+        },
+        {
+          "$ref": "#/texts/27"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/3",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/29"
+        },
+        {
+          "$ref": "#/texts/30"
+        },
+        {
+          "$ref": "#/texts/31"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/4",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/34"
+        },
+        {
+          "$ref": "#/texts/35"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/5",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/37"
+        },
+        {
+          "$ref": "#/texts/38"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/6",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/40"
+        },
+        {
+          "$ref": "#/texts/41"
+        },
+        {
+          "$ref": "#/texts/42"
+        },
+        {
+          "$ref": "#/texts/43"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/7",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/48"
+        },
+        {
+          "$ref": "#/texts/49"
+        },
+        {
+          "$ref": "#/texts/50"
+        },
+        {
+          "$ref": "#/texts/51"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/8",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/53"
+        },
+        {
+          "$ref": "#/texts/54"
+        },
+        {
+          "$ref": "#/texts/55"
+        },
+        {
+          "$ref": "#/texts/56"
+        },
+        {
+          "$ref": "#/texts/57"
+        },
+        {
+          "$ref": "#/texts/58"
+        },
+        {
+          "$ref": "#/texts/59"
+        },
+        {
+          "$ref": "#/texts/60"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/9",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/62"
+        },
+        {
+          "$ref": "#/texts/63"
+        },
+        {
+          "$ref": "#/texts/64"
+        },
+        {
+          "$ref": "#/texts/65"
+        },
+        {
+          "$ref": "#/texts/66"
+        },
+        {
+          "$ref": "#/texts/67"
+        },
+        {
+          "$ref": "#/texts/68"
+        },
+        {
+          "$ref": "#/texts/69"
+        },
+        {
+          "$ref": "#/texts/70"
+        },
+        {
+          "$ref": "#/texts/71"
+        },
+        {
+          "$ref": "#/texts/72"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/10",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/74"
+        },
+        {
+          "$ref": "#/texts/75"
+        },
+        {
+          "$ref": "#/texts/76"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/11",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/78"
+        },
+        {
+          "$ref": "#/texts/79"
+        },
+        {
+          "$ref": "#/texts/80"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/12",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/84"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/13",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/87"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/14",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/90"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/15",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/97"
+        },
+        {
+          "$ref": "#/texts/98"
+        },
+        {
+          "$ref": "#/texts/99"
+        },
+        {
+          "$ref": "#/texts/100"
+        },
+        {
+          "$ref": "#/texts/101"
+        },
+        {
+          "$ref": "#/texts/102"
+        },
+        {
+          "$ref": "#/texts/103"
+        },
+        {
+          "$ref": "#/texts/104"
+        },
+        {
+          "$ref": "#/texts/105"
+        },
+        {
+          "$ref": "#/texts/106"
+        },
+        {
+          "$ref": "#/texts/107"
+        },
+        {
+          "$ref": "#/texts/108"
+        },
+        {
+          "$ref": "#/texts/109"
+        },
+        {
+          "$ref": "#/texts/110"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/16",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/113"
+        },
+        {
+          "$ref": "#/texts/114"
+        },
+        {
+          "$ref": "#/texts/115"
+        },
+        {
+          "$ref": "#/texts/116"
+        },
+        {
+          "$ref": "#/texts/117"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/17",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/120"
+        },
+        {
+          "$ref": "#/texts/121"
+        },
+        {
+          "$ref": "#/texts/122"
+        },
+        {
+          "$ref": "#/texts/123"
+        },
+        {
+          "$ref": "#/texts/124"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/18",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/127"
+        },
+        {
+          "$ref": "#/texts/128"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/19",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/131"
+        },
+        {
+          "$ref": "#/texts/132"
+        },
+        {
+          "$ref": "#/texts/133"
+        },
+        {
+          "$ref": "#/texts/134"
+        },
+        {
+          "$ref": "#/texts/135"
+        },
+        {
+          "$ref": "#/texts/136"
+        },
+        {
+          "$ref": "#/texts/137"
+        },
+        {
+          "$ref": "#/texts/138"
+        },
+        {
+          "$ref": "#/texts/139"
+        },
+        {
+          "$ref": "#/texts/140"
+        },
+        {
+          "$ref": "#/texts/141"
+        },
+        {
+          "$ref": "#/texts/142"
+        },
+        {
+          "$ref": "#/texts/143"
+        },
+        {
+          "$ref": "#/texts/144"
+        },
+        {
+          "$ref": "#/texts/145"
+        },
+        {
+          "$ref": "#/texts/146"
+        },
+        {
+          "$ref": "#/texts/147"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    },
+    {
+      "self_ref": "#/groups/20",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/149"
+        },
+        {
+          "$ref": "#/texts/150"
+        },
+        {
+          "$ref": "#/texts/151"
+        },
+        {
+          "$ref": "#/texts/152"
+        },
+        {
+          "$ref": "#/texts/153"
+        },
+        {
+          "$ref": "#/texts/154"
+        },
+        {
+          "$ref": "#/texts/155"
+        },
+        {
+          "$ref": "#/texts/156"
+        },
+        {
+          "$ref": "#/texts/157"
+        },
+        {
+          "$ref": "#/texts/158"
+        },
+        {
+          "$ref": "#/texts/159"
+        },
+        {
+          "$ref": "#/texts/160"
+        },
+        {
+          "$ref": "#/texts/161"
+        },
+        {
+          "$ref": "#/texts/162"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    }
+  ],
+  "texts": [
+    {
+      "self_ref": "#/texts/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[Jump to content](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka#bodyContent)",
+      "text": "[Jump to content](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka#bodyContent)"
+    },
+    {
+      "self_ref": "#/texts/1",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Main menu",
+      "text": "Main menu"
+    },
+    {
+      "self_ref": "#/texts/2",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Main menu",
+      "text": "Main menu"
+    },
+    {
+      "self_ref": "#/texts/3",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "move to sidebar hide",
+      "text": "move to sidebar hide"
+    },
+    {
+      "self_ref": "#/texts/4",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Navigation",
+      "text": "Navigation"
+    },
+    {
+      "self_ref": "#/texts/5",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Main Page](https://en.wikibooks.org/wiki/Main_Page)",
+      "text": "[Main Page](https://en.wikibooks.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/6",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Help](https://en.wikibooks.org/wiki/Help:Contents)",
+      "text": "[Help](https://en.wikibooks.org/wiki/Help:Contents)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/7",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Browse](https://en.wikibooks.org/wiki/Wikibooks:Card_Catalog_Office)",
+      "text": "[Browse](https://en.wikibooks.org/wiki/Wikibooks:Card_Catalog_Office)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/8",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Cookbook](https://en.wikibooks.org/wiki/Cookbook:Table_of_Contents)",
+      "text": "[Cookbook](https://en.wikibooks.org/wiki/Cookbook:Table_of_Contents)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/9",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikijunior](https://en.wikibooks.org/wiki/Wikijunior)",
+      "text": "[Wikijunior](https://en.wikibooks.org/wiki/Wikijunior)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/10",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Featured books](https://en.wikibooks.org/wiki/Wikibooks:Featured_books)",
+      "text": "[Featured books](https://en.wikibooks.org/wiki/Wikibooks:Featured_books)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/11",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recent changes](https://en.wikibooks.org/wiki/Special:RecentChanges)",
+      "text": "[Recent changes](https://en.wikibooks.org/wiki/Special:RecentChanges)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/12",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Special pages](https://en.wikibooks.org/wiki/Special:SpecialPages)",
+      "text": "[Special pages](https://en.wikibooks.org/wiki/Special:SpecialPages)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/13",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Random book](https://en.wikibooks.org/wiki/Special:RandomInCategory/Book:Wikibooks_Stacks/Books)",
+      "text": "[Random book](https://en.wikibooks.org/wiki/Special:RandomInCategory/Book:Wikibooks_Stacks/Books)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/14",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Using Wikibooks](https://en.wikibooks.org/wiki/Using_Wikibooks)",
+      "text": "[Using Wikibooks](https://en.wikibooks.org/wiki/Using_Wikibooks)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/15",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Community",
+      "text": "Community"
+    },
+    {
+      "self_ref": "#/texts/16",
+      "parent": {
+        "$ref": "#/groups/1"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Reading room forum](https://en.wikibooks.org/wiki/Wikibooks:Reading_room)",
+      "text": "[Reading room forum](https://en.wikibooks.org/wiki/Wikibooks:Reading_room)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/17",
+      "parent": {
+        "$ref": "#/groups/1"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Community portal](https://en.wikibooks.org/wiki/Wikibooks:Community_Portal)",
+      "text": "[Community portal](https://en.wikibooks.org/wiki/Wikibooks:Community_Portal)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/18",
+      "parent": {
+        "$ref": "#/groups/1"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Help out!](https://en.wikibooks.org/wiki/Wikibooks:Maintenance)",
+      "text": "[Help out!](https://en.wikibooks.org/wiki/Wikibooks:Maintenance)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/19",
+      "parent": {
+        "$ref": "#/groups/1"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Policies and guidelines](https://en.wikibooks.org/wiki/Wikibooks:Policies_and_guidelines)",
+      "text": "[Policies and guidelines](https://en.wikibooks.org/wiki/Wikibooks:Policies_and_guidelines)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/20",
+      "parent": {
+        "$ref": "#/groups/1"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Contact us](https://en.wikibooks.org/wiki/Wikibooks:Contact_us)",
+      "text": "[Contact us](https://en.wikibooks.org/wiki/Wikibooks:Contact_us)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/21",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "![Wikibooks](#) ![The Free Textbook Project](#)",
+      "text": "![Wikibooks](#) ![The Free Textbook Project](#)"
+    },
+    {
+      "self_ref": "#/texts/22",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[Search](https://en.wikibooks.org/wiki/Special:Search)",
+      "text": "[Search](https://en.wikibooks.org/wiki/Special:Search)"
+    },
+    {
+      "self_ref": "#/texts/23",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Search",
+      "text": "Search"
+    },
+    {
+      "self_ref": "#/texts/24",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Appearance",
+      "text": "Appearance"
+    },
+    {
+      "self_ref": "#/texts/25",
+      "parent": {
+        "$ref": "#/groups/2"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Donations](https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikibooks.org&uselang=en)",
+      "text": "[Donations](https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikibooks.org&uselang=en)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/26",
+      "parent": {
+        "$ref": "#/groups/2"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Create account](https://en.wikibooks.org/w/index.php?title=Special:CreateAccount&returnto=Cookbook%3AChicken+Tikka)",
+      "text": "[Create account](https://en.wikibooks.org/w/index.php?title=Special:CreateAccount&returnto=Cookbook%3AChicken+Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/27",
+      "parent": {
+        "$ref": "#/groups/2"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Log in](https://en.wikibooks.org/w/index.php?title=Special:UserLogin&returnto=Cookbook%3AChicken+Tikka)",
+      "text": "[Log in](https://en.wikibooks.org/w/index.php?title=Special:UserLogin&returnto=Cookbook%3AChicken+Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/28",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Personal tools",
+      "text": "Personal tools"
+    },
+    {
+      "self_ref": "#/texts/29",
+      "parent": {
+        "$ref": "#/groups/3"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Donations](https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikibooks.org&uselang=en)",
+      "text": "[Donations](https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikibooks.org&uselang=en)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/30",
+      "parent": {
+        "$ref": "#/groups/3"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Create account](https://en.wikibooks.org/w/index.php?title=Special:CreateAccount&returnto=Cookbook%3AChicken+Tikka)",
+      "text": "[Create account](https://en.wikibooks.org/w/index.php?title=Special:CreateAccount&returnto=Cookbook%3AChicken+Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/31",
+      "parent": {
+        "$ref": "#/groups/3"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Log in](https://en.wikibooks.org/w/index.php?title=Special:UserLogin&returnto=Cookbook%3AChicken+Tikka)",
+      "text": "[Log in](https://en.wikibooks.org/w/index.php?title=Special:UserLogin&returnto=Cookbook%3AChicken+Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/32",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "title",
+      "prov": [],
+      "orig": "Cookbook:Chicken Tikka",
+      "text": "Cookbook:Chicken Tikka"
+    },
+    {
+      "self_ref": "#/texts/33",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "2 languages",
+      "text": "2 languages"
+    },
+    {
+      "self_ref": "#/texts/34",
+      "parent": {
+        "$ref": "#/groups/4"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Español](https://es.wikibooks.org/wiki/Artes_culinarias/Recetas/Pollo_tikka)",
+      "text": "[Español](https://es.wikibooks.org/wiki/Artes_culinarias/Recetas/Pollo_tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/35",
+      "parent": {
+        "$ref": "#/groups/4"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[हिन्दी](https://hi.wikibooks.org/wiki/%E0%A4%B0%E0%A4%B8%E0%A5%8B%E0%A4%88:%E0%A4%9A%E0%A4%BF%E0%A4%95%E0%A4%A8_%E0%A4%9F%E0%A4%BF%E0%A4%95%E0%A5%8D%E0%A4%95%E0%A4%BE)",
+      "text": "[हिन्दी](https://hi.wikibooks.org/wiki/%E0%A4%B0%E0%A4%B8%E0%A5%8B%E0%A4%88:%E0%A4%9A%E0%A4%BF%E0%A4%95%E0%A4%A8_%E0%A4%9F%E0%A4%BF%E0%A4%95%E0%A5%8D%E0%A4%95%E0%A4%BE)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/36",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[Edit links](https://www.wikidata.org/wiki/Special:EntityPage/Q2548408#sitelinks-wikibooks)",
+      "text": "[Edit links](https://www.wikidata.org/wiki/Special:EntityPage/Q2548408#sitelinks-wikibooks)"
+    },
+    {
+      "self_ref": "#/texts/37",
+      "parent": {
+        "$ref": "#/groups/5"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipe](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka)",
+      "text": "[Recipe](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/38",
+      "parent": {
+        "$ref": "#/groups/5"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Discussion](https://en.wikibooks.org/wiki/Cookbook_talk:Chicken_Tikka)",
+      "text": "[Discussion](https://en.wikibooks.org/wiki/Cookbook_talk:Chicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/39",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "English",
+      "text": "English"
+    },
+    {
+      "self_ref": "#/texts/40",
+      "parent": {
+        "$ref": "#/groups/6"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Read](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka)",
+      "text": "[Read](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/41",
+      "parent": {
+        "$ref": "#/groups/6"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit)",
+      "text": "[Edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/42",
+      "parent": {
+        "$ref": "#/groups/6"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit)",
+      "text": "[Edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/43",
+      "parent": {
+        "$ref": "#/groups/6"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[View history](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=history)",
+      "text": "[View history](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=history)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/44",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Tools",
+      "text": "Tools"
+    },
+    {
+      "self_ref": "#/texts/45",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Tools",
+      "text": "Tools"
+    },
+    {
+      "self_ref": "#/texts/46",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "move to sidebar hide",
+      "text": "move to sidebar hide"
+    },
+    {
+      "self_ref": "#/texts/47",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Actions",
+      "text": "Actions"
+    },
+    {
+      "self_ref": "#/texts/48",
+      "parent": {
+        "$ref": "#/groups/7"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Read](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka)",
+      "text": "[Read](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/49",
+      "parent": {
+        "$ref": "#/groups/7"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit)",
+      "text": "[Edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/50",
+      "parent": {
+        "$ref": "#/groups/7"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit)",
+      "text": "[Edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/51",
+      "parent": {
+        "$ref": "#/groups/7"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[View history](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=history)",
+      "text": "[View history](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=history)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/52",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "General",
+      "text": "General"
+    },
+    {
+      "self_ref": "#/texts/53",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[What links here](https://en.wikibooks.org/wiki/Special:WhatLinksHere/Cookbook:Chicken_Tikka)",
+      "text": "[What links here](https://en.wikibooks.org/wiki/Special:WhatLinksHere/Cookbook:Chicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/54",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Related changes](https://en.wikibooks.org/wiki/Special:RecentChangesLinked/Cookbook:Chicken_Tikka)",
+      "text": "[Related changes](https://en.wikibooks.org/wiki/Special:RecentChangesLinked/Cookbook:Chicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/55",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Upload file](https://commons.wikimedia.org/wiki/Special:UploadWizard?uselang=en)",
+      "text": "[Upload file](https://commons.wikimedia.org/wiki/Special:UploadWizard?uselang=en)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/56",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Permanent link](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&oldid=4615207)",
+      "text": "[Permanent link](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&oldid=4615207)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/57",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Page information](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=info)",
+      "text": "[Page information](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=info)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/58",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Cite this page](https://en.wikibooks.org/w/index.php?title=Special:CiteThisPage&page=Cookbook%3AChicken_Tikka&id=4615207&wpFormIdentifier=titleform)",
+      "text": "[Cite this page](https://en.wikibooks.org/w/index.php?title=Special:CiteThisPage&page=Cookbook%3AChicken_Tikka&id=4615207&wpFormIdentifier=titleform)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/59",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Get shortened URL](https://en.wikibooks.org/w/index.php?title=Special:UrlShortener&url=https%3A%2F%2Fen.wikibooks.org%2Fwiki%2FCookbook%3AChicken_Tikka)",
+      "text": "[Get shortened URL](https://en.wikibooks.org/w/index.php?title=Special:UrlShortener&url=https%3A%2F%2Fen.wikibooks.org%2Fwiki%2FCookbook%3AChicken_Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/60",
+      "parent": {
+        "$ref": "#/groups/8"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Edit interlanguage links](https://www.wikidata.org/wiki/Special:EntityPage/Q2548408#sitelinks-wikibooks)",
+      "text": "[Edit interlanguage links](https://www.wikidata.org/wiki/Special:EntityPage/Q2548408#sitelinks-wikibooks)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/61",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Sister projects",
+      "text": "Sister projects"
+    },
+    {
+      "self_ref": "#/texts/62",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikipedia](https://en.wikipedia.org/wiki/Main_Page)",
+      "text": "[Wikipedia](https://en.wikipedia.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/63",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikiversity](https://en.wikiversity.org/wiki/Wikiversity:Main_Page)",
+      "text": "[Wikiversity](https://en.wikiversity.org/wiki/Wikiversity:Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/64",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Main_Page)",
+      "text": "[Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/65",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikiquote](https://en.wikiquote.org/wiki/Main_Page)",
+      "text": "[Wikiquote](https://en.wikiquote.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/66",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikisource](https://en.wikisource.org/wiki/Main_Page)",
+      "text": "[Wikisource](https://en.wikisource.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/67",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikinews](https://en.wikinews.org/wiki/Main_Page)",
+      "text": "[Wikinews](https://en.wikinews.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/68",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikivoyage](https://en.wikivoyage.org/wiki/Main_Page)",
+      "text": "[Wikivoyage](https://en.wikivoyage.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/69",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Commons](https://commons.wikimedia.org/wiki/Main_Page)",
+      "text": "[Commons](https://commons.wikimedia.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/70",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page)",
+      "text": "[Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/71",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[MediaWiki](https://www.mediawiki.org/wiki/Main_Page)",
+      "text": "[MediaWiki](https://www.mediawiki.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/72",
+      "parent": {
+        "$ref": "#/groups/9"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Meta-Wiki](https://meta.wikimedia.org/wiki/Main_Page)",
+      "text": "[Meta-Wiki](https://meta.wikimedia.org/wiki/Main_Page)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/73",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Print/export",
+      "text": "Print/export"
+    },
+    {
+      "self_ref": "#/texts/74",
+      "parent": {
+        "$ref": "#/groups/10"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Create a collection](https://en.wikibooks.org/w/index.php?title=Special:Book&bookcmd=book_creator&referer=Cookbook%3AChicken+Tikka)",
+      "text": "[Create a collection](https://en.wikibooks.org/w/index.php?title=Special:Book&bookcmd=book_creator&referer=Cookbook%3AChicken+Tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/75",
+      "parent": {
+        "$ref": "#/groups/10"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Download as PDF](https://en.wikibooks.org/w/index.php?title=Special:DownloadAsPdf&page=Cookbook%3AChicken_Tikka&action=show-download-screen)",
+      "text": "[Download as PDF](https://en.wikibooks.org/w/index.php?title=Special:DownloadAsPdf&page=Cookbook%3AChicken_Tikka&action=show-download-screen)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/76",
+      "parent": {
+        "$ref": "#/groups/10"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Printable version](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&printable=yes)",
+      "text": "[Printable version](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&printable=yes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/77",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "In other projects",
+      "text": "In other projects"
+    },
+    {
+      "self_ref": "#/texts/78",
+      "parent": {
+        "$ref": "#/groups/11"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Chicken_tikka)",
+      "text": "[Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Chicken_tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/79",
+      "parent": {
+        "$ref": "#/groups/11"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikipedia](https://en.wikipedia.org/wiki/Chicken_tikka)",
+      "text": "[Wikipedia](https://en.wikipedia.org/wiki/Chicken_tikka)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/80",
+      "parent": {
+        "$ref": "#/groups/11"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Wikidata item](https://www.wikidata.org/wiki/Special:EntityPage/Q2548408)",
+      "text": "[Wikidata item](https://www.wikidata.org/wiki/Special:EntityPage/Q2548408)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/81",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Appearance",
+      "text": "Appearance"
+    },
+    {
+      "self_ref": "#/texts/82",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "move to sidebar hide",
+      "text": "move to sidebar hide"
+    },
+    {
+      "self_ref": "#/texts/83",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Text",
+      "text": "Text"
+    },
+    {
+      "self_ref": "#/texts/84",
+      "parent": {
+        "$ref": "#/groups/12"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Small Standard Large",
+      "text": "Small Standard Large",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/85",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "This page always uses small font size",
+      "text": "This page always uses small font size"
+    },
+    {
+      "self_ref": "#/texts/86",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Width",
+      "text": "Width"
+    },
+    {
+      "self_ref": "#/texts/87",
+      "parent": {
+        "$ref": "#/groups/13"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Standard Wide",
+      "text": "Standard Wide",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/88",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "The content is as wide as possible for your browser window.",
+      "text": "The content is as wide as possible for your browser window."
+    },
+    {
+      "self_ref": "#/texts/89",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Color (beta)",
+      "text": "Color (beta)"
+    },
+    {
+      "self_ref": "#/texts/90",
+      "parent": {
+        "$ref": "#/groups/14"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Automatic Light Dark",
+      "text": "Automatic Light Dark",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/91",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "This page is always in light mode.",
+      "text": "This page is always in light mode."
+    },
+    {
+      "self_ref": "#/texts/92",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "From Wikibooks, open books for an open world",
+      "text": "From Wikibooks, open books for an open world"
+    },
+    {
+      "self_ref": "#/texts/93",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[Cookbook](https://en.wikibooks.org/wiki/Cookbook:Table_of_Contents) | [Recipes](https://en.wikibooks.org/wiki/Cookbook:Recipes) | [Ingredients](https://en.wikibooks.org/wiki/Cookbook:Ingredients) | [Equipment](https://en.wikibooks.org/wiki/Cookbook:Equipment) | [Techniques](https://en.wikibooks.org/wiki/Cookbook:Cooking_Techniques) | [Cookbook Disambiguation Pages](https://en.wikibooks.org/wiki/Category:Cookbook_disambiguation_pages) | [Recipes](https://en.wikibooks.org/wiki/Category:Recipes) | [Meat recipes](https://en.wikibooks.org/wiki/Cookbook:Meat_Recipes) | [Cuisine of India](https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_India)",
+      "text": "[Cookbook](https://en.wikibooks.org/wiki/Cookbook:Table_of_Contents) | [Recipes](https://en.wikibooks.org/wiki/Cookbook:Recipes) | [Ingredients](https://en.wikibooks.org/wiki/Cookbook:Ingredients) | [Equipment](https://en.wikibooks.org/wiki/Cookbook:Equipment) | [Techniques](https://en.wikibooks.org/wiki/Cookbook:Cooking_Techniques) | [Cookbook Disambiguation Pages](https://en.wikibooks.org/wiki/Category:Cookbook_disambiguation_pages) | [Recipes](https://en.wikibooks.org/wiki/Category:Recipes) | [Meat recipes](https://en.wikibooks.org/wiki/Cookbook:Meat_Recipes) | [Cuisine of India](https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_India)"
+    },
+    {
+      "self_ref": "#/texts/94",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "**Chicken tikka** is a chicken dish originating in the Punjab region of the [Indian Subcontinent](https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_India) made by baking [chicken](https://en.wikibooks.org/wiki/Cookbook:Chicken) which has been [marinated](https://en.wikibooks.org/wiki/Cookbook:Marinating) in [spices](https://en.wikibooks.org/wiki/Cookbook:Spices_and_herbs) and [yoghurt](https://en.wikibooks.org/wiki/Cookbook:Yogurt) . It should not be confused with [Chicken Tikka Masala](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka_Masala) (of which it is an ingredient). It is traditionally cooked on [skewers](https://en.wikibooks.org/wiki/Cookbook:Skewer) in a [tandoor](https://en.wikibooks.org/wiki/Cookbook:Tandoor) and is usually boneless. It is tasty when served with yellow rice and a spicy salad.",
+      "text": "**Chicken tikka** is a chicken dish originating in the Punjab region of the [Indian Subcontinent](https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_India) made by baking [chicken](https://en.wikibooks.org/wiki/Cookbook:Chicken) which has been [marinated](https://en.wikibooks.org/wiki/Cookbook:Marinating) in [spices](https://en.wikibooks.org/wiki/Cookbook:Spices_and_herbs) and [yoghurt](https://en.wikibooks.org/wiki/Cookbook:Yogurt) . It should not be confused with [Chicken Tikka Masala](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka_Masala) (of which it is an ingredient). It is traditionally cooked on [skewers](https://en.wikibooks.org/wiki/Cookbook:Skewer) in a [tandoor](https://en.wikibooks.org/wiki/Cookbook:Tandoor) and is usually boneless. It is tasty when served with yellow rice and a spicy salad."
+    },
+    {
+      "self_ref": "#/texts/95",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "section_header",
+      "prov": [],
+      "orig": "Ingredients",
+      "text": "Ingredients",
+      "level": 1
+    },
+    {
+      "self_ref": "#/texts/96",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=1) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=1) ]",
+      "text": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=1) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=1) ]"
+    },
+    {
+      "self_ref": "#/texts/97",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "675 [g](https://en.wikibooks.org/wiki/Cookbook:G) (1.5 [lb](https://en.wikibooks.org/wiki/Cookbook:Pound) ) skinless and boneless [chicken breast](https://en.wikibooks.org/wiki/Cookbook:Chicken#Breast) , [diced](https://en.wikibooks.org/wiki/Cookbook:Dice) into cubes",
+      "text": "675 [g](https://en.wikibooks.org/wiki/Cookbook:G) (1.5 [lb](https://en.wikibooks.org/wiki/Cookbook:Pound) ) skinless and boneless [chicken breast](https://en.wikibooks.org/wiki/Cookbook:Chicken#Breast) , [diced](https://en.wikibooks.org/wiki/Cookbook:Dice) into cubes",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/98",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "1 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [mustard](https://en.wikibooks.org/wiki/Cookbook:Mustard) seed oil (see notes)",
+      "text": "1 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [mustard](https://en.wikibooks.org/wiki/Cookbook:Mustard) seed oil (see notes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/99",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "50 [ml](https://en.wikibooks.org/wiki/Cookbook:ML) (2 [fl oz](https://en.wikibooks.org/wiki/Cookbook:Fluid_Ounce) ) [milk](https://en.wikibooks.org/wiki/Cookbook:Milk)",
+      "text": "50 [ml](https://en.wikibooks.org/wiki/Cookbook:ML) (2 [fl oz](https://en.wikibooks.org/wiki/Cookbook:Fluid_Ounce) ) [milk](https://en.wikibooks.org/wiki/Cookbook:Milk)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/100",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "150 [ml](https://en.wikibooks.org/wiki/Cookbook:ML) (5 [fl oz](https://en.wikibooks.org/wiki/Cookbook:Fluid_Ounce) ) natural [yoghurt](https://en.wikibooks.org/wiki/Cookbook:Yogurt)",
+      "text": "150 [ml](https://en.wikibooks.org/wiki/Cookbook:ML) (5 [fl oz](https://en.wikibooks.org/wiki/Cookbook:Fluid_Ounce) ) natural [yoghurt](https://en.wikibooks.org/wiki/Cookbook:Yogurt)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/101",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "2 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [lemon juice](https://en.wikibooks.org/wiki/Cookbook:Lemon_Juice)",
+      "text": "2 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [lemon juice](https://en.wikibooks.org/wiki/Cookbook:Lemon_Juice)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/102",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "1 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [tomato paste](https://en.wikibooks.org/wiki/Cookbook:Tomato_Paste)",
+      "text": "1 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [tomato paste](https://en.wikibooks.org/wiki/Cookbook:Tomato_Paste)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/103",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "2 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [chopped](https://en.wikibooks.org/wiki/Cookbook:Chopping) fresh [cilantro](https://en.wikibooks.org/wiki/Cookbook:Cilantro) (coriander leaves)",
+      "text": "2 [tbsp](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) [chopped](https://en.wikibooks.org/wiki/Cookbook:Chopping) fresh [cilantro](https://en.wikibooks.org/wiki/Cookbook:Cilantro) (coriander leaves)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/104",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "4 large cloves of [garlic](https://en.wikibooks.org/wiki/Cookbook:Garlic) , finely [chopped](https://en.wikibooks.org/wiki/Cookbook:Chop)",
+      "text": "4 large cloves of [garlic](https://en.wikibooks.org/wiki/Cookbook:Garlic) , finely [chopped](https://en.wikibooks.org/wiki/Cookbook:Chop)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/105",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "1-4 chopped fresh red [chillis](https://en.wikibooks.org/wiki/Cookbook:Chili_Pepper) (depending on strength of the chillis and the desired strength of the marinade)",
+      "text": "1-4 chopped fresh red [chillis](https://en.wikibooks.org/wiki/Cookbook:Chili_Pepper) (depending on strength of the chillis and the desired strength of the marinade)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/106",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "2 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [paprika](https://en.wikibooks.org/wiki/Cookbook:Paprika)",
+      "text": "2 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [paprika](https://en.wikibooks.org/wiki/Cookbook:Paprika)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/107",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "2 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [garam masala](https://en.wikibooks.org/wiki/Cookbook:Garam_Masala)",
+      "text": "2 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [garam masala](https://en.wikibooks.org/wiki/Cookbook:Garam_Masala)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/108",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "1 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [cumin](https://en.wikibooks.org/wiki/Cookbook:Cumin) powder",
+      "text": "1 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [cumin](https://en.wikibooks.org/wiki/Cookbook:Cumin) powder",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/109",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "½ [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [turmeric](https://en.wikibooks.org/wiki/Cookbook:Turmeric)",
+      "text": "½ [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [turmeric](https://en.wikibooks.org/wiki/Cookbook:Turmeric)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/110",
+      "parent": {
+        "$ref": "#/groups/15"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "1 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [salt](https://en.wikibooks.org/wiki/Cookbook:Salt) (use rock salt for best results)",
+      "text": "1 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) [salt](https://en.wikibooks.org/wiki/Cookbook:Salt) (use rock salt for best results)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/111",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "section_header",
+      "prov": [],
+      "orig": "Procedure",
+      "text": "Procedure",
+      "level": 1
+    },
+    {
+      "self_ref": "#/texts/112",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=2) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=2) ]",
+      "text": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=2) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=2) ]"
+    },
+    {
+      "self_ref": "#/texts/113",
+      "parent": {
+        "$ref": "#/groups/16"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Add all of the ingredients except the chicken to a non-metallic [mixing bowl](https://en.wikibooks.org/wiki/Cookbook:Mixing_Bowl) , and mix well.",
+      "text": "Add all of the ingredients except the chicken to a non-metallic [mixing bowl](https://en.wikibooks.org/wiki/Cookbook:Mixing_Bowl) , and mix well.",
+      "enumerated": true,
+      "marker": "1."
+    },
+    {
+      "self_ref": "#/texts/114",
+      "parent": {
+        "$ref": "#/groups/16"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Add the chicken and mix until fully coated.",
+      "text": "Add the chicken and mix until fully coated.",
+      "enumerated": true,
+      "marker": "2."
+    },
+    {
+      "self_ref": "#/texts/115",
+      "parent": {
+        "$ref": "#/groups/16"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Ideally, the chicken should now be left in a refrigerator to [marinate](https://en.wikibooks.org/wiki/Cookbook:Marinating) for at least 24 hours. It may not be safe to leave chicken which has previously been frozen for longer than 24 hours, but fresh chicken should be left to marinate for 48 hours for best results. If you do not wish to leave the chicken to marinate, simply continue to the next step.",
+      "text": "Ideally, the chicken should now be left in a refrigerator to [marinate](https://en.wikibooks.org/wiki/Cookbook:Marinating) for at least 24 hours. It may not be safe to leave chicken which has previously been frozen for longer than 24 hours, but fresh chicken should be left to marinate for 48 hours for best results. If you do not wish to leave the chicken to marinate, simply continue to the next step.",
+      "enumerated": true,
+      "marker": "3."
+    },
+    {
+      "self_ref": "#/texts/116",
+      "parent": {
+        "$ref": "#/groups/16"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "For best results, place on skewers and cook in a [tandoor](https://en.wikibooks.org/wiki/Cookbook:Tandoor) or ceramic pot oven. The chicken can also be cooked on skewers under a medium [grill](https://en.wikibooks.org/wiki/Cookbook:Grilling) for 5-8 minutes on each side or barbecued (cooking times depend on the temperature of the barbecue). Always ensure the chicken is cooked throughout before serving. It should come apart easily when pressed down with the side of a fork.",
+      "text": "For best results, place on skewers and cook in a [tandoor](https://en.wikibooks.org/wiki/Cookbook:Tandoor) or ceramic pot oven. The chicken can also be cooked on skewers under a medium [grill](https://en.wikibooks.org/wiki/Cookbook:Grilling) for 5-8 minutes on each side or barbecued (cooking times depend on the temperature of the barbecue). Always ensure the chicken is cooked throughout before serving. It should come apart easily when pressed down with the side of a fork.",
+      "enumerated": true,
+      "marker": "4."
+    },
+    {
+      "self_ref": "#/texts/117",
+      "parent": {
+        "$ref": "#/groups/16"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Serve with [naan](https://en.wikibooks.org/wiki/Cookbook:Naan) , with [rice](https://en.wikibooks.org/wiki/Cookbook:Rice) or use in a [Chicken Tikka Masala](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka_Masala) .",
+      "text": "Serve with [naan](https://en.wikibooks.org/wiki/Cookbook:Naan) , with [rice](https://en.wikibooks.org/wiki/Cookbook:Rice) or use in a [Chicken Tikka Masala](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka_Masala) .",
+      "enumerated": true,
+      "marker": "5."
+    },
+    {
+      "self_ref": "#/texts/118",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "section_header",
+      "prov": [],
+      "orig": "Notes, tips, and variations",
+      "text": "Notes, tips, and variations",
+      "level": 1
+    },
+    {
+      "self_ref": "#/texts/119",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=3) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=3) ]",
+      "text": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=3) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=3) ]"
+    },
+    {
+      "self_ref": "#/texts/120",
+      "parent": {
+        "$ref": "#/groups/17"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Mustard seed oil is considered unfit for human consumption in many parts of the world and is therefore not readily available. A poor alternative can be made by crackling 1 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) of [mustard](https://en.wikibooks.org/wiki/Cookbook:Mustard) seeds in approximately 2 [tbs](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) of very hot [vegetable](https://en.wikibooks.org/wiki/Cookbook:Vegetable_Oil) or [olive oil](https://en.wikibooks.org/wiki/Cookbook:Olive_Oil) . Allow to cool then use in place of mustard seed oil.",
+      "text": "Mustard seed oil is considered unfit for human consumption in many parts of the world and is therefore not readily available. A poor alternative can be made by crackling 1 [tsp](https://en.wikibooks.org/wiki/Cookbook:Teaspoon) of [mustard](https://en.wikibooks.org/wiki/Cookbook:Mustard) seeds in approximately 2 [tbs](https://en.wikibooks.org/wiki/Cookbook:Tablespoon) of very hot [vegetable](https://en.wikibooks.org/wiki/Cookbook:Vegetable_Oil) or [olive oil](https://en.wikibooks.org/wiki/Cookbook:Olive_Oil) . Allow to cool then use in place of mustard seed oil.",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/121",
+      "parent": {
+        "$ref": "#/groups/17"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "It is possible to make a tikka with almost any meat, the most commonly used other than chicken being [lamb](https://en.wikibooks.org/wiki/Cookbook:Lamb) and [mutton](https://en.wikibooks.org/wiki/Cookbook:Mutton) .",
+      "text": "It is possible to make a tikka with almost any meat, the most commonly used other than chicken being [lamb](https://en.wikibooks.org/wiki/Cookbook:Lamb) and [mutton](https://en.wikibooks.org/wiki/Cookbook:Mutton) .",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/122",
+      "parent": {
+        "$ref": "#/groups/17"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Tikka can be served either as main meal or as an appetiser.",
+      "text": "Tikka can be served either as main meal or as an appetiser.",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/123",
+      "parent": {
+        "$ref": "#/groups/17"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Powdered or dried ingredients can be substituted for fresh, but at the expense of taste.",
+      "text": "Powdered or dried ingredients can be substituted for fresh, but at the expense of taste.",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/124",
+      "parent": {
+        "$ref": "#/groups/17"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Some people prefer to make tikka with meat on-the-bone for improved flavour.",
+      "text": "Some people prefer to make tikka with meat on-the-bone for improved flavour.",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/125",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "section_header",
+      "prov": [],
+      "orig": "Bibliography",
+      "text": "Bibliography",
+      "level": 1
+    },
+    {
+      "self_ref": "#/texts/126",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=4) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=4) ]",
+      "text": "[ [edit](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&veaction=edit&section=4) | [edit source](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&action=edit&section=4) ]"
+    },
+    {
+      "self_ref": "#/texts/127",
+      "parent": {
+        "$ref": "#/groups/18"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "*Curry Club Tandoori and Tikka Dishes* , Piatkus, London - [ISBN 0749912839](https://en.wikibooks.org/wiki/Special:BookSources/0749912839) (1993)",
+      "text": "*Curry Club Tandoori and Tikka Dishes* , Piatkus, London - [ISBN 0749912839](https://en.wikibooks.org/wiki/Special:BookSources/0749912839) (1993)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/128",
+      "parent": {
+        "$ref": "#/groups/18"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "*India: Food & Cooking* , New Holland, London - [ISBN 978-1845376192](https://en.wikibooks.org/wiki/Special:BookSources/978-1845376192) (2007)",
+      "text": "*India: Food & Cooking* , New Holland, London - [ISBN 978-1845376192](https://en.wikibooks.org/wiki/Special:BookSources/978-1845376192) (2007)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/129",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Retrieved from \" [https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&oldid=4615207](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&oldid=4615207) \"",
+      "text": "Retrieved from \" [https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&oldid=4615207](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&oldid=4615207) \""
+    },
+    {
+      "self_ref": "#/texts/130",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "[Categories](https://en.wikibooks.org/wiki/Special:Categories) :",
+      "text": "[Categories](https://en.wikibooks.org/wiki/Special:Categories) :"
+    },
+    {
+      "self_ref": "#/texts/131",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Easy recipes](https://en.wikibooks.org/wiki/Category:Easy_recipes)",
+      "text": "[Easy recipes](https://en.wikibooks.org/wiki/Category:Easy_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/132",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes](https://en.wikibooks.org/wiki/Category:Recipes)",
+      "text": "[Recipes](https://en.wikibooks.org/wiki/Category:Recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/133",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Indian recipes](https://en.wikibooks.org/wiki/Category:Indian_recipes)",
+      "text": "[Indian recipes](https://en.wikibooks.org/wiki/Category:Indian_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/134",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Pakistani recipes](https://en.wikibooks.org/wiki/Category:Pakistani_recipes)",
+      "text": "[Pakistani recipes](https://en.wikibooks.org/wiki/Category:Pakistani_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/135",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Afghan recipes](https://en.wikibooks.org/wiki/Category:Afghan_recipes)",
+      "text": "[Afghan recipes](https://en.wikibooks.org/wiki/Category:Afghan_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/136",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Pashtun recipes](https://en.wikibooks.org/wiki/Category:Pashtun_recipes)",
+      "text": "[Pashtun recipes](https://en.wikibooks.org/wiki/Category:Pashtun_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/137",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Punjabi recipes](https://en.wikibooks.org/wiki/Category:Punjabi_recipes)",
+      "text": "[Punjabi recipes](https://en.wikibooks.org/wiki/Category:Punjabi_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/138",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using chicken breast](https://en.wikibooks.org/wiki/Category:Recipes_using_chicken_breast)",
+      "text": "[Recipes using chicken breast](https://en.wikibooks.org/wiki/Category:Recipes_using_chicken_breast)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/139",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Appetizer recipes](https://en.wikibooks.org/wiki/Category:Appetizer_recipes)",
+      "text": "[Appetizer recipes](https://en.wikibooks.org/wiki/Category:Appetizer_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/140",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes with metric units](https://en.wikibooks.org/wiki/Category:Recipes_with_metric_units)",
+      "text": "[Recipes with metric units](https://en.wikibooks.org/wiki/Category:Recipes_with_metric_units)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/141",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Kid-friendly recipes](https://en.wikibooks.org/wiki/Category:Kid-friendly_recipes)",
+      "text": "[Kid-friendly recipes](https://en.wikibooks.org/wiki/Category:Kid-friendly_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/142",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using cilantro](https://en.wikibooks.org/wiki/Category:Recipes_using_cilantro)",
+      "text": "[Recipes using cilantro](https://en.wikibooks.org/wiki/Category:Recipes_using_cilantro)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/143",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using lemon juice](https://en.wikibooks.org/wiki/Category:Recipes_using_lemon_juice)",
+      "text": "[Recipes using lemon juice](https://en.wikibooks.org/wiki/Category:Recipes_using_lemon_juice)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/144",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using garam masala](https://en.wikibooks.org/wiki/Category:Recipes_using_garam_masala)",
+      "text": "[Recipes using garam masala](https://en.wikibooks.org/wiki/Category:Recipes_using_garam_masala)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/145",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using ground cumin](https://en.wikibooks.org/wiki/Category:Recipes_using_ground_cumin)",
+      "text": "[Recipes using ground cumin](https://en.wikibooks.org/wiki/Category:Recipes_using_ground_cumin)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/146",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using milk](https://en.wikibooks.org/wiki/Category:Recipes_using_milk)",
+      "text": "[Recipes using milk](https://en.wikibooks.org/wiki/Category:Recipes_using_milk)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/147",
+      "parent": {
+        "$ref": "#/groups/19"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes using mustard oil](https://en.wikibooks.org/wiki/Category:Recipes_using_mustard_oil)",
+      "text": "[Recipes using mustard oil](https://en.wikibooks.org/wiki/Category:Recipes_using_mustard_oil)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/148",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Hidden categories:",
+      "text": "Hidden categories:"
+    },
+    {
+      "self_ref": "#/texts/149",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Recipes with images](https://en.wikibooks.org/wiki/Category:Recipes_with_images)",
+      "text": "[Recipes with images](https://en.wikibooks.org/wiki/Category:Recipes_with_images)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/150",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Featured recipes](https://en.wikibooks.org/wiki/Category:Featured_recipes)",
+      "text": "[Featured recipes](https://en.wikibooks.org/wiki/Category:Featured_recipes)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/151",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "This page was last edited on 3 February 2026, at 02:39.",
+      "text": "This page was last edited on 3 February 2026, at 02:39.",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/152",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "Text is available under the [Creative Commons Attribution-ShareAlike License](https://creativecommons.org/licenses/by-sa/4.0/) ; additional terms may apply. By using this site, you agree to the [Terms of Use](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use) and [Privacy Policy.](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy)",
+      "text": "Text is available under the [Creative Commons Attribution-ShareAlike License](https://creativecommons.org/licenses/by-sa/4.0/) ; additional terms may apply. By using this site, you agree to the [Terms of Use](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use) and [Privacy Policy.](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/153",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Privacy policy](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy)",
+      "text": "[Privacy policy](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/154",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[About Wikibooks](https://en.wikibooks.org/wiki/Wikibooks:Welcome)",
+      "text": "[About Wikibooks](https://en.wikibooks.org/wiki/Wikibooks:Welcome)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/155",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Disclaimers](https://en.wikibooks.org/wiki/Wikibooks:General_disclaimer)",
+      "text": "[Disclaimers](https://en.wikibooks.org/wiki/Wikibooks:General_disclaimer)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/156",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Code of Conduct](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct)",
+      "text": "[Code of Conduct](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/157",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Developers](https://developer.wikimedia.org/)",
+      "text": "[Developers](https://developer.wikimedia.org/)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/158",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Statistics](https://stats.wikimedia.org/#/en.wikibooks.org)",
+      "text": "[Statistics](https://stats.wikimedia.org/#/en.wikibooks.org)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/159",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Cookie statement](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement)",
+      "text": "[Cookie statement](https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/160",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "[Mobile view](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&mobileaction=toggle_view_mobile)",
+      "text": "[Mobile view](https://en.wikibooks.org/w/index.php?title=Cookbook:Chicken_Tikka&mobileaction=toggle_view_mobile)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/161",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "![Wikimedia Foundation](#)",
+      "text": "![Wikimedia Foundation](#)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/162",
+      "parent": {
+        "$ref": "#/groups/20"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [],
+      "orig": "![Powered by MediaWiki](#)",
+      "text": "![Powered by MediaWiki](#)",
+      "enumerated": false,
+      "marker": "-"
+    },
+    {
+      "self_ref": "#/texts/163",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Search",
+      "text": "Search"
+    },
+    {
+      "self_ref": "#/texts/164",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Search",
+      "text": "Search"
+    },
+    {
+      "self_ref": "#/texts/165",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "Cookbook:Chicken Tikka",
+      "text": "Cookbook:Chicken Tikka"
+    },
+    {
+      "self_ref": "#/texts/166",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [],
+      "orig": "2 languages [Add topic](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka#)",
+      "text": "2 languages [Add topic](https://en.wikibooks.org/wiki/Cookbook:Chicken_Tikka#)"
+    }
+  ],
+  "pictures": [],
+  "tables": [
+    {
+      "self_ref": "#/tables/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "table",
+      "prov": [],
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "data": {
+        "table_cells": [
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 0,
+            "end_row_offset_idx": 1,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "Chicken Tikka",
+            "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 0,
+            "end_row_offset_idx": 1,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "Chicken Tikka",
+            "column_header": true,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "The cooked Chicken Tikka\n\n<!-- image -->",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 1,
+            "end_row_offset_idx": 2,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "The cooked Chicken Tikka\n\n<!-- image -->",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 2,
+            "end_row_offset_idx": 3,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "Servings",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 2,
+            "end_row_offset_idx": 3,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "4",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 3,
+            "end_row_offset_idx": 4,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "Time",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 3,
+            "end_row_offset_idx": 4,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "30 minutes",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 4,
+            "end_row_offset_idx": 5,
+            "start_col_offset_idx": 0,
+            "end_col_offset_idx": 1,
+            "text": "Difficulty",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          },
+          {
+            "row_span": 1,
+            "col_span": 1,
+            "start_row_offset_idx": 4,
+            "end_row_offset_idx": 5,
+            "start_col_offset_idx": 1,
+            "end_col_offset_idx": 2,
+            "text": "Easy\n\n<!-- image -->",
+            "column_header": false,
+            "row_header": false,
+            "row_section": false,
+            "fillable": false
+          }
+        ],
+        "num_rows": 5,
+        "num_cols": 2,
+        "grid": [
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 0,
+              "end_row_offset_idx": 1,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "Chicken Tikka",
+              "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 0,
+              "end_row_offset_idx": 1,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "Chicken Tikka",
+              "column_header": true,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "The cooked Chicken Tikka\n\n<!-- image -->",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 1,
+              "end_row_offset_idx": 2,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "The cooked Chicken Tikka\n\n<!-- image -->",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 2,
+              "end_row_offset_idx": 3,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "Servings",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 2,
+              "end_row_offset_idx": 3,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "4",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 3,
+              "end_row_offset_idx": 4,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "Time",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 3,
+              "end_row_offset_idx": 4,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "30 minutes",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ],
+          [
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 4,
+              "end_row_offset_idx": 5,
+              "start_col_offset_idx": 0,
+              "end_col_offset_idx": 1,
+              "text": "Difficulty",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            },
+            {
+              "row_span": 1,
+              "col_span": 1,
+              "start_row_offset_idx": 4,
+              "end_row_offset_idx": 5,
+              "start_col_offset_idx": 1,
+              "end_col_offset_idx": 2,
+              "text": "Easy\n\n<!-- image -->",
+              "column_header": false,
+              "row_header": false,
+              "row_section": false,
+              "fillable": false
+            }
+          ]
+        ]
+      },
+      "annotations": []
+    }
+  ],
+  "key_value_items": [],
+  "form_items": [],
+  "pages": {}
+}

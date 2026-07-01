@@ -29,6 +29,9 @@ pub enum InputFormat {
     Latex,
     Email,
     Epub,
+    /// MIME HTML archive (`.mhtml`/`.mht`) — a fleischwolf extension; docling
+    /// has no MHTML backend.
+    Mhtml,
 }
 
 impl InputFormat {
@@ -58,6 +61,7 @@ impl InputFormat {
             InputFormat::Latex => "latex",
             InputFormat::Email => "email",
             InputFormat::Epub => "epub",
+            InputFormat::Mhtml => "mhtml",
         }
     }
 
@@ -89,6 +93,7 @@ impl InputFormat {
             "tex" | "latex" => InputFormat::Latex,
             "eml" => InputFormat::Email,
             "epub" => InputFormat::Epub,
+            "mhtml" | "mht" => InputFormat::Mhtml,
             // METS/Google Books scan packages ship as `*.tar.gz`.
             "gz" | "targz" => InputFormat::MetsGbs,
             _ => return None,

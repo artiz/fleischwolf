@@ -27,11 +27,17 @@ the full architecture, the Python → Rust mapping, and the phased plan.
 ## Status
 
 The public API works end to end across **Markdown, CSV, HTML, AsciiDoc, DOCX,
-PPTX, XLSX, EPUB, ODF, WebVTT, Email, JATS, USPTO, XBRL, LaTeX, JSON, PDF,
-images and METS** — plus Markdown / docling-JSON output and image extraction.
-The discriminative PDF/image pipeline lives in `fleischwolf-pdf`: a pure-Rust PDF
-text parser, pdfium for page rasterization, and an ONNX layout/TableFormer/OCR
-stack. Audio/ASR is the main format still on the roadmap (see `MIGRATION.md`).
+PPTX, XLSX, EPUB, ODF, WebVTT, Email, MHTML, JATS, USPTO, XBRL, LaTeX, JSON,
+PDF, images and METS** — plus Markdown / docling-JSON output and image
+extraction. MHTML is a fleischwolf-only extension (docling has no MHTML
+backend): saved-webpage `.mhtml`/`.mht` archives are parsed as a MIME message
+with [`mail-parser`](https://crates.io/crates/mail-parser) (which conforms to
+[RFC 2557](https://datatracker.ietf.org/doc/html/rfc2557), the MHTML spec) and
+routed through the HTML backend, with embedded images resolved from the
+archive by `Content-Location`/`cid:`. The discriminative PDF/image pipeline
+lives in `fleischwolf-pdf`: a pure-Rust PDF text parser, pdfium for page
+rasterization, and an ONNX layout/TableFormer/OCR stack. Audio/ASR is the main
+format still on the roadmap (see `MIGRATION.md`).
 
 Output is checked against upstream Python docling — declarative formats
 byte-for-byte against live docling, the ML pipeline against a deterministic
@@ -70,8 +76,10 @@ round-trips to the same Markdown.
 ### Image extraction
 
 Backends that have the image populate `Node::Picture { image }`: the PDF/image
-pipeline crops figure regions, the DOCX / PPTX backends pull embedded image
-blobs, and — opt-in — the HTML / EPUB backends fetch `<img src>` (see below).
+pipeline crops figure regions, the DOCX / PPTX / MHTML backends pull embedded
+image blobs (MHTML resolves `<img src>` against the archive's own MIME parts —
+no network/filesystem access needed, so it's on by default), and — opt-in —
+the HTML / EPUB backends fetch `<img src>` (see below).
 Pick how pictures render with an [`ImageMode`] — the analogue of docling's
 `image_mode`:
 

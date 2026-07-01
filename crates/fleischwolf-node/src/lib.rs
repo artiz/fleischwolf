@@ -662,6 +662,7 @@ pub fn supported_formats() -> Vec<String> {
         "latex",
         "email",
         "epub",
+        "mhtml",
     ]
     .iter()
     .map(|s| s.to_string())

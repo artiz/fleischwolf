@@ -7,14 +7,15 @@ phased plan is kept at the end as history.)
 
 > **Status: the format migration is essentially complete.** Every document
 > format in docling's pipeline except **audio/ASR** is supported, plus Markdown
-> (legacy + a Rust-only *strict* mode), docling-native **JSON** output, and
-> **image extraction**. The declarative formats are pure-Rust and checked
-> byte-for-byte against *live* docling; the PDF/image/METS ML path lives in
-> `fleischwolf-pdf` (a pure-Rust PDF text parser + pdfium rasterization + ONNX
+> (legacy + a Rust-only *strict* mode), docling-native **JSON** output, **image
+> extraction**, and **MHTML** (a fleischwolf-only extension docling doesn't
+> have). The declarative formats are pure-Rust and checked byte-for-byte
+> against *live* docling; the PDF/image/METS ML path lives in `fleischwolf-pdf`
+> (a pure-Rust PDF text parser + pdfium rasterization + ONNX
 > layout/TableFormer/OCR + a port of docling-parse's line sanitizer) and is also
 > measured byte-for-byte against live docling — **6 / 14 PDF fixtures exact, 7 / 14
 > whitespace-normalized** (see `PDF_CONFORMANCE.md`), with a snapshot baseline
-> guarding against regressions. `cargo test` is green (unit tests + a 131-source
+> guarding against regressions. `cargo test` is green (unit tests + a 133-source
 > output-regression suite).
 
 ---
@@ -80,6 +81,7 @@ PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
 | XBRL | `xbrl.rs` | arelle-free core (dei facts → title, `*TextBlock` → HTML) |
 | JSON-docling | `docling_json.rs` (serde_json) | reads docling's native JSON; ~51/145 round-trip exact |
 | LaTeX | `latex.rs` (scanner) | simple `.tex` ≈ live; multi-file arxiv out of scope |
+| MHTML (.mhtml/.mht) | `mhtml.rs` (mail-parser) → HTML backend | **fleischwolf extension — no docling backend to compare against**; embedded images resolved by `Content-Location`/`cid:` |
 
 Shared OOXML infrastructure (`ooxml.rs`): a `zip` reader, `.rels` parsing, part
 content-type resolution, and image extraction — reused by DOCX/PPTX/XLSX/EPUB.
@@ -235,7 +237,6 @@ when the TableFormer graphs aren't present.)
 
 ## 6. Extensions
 
-- Support **MHTML** format, check if https://crates.io/crates/mail-parser has support for it.
 - **PyO3 bindings** (`fleischwolf-py`) for a strangler-fig drop-in.
 - **C++** bindings
 - `fleischwolf-rag` - basic documents processing/chunking/vectorization/semantic-search system with pluggable DB support, PostgreSQL/SQLite, embedding with small ONNX local model (test options, dimensions >= 1024). 
@@ -246,7 +247,7 @@ when the TableFormer graphs aren't present.)
   regression suite** (`crates/fleischwolf/tests/regression.rs`): every
   declarative source under `crates/fleischwolf/tests/data/<fmt>/sources/` is
   converted to legacy Markdown, strict Markdown and docling JSON and compared to
-  committed fixtures (131 sources × 3). `FLEISCHWOLF_REGEN=1` refreshes them.
+  committed fixtures (133 sources × 3). `FLEISCHWOLF_REGEN=1` refreshes them.
   The JSON fixtures double as a docling-core load check.
 - **Snapshot harness** — `scripts/pdf_conformance.sh` regenerates and diffs the
   PDF/image/METS baseline (needs pdfium + the ONNX models; **91/91 exact**).
