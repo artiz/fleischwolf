@@ -36,7 +36,8 @@ crates/
 ├── fleischwolf-core/   # DoclingDocument, Node model, markdown.rs, json.rs, base64.rs, labels.rs
 ├── fleischwolf/        # DocumentConverter, source/format detection, backend/*.rs, ooxml.rs
 ├── fleischwolf-pdf/    # pdfium_backend, layout (RT-DETR/ONNX), ocr (PP-OCRv3/ONNX), assemble, mets
-└── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
+├── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
+└── fleischwolf-node/   # Node.js/Bun N-API bindings (napi-rs), published to npm as `fleischwolf`
 ```
 
 The public API is unchanged from day one:
@@ -236,7 +237,6 @@ when the TableFormer graphs aren't present.)
 
 - Support **MHTML** format, check if https://crates.io/crates/mail-parser has support for it.
 - **PyO3 bindings** (`fleischwolf-py`) for a strangler-fig drop-in.
-- **nodejs/bun TypeScript** bindings
 - **C++** bindings
 - `fleischwolf-rag` - basic documents processing/chunking/vectorization/semantic-search system with pluggable DB support, PostgreSQL/SQLite, embedding with small ONNX local model (test options, dimensions >= 1024). 
   
