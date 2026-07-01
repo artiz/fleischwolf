@@ -162,7 +162,13 @@ The CLI streams Markdown by default (`--no-stream` opts back into buffering;
 loading/running the TableFormer table-structure model, falling back to simple
 geometric table reconstruction from cell positions — no model load, no
 per-table inference, which can noticeably speed up parsing (especially in
-streaming mode) at the cost of table fidelity.
+streaming mode) at the cost of table fidelity. `--no-ocr` goes further and
+skips layout detection, OCR, and TableFormer entirely — no ML inference at
+all, only the PDF's embedded text cells grouped into flat paragraphs by
+reading order (no headings/lists/tables/pictures). It's the fastest PDF path
+by a wide margin, but a scanned/image-only PDF (no embedded text layer) comes
+back empty rather than erroring, so a caller can detect that and re-convert
+without the flag.
 
 ## Node.js / Bun bindings
 

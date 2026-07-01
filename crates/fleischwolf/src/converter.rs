@@ -45,6 +45,7 @@ pub struct DocumentConverter {
     strict: bool,
     fetch_images: bool,
     no_table_former: bool,
+    no_ocr: bool,
 }
 
 impl DocumentConverter {
@@ -61,6 +62,7 @@ impl DocumentConverter {
             strict: false,
             fetch_images: false,
             no_table_former: false,
+            no_ocr: false,
         }
     }
 
@@ -103,6 +105,20 @@ impl DocumentConverter {
     /// with [`convert_streaming`](Self::convert_streaming).
     pub fn no_table_former(mut self, disable: bool) -> Self {
         self.no_table_former = disable;
+        self
+    }
+
+    /// Skip layout detection, OCR, and TableFormer entirely for PDF/image/METS
+    /// sources — no model load, no inference of any kind.
+    ///
+    /// Off by default. When enabled, the PDF's embedded text cells are grouped by
+    /// line and emitted as plain paragraphs in reading order: no headings, lists,
+    /// tables, code blocks, or pictures, since that structure comes from the
+    /// layout model. The fastest possible PDF path, but pages with no embedded
+    /// text layer (scanned/image-only PDFs) yield no text at all — convert those
+    /// without this flag. Implies [`no_table_former`](Self::no_table_former).
+    pub fn no_ocr(mut self, disable: bool) -> Self {
+        self.no_ocr = disable;
         self
     }
 
@@ -157,6 +173,7 @@ impl DocumentConverter {
             image_mode,
             self.strict,
             self.no_table_former,
+            self.no_ocr,
         ))
     }
 
@@ -216,18 +233,21 @@ impl DocumentConverter {
                 None,
                 &source.name,
                 self.no_table_former,
+                self.no_ocr,
             )
             .map_err(|e| ConversionError::Parse(e.to_string()))?,
             InputFormat::Image => fleischwolf_pdf::convert_image_with_options(
                 &source.bytes,
                 &source.name,
                 self.no_table_former,
+                self.no_ocr,
             )
             .map_err(|e| ConversionError::Parse(e.to_string()))?,
             InputFormat::MetsGbs => fleischwolf_pdf::convert_mets_gbs_with_options(
                 &source.bytes,
                 &source.name,
                 self.no_table_former,
+                self.no_ocr,
             )
             .map_err(|e| ConversionError::Parse(e.to_string()))?,
             other => return Err(ConversionError::UnsupportedFormat(other)),
