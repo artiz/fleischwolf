@@ -227,16 +227,23 @@ Full TypeScript types are generated into `index.d.ts` / `native.d.ts`.
 
 ## Examples
 
+The [`examples/`](examples) folder is a self-contained project that depends on
+the published `fleischwolf` package — `npm install` there, then run any of them:
+
+```bash
+cd examples
+npm install
+node node-basic.mjs        # ESM: file, bytes, JSON, reuse
+bun run bun-basic.ts       # Bun + TypeScript: async + streaming
+node pdf-pipeline.mjs       # installDependencies + warm Pipeline for PDFs
+```
+
 - [`examples/node-basic.mjs`](examples/node-basic.mjs) — Node.js (ESM): file, bytes, JSON, reuse.
 - [`examples/bun-basic.ts`](examples/bun-basic.ts) — Bun + TypeScript, with async and streaming.
 - [`examples/pdf-pipeline.mjs`](examples/pdf-pipeline.mjs) — `installDependencies` + warm `Pipeline` for PDFs.
 
-```bash
-npm run build          # once
-node examples/node-basic.mjs
-bun run examples/bun-basic.ts
-node test/smoke.mjs    # or: bun test/smoke.mjs
-```
+The smoke test exercises the locally-built addon instead: `npm run build` once at
+the package root, then `node test/smoke.mjs` (or `bun test/smoke.mjs`).
 
 ## License
 
