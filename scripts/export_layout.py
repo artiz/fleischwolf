@@ -8,6 +8,7 @@ Usage:
     python scripts/export_layout.py models/layout_heron.onnx
 """
 
+import os
 import sys
 
 import torch
@@ -30,6 +31,9 @@ class Wrap(torch.nn.Module):
 
 def main() -> None:
     out = sys.argv[1] if len(sys.argv) > 1 else "models/layout_heron.onnx"
+    out_dir = os.path.dirname(out)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     print(f"loading {REPO} ...", flush=True)
     model = RTDetrV2ForObjectDetection.from_pretrained(
         REPO, torch_dtype=torch.float32
