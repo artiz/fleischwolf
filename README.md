@@ -192,9 +192,18 @@ const json = await convertFileAsync('report.docx', { to: 'json' })
 
 Declarative formats (Markdown, HTML, DOCX, XLSX, …) work out of the box. The
 PDF/image pipeline needs pdfium + the ONNX models (not bundled), so it throws
-until you call `installDependencies()` — which auto-downloads pdfium/OCR and
-fetches the layout/TableFormer ONNX from a `modelsUrl` you host. A reusable
-`Pipeline` keeps those models warm across many PDFs.
+until you call `installDependencies()` — which downloads everything with zero
+configuration (pdfium and OCR from their own upstream releases; the layout
+model and TableFormer — PyTorch→ONNX exports of docling-project's own models,
+Apache-2.0/CDLA-Permissive-2.0, see [`MODELS_NOTICE.md`](./MODELS_NOTICE.md) —
+from fleischwolf's own hosted release). Pre-fetch everything ahead of time
+(e.g. in a container build step) with a one-liner from your app's directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/artiz/fleischwolf/master/scripts/setup_nodejs_dependencies.sh | bash
+```
+
+A reusable `Pipeline` keeps those models warm across many PDFs.
 
 Runnable Node + Bun examples are in
 [`crates/fleischwolf-node/examples`](./crates/fleischwolf-node/examples)

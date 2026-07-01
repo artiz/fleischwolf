@@ -2,22 +2,26 @@
 //
 // The declarative backends (Markdown, HTML, DOCX, XLSX, …) are pure Rust and
 // need nothing. The PDF/image path needs native assets that are NOT bundled in
-// the addon (they're large and licensed separately), mirroring how Python
-// docling downloads its models on first use:
+// the addon (they're large and licensed separately from fleischwolf's own MIT
+// code), mirroring how Python docling downloads its models on first use:
 //
 //   - libpdfium            (PDF text extraction + page rasterization) — required for PDF
 //   - RT-DETR layout model (models/layout_heron.onnx)                 — required for PDF & image
 //   - PP-OCR rec + dict    (models/ocr_rec.onnx, ppocr_keys_v1.txt)   — used for pages with no text layer
 //   - TableFormer          (models/tableformer/{encoder,decoder,bbox}.onnx) — optional; geometric fallback otherwise
 //
-// pdfium and the OCR assets have public download URLs and are fetched
-// automatically. The layout and TableFormer models are exported from PyTorch
-// (docling-project/docling-layout-heron and docling_ibm_models) and have no
-// public prebuilt `.onnx`, so they are downloaded from a base URL you provide
-// via `installDependencies({ modelsUrl })` or the `FLEISCHWOLF_MODELS_URL`
-// environment variable (point it at a host serving `layout_heron.onnx` and
-// `tableformer/*.onnx`). If you exported them locally, set `DOCLING_LAYOUT_ONNX`
-// etc. and they'll be detected as already installed.
+// All four download automatically via `installDependencies()`, no extra
+// configuration needed. pdfium and the OCR model come from their own public
+// upstream releases. The layout model and TableFormer are PyTorch→ONNX exports
+// of docling-project's own models (`docling-project/docling-layout-heron`,
+// Apache-2.0; `docling-project/docling-models`, CDLA-Permissive-2.0 /
+// Apache-2.0) — fleischwolf doesn't train or modify the weights, just converts
+// their format, and redistributes the export as a GitHub Release asset on this
+// repo (see `MODELS_NOTICE.md` for the full attribution) at `DEFAULT_MODELS_URL`
+// below. Override with `installDependencies({ modelsUrl })` /
+// `FLEISCHWOLF_MODELS_URL` to use your own export/host instead, or set
+// `DOCLING_LAYOUT_ONNX` etc. directly to a local file to skip downloading
+// entirely.
 //
 // Everything is installed under a single home directory (default
 // `~/.cache/fleischwolf`, overridable via `FLEISCHWOLF_HOME` or the `dir`
@@ -42,6 +46,13 @@ const OCR_REC_URL =
   'https://huggingface.co/SWHL/RapidOCR/resolve/main/PP-OCRv3/ch_PP-OCRv3_rec_infer.onnx'
 const OCR_DICT_URL =
   'https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/ppocr_keys_v1.txt'
+// A fixed (non-"latest") tag: this repo also cuts a code release on every
+// master push (see .github/workflows/ci.yml), so "latest" would almost always
+// point at one of *those* instead of the model assets. Bump to models-v2 (and
+// this constant) only when the export changes — see
+// .github/workflows/publish-models.yml.
+const DEFAULT_MODELS_URL =
+  'https://github.com/artiz/fleischwolf/releases/download/models-v1'
 
 // pdfium-binaries platform tag + shared-library filename, by (platform, arch).
 function pdfiumPlatform() {
@@ -126,6 +137,49 @@ function exportEnv(p) {
 }
 
 /**
+ * A numbered, copy-pasteable walkthrough for getting the layout model (and,
+ * optionally, TableFormer) in place, shown when the default hosted download
+ * didn't succeed (or wasn't reachable) so both error sites below give the same
+ * concrete next steps.
+ */
+function layoutSetupGuide() {
+  return [
+    'pdfium and the OCR model download automatically. The RT-DETR layout model',
+    '(required) and TableFormer (optional — tables fall back to geometric',
+    'reconstruction without it) normally do too, from a PyTorch→ONNX export',
+    `fleischwolf hosts at ${DEFAULT_MODELS_URL} (docling-project's own models,`,
+    'format-converted only — see MODELS_NOTICE.md for full attribution). That',
+    "fetch didn't succeed here. Options:",
+    '',
+    '  1. Check connectivity to github.com and retry:',
+    '       await installDependencies({ force: true })',
+    '',
+    '  2. Export the models yourself (needs Python + torch + transformers + onnx):',
+    '       git clone https://github.com/artiz/fleischwolf && cd fleischwolf',
+    '       pip install torch transformers onnx',
+    '       python scripts/export_layout.py models/layout_heron.onnx',
+    '       # optional — also needs docling_ibm_models + onnxscript + onnxruntime:',
+    '       python scripts/export_tableformer.py models/tableformer',
+    '     then point fleischwolf at the exported files, either directly:',
+    '       export DOCLING_LAYOUT_ONNX=/path/to/layout_heron.onnx',
+    '       export DOCLING_TABLEFORMER_ENCODER=/path/to/tableformer/encoder.onnx  # optional',
+    '       export DOCLING_TABLEFORMER_DECODER=/path/to/tableformer/decoder.onnx  # optional',
+    '       export DOCLING_TABLEFORMER_BBOX=/path/to/tableformer/bbox.onnx        # optional',
+    '     or by copying them into installDependencies()’s install dir',
+    '     (default ~/.cache/fleischwolf/models, or $FLEISCHWOLF_HOME/models) so',
+    "     they're picked up as already installed on the next call.",
+    '',
+    '  3. Point at a different host (your own export, an internal mirror, …):',
+    "       await installDependencies({ modelsUrl: 'https://your-host/models' })",
+    '     (serving layout_heron.onnx and, optionally, tableformer-*.onnx), or set',
+    '     FLEISCHWOLF_MODELS_URL to the same value.',
+    '',
+    'Declarative formats (md, html, docx, xlsx, …) need none of this — only PDF,',
+    'image and METS conversion do.',
+  ].join('\n')
+}
+
+/**
  * Throw a clear, actionable error if `format` needs the ML pipeline but its
  * dependencies aren't installed. Called before ML conversions.
  */
@@ -140,10 +194,9 @@ function assertMlReady(format, dir) {
   if (missing.length === 0) return
   throw new Error(
     `Converting '${format}' requires the PDF/ML dependencies, which are not installed: ` +
-      `${missing.join(', ')}. Call \`await installDependencies()\` before converting ` +
-      `(pass { modelsUrl } or set FLEISCHWOLF_MODELS_URL so the layout/TableFormer ONNX can be ` +
-      `fetched; or set DOCLING_LAYOUT_ONNX / PDFIUM_DYNAMIC_LIB_PATH to local files). ` +
-      `Declarative formats (md, html, docx, xlsx, …) need none of this.`,
+      `${missing.join(', ')}.\n\n` +
+      `First, call \`await installDependencies()\` — it fetches pdfium and the OCR model on ` +
+      `its own. If it still can't get the layout model afterwards, see below.\n\n${layoutSetupGuide()}`,
   )
 }
 
@@ -182,6 +235,20 @@ async function ensureFile(dest, url, force, onProgress, label) {
   return true
 }
 
+/**
+ * Fetch `<mainDest>.data` (ONNX's external-data sidecar) from `sidecarUrl` if
+ * the host has one, ignoring a 404/any fetch error — most exports don't need
+ * one (only a graph over ONNX's ~2GB protobuf limit does), so its absence is
+ * expected, not a failure.
+ */
+async function ensureOptionalSidecar(mainDest, sidecarUrl, onProgress) {
+  try {
+    await ensureFile(`${mainDest}.data`, sidecarUrl, false, onProgress, `${path.basename(mainDest)}.data`)
+  } catch {
+    // No sidecar for this export — fine.
+  }
+}
+
 async function installPdfium(p, force, onProgress) {
   if (!force && fs.existsSync(p.pdfiumLib)) return false
   if (process.env.PDFIUM_DYNAMIC_LIB_PATH) {
@@ -216,9 +283,10 @@ async function installPdfium(p, force, onProgress) {
  *
  * @param {object} [options]
  * @param {string} [options.dir]         install home (default ~/.cache/fleischwolf or $FLEISCHWOLF_HOME)
- * @param {string} [options.modelsUrl]   base URL serving layout_heron.onnx + tableformer/*.onnx
+ * @param {string} [options.modelsUrl]   base URL serving layout_heron.onnx + tableformer-*.onnx
+ *                                       (default: fleischwolf's own hosted export, DEFAULT_MODELS_URL)
  * @param {boolean} [options.ocr=true]   also fetch the OCR model + dictionary
- * @param {boolean} [options.tableformer=true] also fetch TableFormer from modelsUrl (if provided)
+ * @param {boolean} [options.tableformer=true] also fetch TableFormer from modelsUrl
  * @param {boolean} [options.force=false] re-download assets that already exist
  * @param {(msg: string) => void} [options.onProgress]
  */
@@ -240,27 +308,48 @@ async function installDependencies(options = {}) {
       installed.push('ppocr_keys_v1.txt')
   }
 
-  // 3. Layout (required) + TableFormer (optional) — from the configured base URL.
-  const base = (options.modelsUrl || process.env.FLEISCHWOLF_MODELS_URL || '').replace(/\/$/, '')
+  // 3. Layout (required) + TableFormer (optional) — from the configured base URL,
+  // defaulting to fleischwolf's own hosted export (DEFAULT_MODELS_URL) so this
+  // works with zero configuration; pass `{ modelsUrl }` / set
+  // `FLEISCHWOLF_MODELS_URL` to use your own export/host instead.
+  const base = (options.modelsUrl || process.env.FLEISCHWOLF_MODELS_URL || DEFAULT_MODELS_URL).replace(
+    /\/$/,
+    '',
+  )
   if (!fs.existsSync(p.layout)) {
-    if (base) {
+    try {
       if (
         await ensureFile(p.layout, `${base}/layout_heron.onnx`, options.force, onProgress, 'layout model')
-      )
+      ) {
         installed.push('layout_heron.onnx')
-    } else {
-      missing.push('layout_heron.onnx')
+        // Large exports carry their weights in a sidecar `<file>.onnx.data`
+        // (ONNX's external-data format, used above the ~2GB protobuf limit).
+        // Optional — most exports don't need one — so a missing sidecar is not
+        // an error.
+        await ensureOptionalSidecar(p.layout, `${base}/layout_heron.onnx.data`, onProgress)
+      }
+    } catch (e) {
+      // Surfaced below via status.missing + layoutSetupGuide(), with more
+      // actionable detail than the raw fetch error.
+      onProgress?.(`could not fetch layout model from ${base}: ${e.message}`)
     }
   }
-  if (options.tableformer !== false && base) {
+  if (options.tableformer !== false) {
     for (const [file, dest] of [
       ['tableformer/encoder.onnx', p.tfEncoder],
       ['tableformer/decoder.onnx', p.tfDecoder],
       ['tableformer/bbox.onnx', p.tfBbox],
     ]) {
+      // GitHub Release assets can't contain "/", so the hosted copy is flat
+      // (tableformer-encoder.onnx, …); a custom `modelsUrl` host is free to
+      // mirror either layout, since ensureOptionalSidecar/ensureFile below try
+      // the flat name.
+      const flat = file.replace(/\//g, '-')
       try {
-        if (await ensureFile(dest, `${base}/${file}`, options.force, onProgress, file))
+        if (await ensureFile(dest, `${base}/${flat}`, options.force, onProgress, file)) {
           installed.push(file)
+          await ensureOptionalSidecar(dest, `${base}/${flat}.data`, onProgress)
+        }
       } catch (e) {
         // TableFormer is optional (geometric fallback); note but don't fail.
         onProgress?.(`skipped ${file}: ${e.message}`)
@@ -272,15 +361,10 @@ async function installDependencies(options = {}) {
   const status = checkDependencies(options)
 
   if (!status.ready) {
-    const hint = base
-      ? `layout_heron.onnx could not be fetched from ${base}.`
-      : `no models URL configured — pass { modelsUrl } to installDependencies() or set ` +
-        `FLEISCHWOLF_MODELS_URL to a host serving layout_heron.onnx (and tableformer/*.onnx). ` +
-        `The layout model is a PyTorch→ONNX export (docling-project/docling-layout-heron) with no ` +
-        `public prebuilt download; export it with the repo's scripts/export_layout.py and host it, ` +
-        `or set DOCLING_LAYOUT_ONNX to the local file.`
     throw new Error(
-      `installDependencies: PDF conversion is not ready. Missing: ${status.missing.join(', ')}. ${hint}`,
+      `installDependencies: PDF conversion is not ready. Missing: ${status.missing.join(', ')}.\n\n` +
+        `layout_heron.onnx could not be fetched from ${base} — check the URL is reachable and\n` +
+        `serves layout_heron.onnx (and, optionally, tableformer-*.onnx) at that path.\n\n${layoutSetupGuide()}`,
     )
   }
 

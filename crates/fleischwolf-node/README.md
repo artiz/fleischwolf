@@ -118,23 +118,34 @@ What `installDependencies()` fetches, into `~/.cache/fleischwolf` (override with
 | --- | --- | --- |
 | **pdfium** | bblanchon prebuilt (auto, platform-detected) | PDF |
 | **OCR** rec model + dictionary | HuggingFace / GitHub (auto) | scanned pages |
-| **layout** (`layout_heron.onnx`) | your `modelsUrl` (see below) | PDF **and** image |
-| **TableFormer** (`tableformer/*.onnx`) | your `modelsUrl` | tables (else geometric fallback) |
+| **layout** (`layout_heron.onnx`) | fleischwolf's hosted release (auto) | PDF **and** image |
+| **TableFormer** (`tableformer-*.onnx`) | fleischwolf's hosted release (auto) | tables (else geometric fallback) |
 
-> **layout + TableFormer have no public prebuilt download.** They're PyTorch→ONNX
-> exports (`docling-project/docling-layout-heron`, `docling_ibm_models`). Host the
-> exported `.onnx` yourself and point `installDependencies` at the base URL via
-> `{ modelsUrl }` or `FLEISCHWOLF_MODELS_URL` — it fetches `layout_heron.onnx` and
-> `tableformer/{encoder,decoder,bbox}.onnx` from there. Or export them locally
-> (repo `scripts/export_layout.py`, `scripts/export_tableformer.py`) and set
-> `DOCLING_LAYOUT_ONNX` / `DOCLING_TABLEFORMER_*` — `installDependencies` detects
-> those as already installed. Without a layout source it installs pdfium/OCR and
-> throws, naming what's missing.
+> **layout + TableFormer are PyTorch→ONNX exports**
+> (`docling-project/docling-layout-heron`, Apache-2.0;
+> `docling-project/docling-models`, CDLA-Permissive-2.0/Apache-2.0 — see
+> [`MODELS_NOTICE.md`](../../MODELS_NOTICE.md) for full attribution), not
+> fleischwolf's own weights. `installDependencies()` fetches the export
+> fleischwolf hosts as a GitHub Release by default — no configuration needed.
+> Override with `{ modelsUrl }` / `FLEISCHWOLF_MODELS_URL` to use your own
+> export/host instead (serving `layout_heron.onnx` and, optionally,
+> `tableformer-{encoder,decoder,bbox}.onnx`), or export locally (repo
+> `scripts/export_layout.py`, `scripts/export_tableformer.py`) and set
+> `DOCLING_LAYOUT_ONNX` / `DOCLING_TABLEFORMER_*` directly —
+> `installDependencies` detects those as already installed and skips fetching.
+>
+> Pre-fetch everything ahead of time (e.g. in a container build step), from
+> your app's directory:
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/artiz/fleischwolf/master/scripts/setup_nodejs_dependencies.sh | bash
+> ```
 
 ```js
+await installDependencies({ onProgress: (m) => console.log(m) })
+
+// or, to use your own export/host instead of fleischwolf's default:
 await installDependencies({
-  modelsUrl: 'https://you.example/fleischwolf-models', // serves layout_heron.onnx, tableformer/*.onnx
-  onProgress: (m) => console.log(m),
+  modelsUrl: 'https://you.example/fleischwolf-models', // serves layout_heron.onnx, tableformer-*.onnx
 })
 
 checkDependencies() // { home, pdfium, layout, ocr, tableformer, ready, missing }
