@@ -35,12 +35,6 @@ with
 \documentclass{llncs}
 ```
 
-```
-\begin{document}
-  <Your contribution>
-\end{document}
-```
-
 If your file is already coded with L A T E X, you can easily adapt it to the llncs document class by replacing
 
 \documentclass{article}
@@ -132,23 +126,11 @@ Inside \institute you can use\email
        \url{<url>}
 ```
 
-```
-\institute{<name of an institute>
-\and <name of the next institute>
-\and <name of the next institute>}
-```
-
 \email Inside \institute you can use
 
 \email{&lt;email address&gt;}
 
-\url and
-
-```
-\url{<url>}
-```
-
-to provide author email addresses and Web pages. If you need to typeset the tilde character - e.g. for your Web page in your unix system's home directory - the \homedir command will do this. If multiple authors have the same affiliation, please check that the order of email addresses matches the sequence of (affiliated) author names.
+\url and to provide author email addresses and Web pages. If you need to typeset the tilde character - e.g. for your Web page in your unix system's home directory - the \homedir command will do this. If multiple authors have the same affiliation, please check that the order of email addresses matches the sequence of (affiliated) author names.
 
 Please note that, if email addresses are given in your paper, they will also be included in the metadata of the online version.
 
@@ -165,12 +147,6 @@ The abstract is coded as follows:abstract(env.)
                \begin{abstract}
                <Text of the summary of your paper>
                \end{abstract}
-```
-
-```
-\begin{abstract}
-<Text of the summary of your paper>
-\end{abstract}
 ```
 
 \keywords Keywords should be specified inside the abstract environment. Please capitalize \and the first letter of each keyword and again separate them with \and :
