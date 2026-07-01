@@ -327,8 +327,9 @@ impl Pipeline {
         name: &str,
     ) -> Result<DoclingDocument, PdfError> {
         let mut doc = DoclingDocument::new(name);
+        let render_image = !self.no_ocr;
         let worker = self.primary()?;
-        pdfium_backend::for_each_page(bytes, password, |n, _total, mut page| {
+        pdfium_backend::for_each_page(bytes, password, render_image, |n, _total, mut page| {
             let (nodes, links) = worker.process(n, &mut page)?;
             doc.nodes.extend(nodes);
             doc.links.extend(links);
@@ -351,6 +352,7 @@ impl Pipeline {
     ) -> Result<DoclingDocument, PdfError> {
         self.ensure_pool()?;
         let n_workers = self.pool.len();
+        let render_image = !self.no_ocr;
         let (work_tx, work_rx) = sync_channel::<(usize, PdfPage)>(n_workers * 2);
         let work_rx: Arc<Mutex<Receiver<(usize, PdfPage)>>> = Arc::new(Mutex::new(work_rx));
         let results: Arc<Mutex<Vec<(usize, PageOut)>>> = Arc::new(Mutex::new(Vec::new()));
@@ -382,11 +384,12 @@ impl Pipeline {
             // Render on this thread and feed the workers; backpressure blocks here
             // when the channel is full. Dropping `work_tx` afterwards signals the
             // workers (recv → Err) to finish.
-            let render = pdfium_backend::for_each_page(bytes, password, |i, _total, page| {
-                work_tx
-                    .send((i, page))
-                    .map_err(|_| PdfError::Pdfium("page-worker channel closed".into()))
-            });
+            let render =
+                pdfium_backend::for_each_page(bytes, password, render_image, |i, _total, page| {
+                    work_tx
+                        .send((i, page))
+                        .map_err(|_| PdfError::Pdfium("page-worker channel closed".into()))
+                });
             drop(work_tx);
             if let Err(e) = render {
                 let mut slot = first_err.lock().unwrap();
@@ -459,8 +462,9 @@ impl Pipeline {
         F: FnMut(Vec<Node>, Vec<(String, String)>) -> Result<(), PdfError>,
     {
         let mut asm = assemble::StreamAssembler::new();
+        let render_image = !self.no_ocr;
         let worker = self.primary()?;
-        pdfium_backend::for_each_page(bytes, password, |n, _total, mut page| {
+        pdfium_backend::for_each_page(bytes, password, render_image, |n, _total, mut page| {
             let (nodes, links) = worker.process(n, &mut page)?;
             emit(asm.push(nodes), links)
         })?;
@@ -484,6 +488,7 @@ impl Pipeline {
     {
         self.ensure_pool()?;
         let n_workers = self.pool.len();
+        let render_image = !self.no_ocr;
         let (work_tx, work_rx) = sync_channel::<(usize, PdfPage)>(n_workers * 2);
         let work_rx: Arc<Mutex<Receiver<(usize, PdfPage)>>> = Arc::new(Mutex::new(work_rx));
         // Workers and the renderer report here; the calling thread drains it in
@@ -514,12 +519,16 @@ impl Pipeline {
             {
                 let res_tx = res_tx.clone();
                 s.spawn(move || {
-                    let render =
-                        pdfium_backend::for_each_page(bytes, password, |i, _total, page| {
+                    let render = pdfium_backend::for_each_page(
+                        bytes,
+                        password,
+                        render_image,
+                        |i, _total, page| {
                             work_tx
                                 .send((i, page))
                                 .map_err(|_| PdfError::Pdfium("page-worker channel closed".into()))
-                        });
+                        },
+                    );
                     drop(work_tx); // signal workers to finish
                     if let Err(e) = render {
                         let _ = res_tx.send(Err(e));

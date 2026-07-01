@@ -138,7 +138,7 @@ impl PdfDocument {
         let mut pages = Vec::new();
         for (i, page) in doc.pages().iter().enumerate() {
             let rc = rust.as_mut().and_then(|v| v.get_mut(i).map(std::mem::take));
-            pages.push(extract_page(&page, &ffi, i as i32, rc)?);
+            pages.push(extract_page(&page, &ffi, i as i32, rc, true)?);
         }
         Ok(PdfDocument { pages })
     }
@@ -173,8 +173,20 @@ pub fn page_count(bytes: &[u8], password: Option<&str>) -> Result<usize, PdfiumE
 /// large PDF would otherwise hold gigabytes of bitmaps at once. `f` receives the
 /// zero-based page index and the total page count.
 ///
+/// `render_image` controls whether the page bitmap is rasterized at all: layout,
+/// OCR, TableFormer, and picture cropping all need it, but a caller that skips
+/// every one of those (the `no_ocr` fast path) doesn't, and rasterizing +
+/// downsampling a page is by far the most expensive step per page — skipping it
+/// is most of `no_ocr`'s speedup. `PdfPage::image` is a 1×1 placeholder when
+/// `false`; do not read it.
+///
 /// `E` is the caller's error type; pdfium errors convert into it via `From`.
-pub fn for_each_page<E, F>(bytes: &[u8], password: Option<&str>, mut f: F) -> Result<(), E>
+pub fn for_each_page<E, F>(
+    bytes: &[u8],
+    password: Option<&str>,
+    render_image: bool,
+    mut f: F,
+) -> Result<(), E>
 where
     E: From<PdfiumError>,
     F: FnMut(usize, usize, PdfPage) -> Result<(), E>,
@@ -187,7 +199,7 @@ where
     let total = pages.len() as usize;
     for (i, page) in pages.iter().enumerate() {
         let rc = rust.as_mut().and_then(|v| v.get_mut(i).map(std::mem::take));
-        let extracted = extract_page(&page, &ffi, i as i32, rc)?;
+        let extracted = extract_page(&page, &ffi, i as i32, rc, render_image)?;
         f(i, total, extracted)?;
     }
     Ok(())
@@ -198,52 +210,69 @@ fn extract_page(
     ffi: &FfiText<'_>,
     index: i32,
     rust_cells: Option<crate::textparse::PageParserCells>,
+    render_image: bool,
 ) -> Result<PdfPage, PdfiumError> {
     let width = page.width().value;
     let height = page.height().value;
 
-    let (mut cells, mut code_cells, mut word_cells) =
-        crate::timing::timed("ffi.page_cells", || ffi.page_cells(index, height));
-    if cells.is_empty() {
-        cells = segment_cells(&page.text()?, height);
-    }
     // Default: use the pure-Rust text parser instead of pdfium's text layer
     // (override with `DOCLING_PDFIUM_TEXT`). Prose line cells always come from the
     // parser; word and code cells do too unless `DOCLING_PDFIUM_WORDS` keeps them
     // on pdfium (the parser's word grouping reproduces docling-parse's, which
     // TableFormer matches against — roadmap item 6). A page the parser couldn't
     // read (no text layer) keeps pdfium's cells.
-    if let Some(rc) = rust_cells {
-        if !rc.prose.is_empty() {
-            cells = rc.prose;
-        }
-        if use_parser_words() && !rc.words.is_empty() {
-            word_cells = rc.words;
-        }
-        if use_parser_code() && !rc.code.is_empty() {
-            code_cells = rc.code;
-        }
+    let rc = rust_cells.unwrap_or_default();
+    let need_pdfium_prose = rc.prose.is_empty();
+    let need_pdfium_words = !use_parser_words() || rc.words.is_empty();
+    let need_pdfium_code = !use_parser_code() || rc.code.is_empty();
+
+    // The parser covers prose/words/code from one shared glyph pass, so on the
+    // common (parser-succeeded) page all three are already satisfied and this
+    // pdfium FFI call — otherwise fully discarded below — is skipped outright.
+    let (mut cells, mut code_cells, mut word_cells) =
+        if need_pdfium_prose || need_pdfium_words || need_pdfium_code {
+            let (mut cells, code_cells, word_cells) =
+                crate::timing::timed("ffi.page_cells", || ffi.page_cells(index, height));
+            if cells.is_empty() {
+                cells = segment_cells(&page.text()?, height);
+            }
+            (cells, code_cells, word_cells)
+        } else {
+            (Vec::new(), Vec::new(), Vec::new())
+        };
+    if !rc.prose.is_empty() {
+        cells = rc.prose;
+    }
+    if use_parser_words() && !rc.words.is_empty() {
+        word_cells = rc.words;
+    }
+    if use_parser_code() && !rc.code.is_empty() {
+        code_cells = rc.code;
     }
 
-    // docling renders at 1.5× the target scale and downsamples "to make it
-    // sharper" (pypdfium2 → PIL BICUBIC). Replicate exactly: the TableFormer
-    // model is pixel-sensitive, so the page bitmap must match byte-for-byte.
-    // `CatmullRom` is the same a=-0.5 cubic kernel as PIL's BICUBIC.
-    const SUPERSAMPLE: f32 = 1.5;
-    let tw = (width * RENDER_SCALE * SUPERSAMPLE).round().max(1.0) as i32;
-    let th = (height * RENDER_SCALE * SUPERSAMPLE).round().max(1.0) as i32;
-    let cfg = PdfRenderConfig::new()
-        .set_target_width(tw)
-        .set_target_height(th);
-    let big = crate::timing::timed("pdfium.render", || {
-        page.render_with_config(&cfg)
-            .map(|b| b.as_image().into_rgb8())
-    })?;
-    let dw = (width * RENDER_SCALE).round().max(1.0) as u32;
-    let dh = (height * RENDER_SCALE).round().max(1.0) as u32;
-    let image = crate::timing::timed("image.resize", || {
-        image::imageops::resize(&big, dw, dh, image::imageops::FilterType::CatmullRom)
-    });
+    let image = if render_image {
+        // docling renders at 1.5× the target scale and downsamples "to make it
+        // sharper" (pypdfium2 → PIL BICUBIC). Replicate exactly: the TableFormer
+        // model is pixel-sensitive, so the page bitmap must match byte-for-byte.
+        // `CatmullRom` is the same a=-0.5 cubic kernel as PIL's BICUBIC.
+        const SUPERSAMPLE: f32 = 1.5;
+        let tw = (width * RENDER_SCALE * SUPERSAMPLE).round().max(1.0) as i32;
+        let th = (height * RENDER_SCALE * SUPERSAMPLE).round().max(1.0) as i32;
+        let cfg = PdfRenderConfig::new()
+            .set_target_width(tw)
+            .set_target_height(th);
+        let big = crate::timing::timed("pdfium.render", || {
+            page.render_with_config(&cfg)
+                .map(|b| b.as_image().into_rgb8())
+        })?;
+        let dw = (width * RENDER_SCALE).round().max(1.0) as u32;
+        let dh = (height * RENDER_SCALE).round().max(1.0) as u32;
+        crate::timing::timed("image.resize", || {
+            image::imageops::resize(&big, dw, dh, image::imageops::FilterType::CatmullRom)
+        })
+    } else {
+        RgbImage::new(1, 1)
+    };
 
     Ok(PdfPage {
         width,
