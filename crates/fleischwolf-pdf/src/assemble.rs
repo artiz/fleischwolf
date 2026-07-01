@@ -33,8 +33,16 @@ pub fn resolve(mut regions: Vec<Region>) -> Vec<Region> {
         let covered = kept.iter().any(|k| {
             let i = inter(&r, k.l, k.t, k.r, k.b);
             let ka = area(k.l, k.t, k.r, k.b).max(1.0);
-            // drop if most of r is inside k, or they strongly mutually overlap
-            i / ra > 0.7 || i / (ra + ka - i) > 0.5
+            // Drop r if most of it sits inside an already-kept box, or the two
+            // strongly overlap (IoU). Also drop r when it *contains* a kept box of
+            // the same label: the detector sometimes emits a taller near-duplicate
+            // of a block (e.g. a code box that also swallows the `XML` language
+            // label) with a slightly lower score than the tight box, so the tight
+            // one is kept first and the container — not "mostly inside" anything —
+            // would otherwise survive and emit the block a second time. Restricting
+            // the containment drop to the same label keeps genuinely nested,
+            // differently-typed regions (a text box inside a table) intact.
+            i / ra > 0.7 || i / (ra + ka - i) > 0.5 || (r.label == k.label && i / ka > 0.7)
         });
         if !covered {
             kept.push(r);
@@ -1049,6 +1057,44 @@ mod tests {
             r,
             b,
         }
+    }
+
+    fn region(label: &'static str, score: f32, l: f32, t: f32, r: f32, b: f32) -> Region {
+        Region {
+            label,
+            score,
+            l,
+            t,
+            r,
+            b,
+        }
+    }
+
+    #[test]
+    fn resolve_collapses_same_label_nested_duplicates() {
+        // The detector emitted three overlapping `code` boxes for one block: a
+        // tight high-score box and two taller lower-score near-duplicates that
+        // contain it. All must collapse to one so the block isn't emitted twice.
+        let regions = vec![
+            region("code", 0.70, 78.0, 252.0, 300.0, 346.0), // tall container
+            region("code", 0.95, 78.0, 292.0, 300.0, 330.0), // tight, highest score
+            region("code", 0.80, 78.0, 260.0, 300.0, 332.0), // medium container
+        ];
+        let kept = super::resolve(regions);
+        assert_eq!(kept.len(), 1, "nested same-label code boxes must collapse");
+        assert!((kept[0].score - 0.95).abs() < 1e-6, "the tight box wins");
+    }
+
+    #[test]
+    fn resolve_keeps_differently_typed_nested_regions() {
+        // A text box fully inside a lower-score table must NOT drop the table:
+        // the containment drop is same-label only.
+        let regions = vec![
+            region("text", 0.95, 90.0, 210.0, 200.0, 230.0), // small, high score
+            region("table", 0.60, 80.0, 200.0, 400.0, 500.0), // big table around it
+        ];
+        let kept = super::resolve(regions);
+        assert_eq!(kept.len(), 2, "table containing a text box is preserved");
     }
 
     #[test]
