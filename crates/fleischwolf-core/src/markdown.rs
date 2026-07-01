@@ -396,6 +396,61 @@ fn ext_for(mimetype: &str) -> &str {
 ///
 /// Each cell is first escaped (`\n` → space, `|` → `&#124;`) so it can't break the
 /// table. Row 0 is the header.
+/// Whether a table cell counts as a number for column alignment, matching
+/// `tabulate`'s detection: an ordinary float/int (`f64`-parseable, covering
+/// `1e2`/`inf`/`+1.5`) **or** a thousands-separated number like `7,015`.
+fn is_number_cell(t: &str) -> bool {
+    t.parse::<f64>().is_ok() || is_thousands_number(t)
+}
+
+/// A number with comma thousands-separators, per `tabulate`'s
+/// `_float_with_thousands_separators` regex
+/// (`^(([+-]?[0-9]{1,3})(?:,([0-9]{3}))*)?(?(1)\.[0-9]*|\.[0-9]+)?$`): the
+/// integer part is 1–3 digits then any number of `,ddd` groups; the fraction is
+/// optional (and, without an integer part, must have at least one digit).
+fn is_thousands_number(t: &str) -> bool {
+    let b = t.as_bytes();
+    let mut i = 0;
+    let start = i;
+    if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
+        i += 1;
+    }
+    // First digit chunk: 1–3 digits.
+    let d0 = i;
+    while i < b.len() && b[i].is_ascii_digit() && i - d0 < 3 {
+        i += 1;
+    }
+    let has_int = i > d0;
+    if has_int {
+        // Subsequent `,ddd` groups (exactly three digits each).
+        while i + 3 < b.len() + 1
+            && b.get(i) == Some(&b',')
+            && b.get(i + 1).is_some_and(u8::is_ascii_digit)
+            && b.get(i + 2).is_some_and(u8::is_ascii_digit)
+            && b.get(i + 3).is_some_and(u8::is_ascii_digit)
+        {
+            i += 4;
+        }
+    } else {
+        // A sign only counts with an integer part.
+        i = start;
+    }
+    // Optional fraction.
+    if i < b.len() && b[i] == b'.' {
+        i += 1;
+        let f0 = i;
+        while i < b.len() && b[i].is_ascii_digit() {
+            i += 1;
+        }
+        if !has_int && i == f0 {
+            return false; // `.` with no digits and no integer part
+        }
+    } else if !has_int {
+        return false; // neither integer nor fractional part
+    }
+    i == b.len()
+}
+
 fn render_table(table: &Table, compact: bool) -> String {
     if table.rows.is_empty() {
         return String::new();
@@ -442,14 +497,24 @@ fn render_table(table: &Table, compact: bool) -> String {
     let dw = |s: &str| s.chars().count();
     let data_rows = 1..grid.len();
 
-    // A column is right-aligned when it has data and every data cell is numeric.
+    // A column is right-aligned when at least one data cell is numeric and every
+    // non-empty data cell is numeric — matching `tabulate`'s column typing, where
+    // empty cells are "missing" (ignored) and a number may carry thousands
+    // separators (`7,015`), which a plain `f64` parse rejects.
     let right: Vec<bool> = (0..num_cols)
         .map(|c| {
-            !data_rows.is_empty()
-                && data_rows.clone().all(|r| {
-                    let t = grid[r][c].trim();
-                    !t.is_empty() && t.parse::<f64>().is_ok()
-                })
+            let mut any = false;
+            for r in data_rows.clone() {
+                let t = grid[r][c].trim();
+                if t.is_empty() {
+                    continue;
+                }
+                if !is_number_cell(t) {
+                    return false;
+                }
+                any = true;
+            }
+            any
         })
         .collect();
 

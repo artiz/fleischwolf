@@ -73,8 +73,8 @@ PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
 | WebVTT | `webvtt.rs` | **4/4 exact** |
 | Email (.eml) | `email.rs` (mail-parser) | **2/2 exact** |
 | EPUB | `epub.rs` → HTML backend | core exact (shares HTML residual) |
-| ODF (odt/ods/odp) | `odf.rs` | core; residual in §5 |
-| JATS | `jats.rs` (roxmltree) | core ~60% (metadata + sections + paragraphs) |
+| ODF (odt/ods/odp) | `odf.rs` | core + list continuation + ODS table regions; residual in §5 |
+| JATS | `jats.rs` (roxmltree) | metadata + full `<body>`/`<back>` (tables, figures, references, lists, footnotes, formulas) |
 | USPTO | `uspto.rs` | modern `us-patent-*-v4x` core; residual in §5 |
 | XBRL | `xbrl.rs` | arelle-free core (dei facts → title, `*TextBlock` → HTML) |
 | JSON-docling | `docling_json.rs` (serde_json) | reads docling's native JSON; ~51/145 round-trip exact |
@@ -208,15 +208,20 @@ when the TableFormer graphs aren't present.)
 - **Older patent schemas.** USPTO covers the modern `v4x` XML only; the
   `pap-v1` / 2001-era `pa`/`pg` schemas and the legacy **APS text** (`pftaps`)
   format are not handled (two files even use HTML entities roxmltree rejects).
-- **JATS article-body machinery** — tables, figures, references/citations, lists
-  and formula rendering inside `<body>` (metadata + sections + paragraphs are
-  done).
-- **ODF deep quirks** — mixed-style list continuation, empty-list-item level
-  collapse, ODS sheet→table region detection with numeric alignment, rich table
-  cells.
-- **DOCX long tail** — full Word multilevel list/heading *shared* numbering,
-  position-sorted textbox/shape-text layout, advanced OMML + inline-equation
-  spacing.
+- **ODF rich table cells** — cells holding lists, nested tables or images (and the
+  plain-vs-rich cell distinction that keeps simple cells unformatted). The
+  mixed-style **list continuation**, empty-list-item level collapse and
+  **ODS sheet→table region detection with numeric alignment** are now done (a
+  flood-fill splits a sheet into its disconnected data regions, each emitted as a
+  table; `<text:list>` siblings continue their numbering across an empty nested
+  item).
+- **DOCX grouped/anchored drawings** — position-sorted layout of grouped shapes
+  and `<mc:AlternateContent>` image de-duplication (`drawingml` fixture). The
+  Word multilevel list/heading *shared* numbering and **advanced OMML +
+  inline-equation spacing** are now done (inline equations reproduce docling's
+  inline-group spacing and stay attached to their list item; `\operatorname`
+  functions, limit-label space escaping and the two-space symbol padding match
+  pylatexenc byte-for-byte).
 - **HTML browser-render subsystem** — nav/visibility suppression (`wiki_duck`),
   form key-value-pair regions (`kvp_data_example`), deep nested-table cell padding
   from rendered bounding boxes. ~4 HTML fixtures + KVP.

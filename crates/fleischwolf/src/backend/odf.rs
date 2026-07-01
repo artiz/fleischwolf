@@ -5,7 +5,7 @@
 //! heading by outline level; runs (`<text:span>`) carry bold/italic/strike/sub-
 //! superscript resolved through the style parent chain; lists nest by depth.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use roxmltree::{Document, Node as XmlNode};
 
@@ -38,8 +38,15 @@ struct StyleInfo {
     script: Option<u8>,
 }
 
-/// List style level → is-numbered (vs bullet).
-type ListStyles = HashMap<String, HashMap<i64, bool>>;
+/// One list level's rendering: bullet vs numbered, and its `start-value`.
+#[derive(Default, Clone, Copy)]
+struct OdfLevel {
+    numbered: bool,
+    start: i64,
+}
+
+/// List style name → level (1-based) → level rendering.
+type ListStyles = HashMap<String, HashMap<i64, OdfLevel>>;
 
 struct Styles {
     map: HashMap<String, StyleInfo>,
@@ -96,7 +103,11 @@ fn parse_styles(content: &Document, styles: Option<&Document>) -> Styles {
                             let level: i64 =
                                 attr(lv, "level").and_then(|v| v.parse().ok()).unwrap_or(1);
                             let numbered = lv.tag_name().name() == "list-level-style-number";
-                            levels.insert(level, numbered);
+                            let start = attr(lv, "start-value")
+                                .and_then(|v| v.parse().ok())
+                                .map(|n: i64| n.max(1))
+                                .unwrap_or(1);
+                            levels.insert(level, OdfLevel { numbered, start });
                         }
                         lists.insert(name.to_string(), levels);
                     }
@@ -282,15 +293,26 @@ fn serialize_run(text: &str, fmt: Fmt) -> String {
 // ---------------------------------------------------------------- text doc
 
 fn walk_text(text: XmlNode, styles: &Styles, doc: &mut DoclingDocument) {
-    // List numbering continues across consecutive `<text:list>` siblings (ODF
-    // splits a single logical list into several elements); a non-list block
-    // resets it.
-    let mut counters: Vec<u64> = Vec::new();
-    for el in text.children().filter(XmlNode::is_element) {
-        if el.tag_name().name() != "list" {
-            counters.clear();
+    walk_blocks(text.children().filter(XmlNode::is_element), styles, doc);
+}
+
+/// Walk a run of sibling blocks, threading list-continuation state. Numbering
+/// continues across consecutive `<text:list>` siblings when the next list opens
+/// with an empty nested item (docling's `_OdfListState`); any non-list block
+/// resets the continuation.
+fn walk_blocks<'a, 'i: 'a>(
+    els: impl Iterator<Item = XmlNode<'a, 'i>>,
+    styles: &Styles,
+    doc: &mut DoclingDocument,
+) {
+    let mut prev_state: Option<ListCont> = None;
+    for el in els {
+        if el.tag_name().name() == "list" {
+            prev_state = add_odf_list(el, styles, doc, 0, 1, false, prev_state.take());
+        } else {
+            prev_state = None;
+            handle_block(el, styles, doc, 0, &mut Vec::new());
         }
-        handle_block(el, styles, doc, 0, &mut counters);
     }
 }
 
@@ -301,6 +323,7 @@ fn handle_block(
     list_level: u8,
     counters: &mut Vec<u64>,
 ) {
+    let _ = counters;
     match el.tag_name().name() {
         "h" => {
             let level = attr(el, "outline-level")
@@ -334,8 +357,7 @@ fn handle_block(
             }
         }
         "list" => {
-            let style = attr(el, "style-name");
-            walk_list(el, styles, doc, list_level, style, counters);
+            add_odf_list(el, styles, doc, list_level, 1, false, None);
         }
         "table" => {
             if let Some(table) = parse_table(el, styles) {
@@ -346,56 +368,194 @@ fn handle_block(
     }
 }
 
-fn walk_list(
+/// Continuation state carried across sibling `<text:list>` elements — docling's
+/// `_OdfListState`.
+#[derive(Clone, Copy)]
+struct ListCont {
+    enumerated: bool,
+    counter: i64,
+    has_last: bool,
+}
+
+/// A list's item elements (`<text:list-item>` / `<text:list-header>`).
+fn list_items<'a, 'i>(list: XmlNode<'a, 'i>) -> impl Iterator<Item = XmlNode<'a, 'i>> {
+    list.children()
+        .filter(|c| c.has_tag_name("list-item") || c.has_tag_name("list-header"))
+}
+
+/// An item's rendered text (its direct paragraphs' runs, cleaned to single lines)
+/// and its directly-nested `<text:list>` elements. Mirrors docling's
+/// `_odf_list_item_content` with `flatten_nested_text=False`.
+fn odf_item_content<'a, 'i>(
+    item: XmlNode<'a, 'i>,
+    styles: &Styles,
+) -> (String, Vec<XmlNode<'a, 'i>>) {
+    let mut parts: Vec<String> = Vec::new();
+    let mut nested: Vec<XmlNode> = Vec::new();
+    for child in item.children().filter(XmlNode::is_element) {
+        match child.tag_name().name() {
+            "list" => nested.push(child),
+            "p" | "h" => {
+                let mut runs = Vec::new();
+                collect_runs(child, styles, Fmt::default(), &mut runs);
+                let text = clean_lines(&runs_to_text(runs));
+                if !text.is_empty() {
+                    parts.push(text);
+                }
+            }
+            _ => {}
+        }
+    }
+    (parts.join(" "), nested)
+}
+
+/// Split on newlines, strip each line, drop the blanks, re-join with spaces —
+/// docling's `_clean_odf_text_lines` joined.
+fn clean_lines(text: &str) -> String {
+    text.lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Whether a list renders anything (any item with text, or a renderable nested list).
+fn list_has_renderable(list: XmlNode, styles: &Styles) -> bool {
+    list_items(list).any(|item| {
+        let (text, nested) = odf_item_content(item, styles);
+        !text.is_empty() || nested.iter().any(|n| list_has_renderable(*n, styles))
+    })
+}
+
+/// Whether any item carries direct text (vs. only nested lists).
+fn list_has_direct_text(list: XmlNode, styles: &Styles) -> bool {
+    list_items(list).any(|item| !odf_item_content(item, styles).0.is_empty())
+}
+
+/// Whether the first item is empty but wraps a renderable nested list — the
+/// signal that this list continues the previous one's numbering.
+fn list_starts_with_empty_nested(list: XmlNode, styles: &Styles) -> bool {
+    if let Some(item) = list_items(list).next() {
+        let (text, nested) = odf_item_content(item, styles);
+        return text.is_empty() && nested.iter().any(|n| list_has_renderable(*n, styles));
+    }
+    false
+}
+
+/// A list level's rendering (bullet vs numbered) from the list's own style, else
+/// the inherited `fallback` — docling's `_odf_list_level_is_enumerated`.
+fn level_is_enumerated(styles: &Styles, list: XmlNode, level: i64, fallback: bool) -> bool {
+    attr(list, "style-name")
+        .and_then(|name| styles.lists.get(name))
+        .and_then(|levels| levels.get(&level))
+        .map(|lv| lv.numbered)
+        .unwrap_or(fallback)
+}
+
+/// A list level's `start-value` (default 1).
+fn level_start(styles: &Styles, list: XmlNode, level: i64) -> i64 {
+    attr(list, "style-name")
+        .and_then(|name| styles.lists.get(name))
+        .and_then(|levels| levels.get(&level))
+        .map(|lv| lv.start)
+        .unwrap_or(1)
+}
+
+/// Emit an ODF list as flat [`Node::ListItem`]s — a port of docling's
+/// `_add_odf_list`. `depth` is the Markdown nesting level for items of this list;
+/// `style_level` (1-based) drives style lookups; empty items collapse (their
+/// nested list attaches to the previous item) and a list that opens with an empty
+/// nested item continues the previous list's numbering.
+fn add_odf_list(
     list: XmlNode,
     styles: &Styles,
     doc: &mut DoclingDocument,
-    level: u8,
-    list_style: Option<&str>,
-    counters: &mut Vec<u64>,
-) {
-    let numbered = list_style
-        .and_then(|s| styles.lists.get(s))
-        .and_then(|levels| levels.get(&((level + 1) as i64)))
-        .copied()
-        .unwrap_or(false);
-    while counters.len() <= level as usize {
-        counters.push(0);
+    depth: u8,
+    style_level: i64,
+    enumerated_fallback: bool,
+    continued: Option<ListCont>,
+) -> Option<ListCont> {
+    if !list_has_renderable(list, styles) {
+        return None;
     }
-    for item in list.children().filter(|c| c.has_tag_name("list-item")) {
-        // The first block of the item is its text; nested lists indent deeper.
-        for child in item.children().filter(XmlNode::is_element) {
-            match child.tag_name().name() {
-                "p" | "h" => {
-                    let mut runs = Vec::new();
-                    collect_runs(child, styles, Fmt::default(), &mut runs);
-                    let text = runs_to_text(runs);
-                    if text.is_empty() {
-                        continue;
-                    }
-                    let number = if numbered {
-                        counters[level as usize] += 1;
-                        counters[level as usize]
-                    } else {
-                        0
-                    };
-                    doc.push(Node::ListItem {
-                        ordered: numbered,
-                        number,
-                        first_in_list: false,
-                        text,
-                        level,
-                    });
-                }
-                "list" => {
-                    let s = attr(child, "style-name").or(list_style);
-                    walk_list(child, styles, doc, level + 1, s, counters);
-                }
-                _ => {}
+    let style_enum = level_is_enumerated(styles, list, style_level, enumerated_fallback);
+    let should_continue = continued.map(|c| c.has_last).unwrap_or(false)
+        && list_starts_with_empty_nested(list, styles);
+
+    // A list with no direct text of its own (and not continuing) is transparent:
+    // its items' nested lists take its place at the same depth.
+    if !should_continue && !list_has_direct_text(list, styles) {
+        for item in list_items(list) {
+            let (_text, nested) = odf_item_content(item, styles);
+            for n in nested {
+                add_odf_list(n, styles, doc, depth, style_level + 1, style_enum, None);
             }
         }
+        return None;
     }
-    counters.truncate((level + 1) as usize);
+
+    let (mut counter, current_enum) = match (should_continue, continued) {
+        (true, Some(c)) => (c.counter, c.enumerated),
+        _ => (level_start(styles, list, style_level) - 1, style_enum),
+    };
+    let mut has_last = should_continue;
+
+    for item in list_items(list) {
+        let (text, nested) = odf_item_content(item, styles);
+        let nested: Vec<XmlNode> = nested
+            .into_iter()
+            .filter(|n| list_has_renderable(*n, styles))
+            .collect();
+        if text.is_empty() && nested.is_empty() {
+            continue;
+        }
+        if text.is_empty() {
+            // Empty item: its nested list collapses under the previous item.
+            for n in &nested {
+                add_odf_list(
+                    *n,
+                    styles,
+                    doc,
+                    depth + 1,
+                    style_level + 1,
+                    style_enum,
+                    None,
+                );
+            }
+            continue;
+        }
+        counter += 1;
+        let (ordered, number) = if current_enum {
+            (true, counter.max(0) as u64)
+        } else {
+            (false, 0)
+        };
+        doc.push(Node::ListItem {
+            ordered,
+            number,
+            first_in_list: false,
+            text,
+            level: depth,
+        });
+        has_last = true;
+        for n in &nested {
+            add_odf_list(
+                *n,
+                styles,
+                doc,
+                depth + 1,
+                style_level + 1,
+                style_enum,
+                None,
+            );
+        }
+    }
+
+    Some(ListCont {
+        enumerated: current_enum,
+        counter,
+        has_last,
+    })
 }
 
 // ---------------------------------------------------------------- tables
@@ -448,12 +608,128 @@ fn cell_text(tc: XmlNode, styles: &Styles) -> String {
 
 // ---------------------------------------------------------------- spreadsheet
 
-fn walk_spreadsheet(sheet: XmlNode, styles: &Styles, doc: &mut DoclingDocument) {
+fn walk_spreadsheet(sheet: XmlNode, _styles: &Styles, doc: &mut DoclingDocument) {
     for table in sheet.children().filter(|c| c.has_tag_name("table")) {
-        if let Some(t) = parse_table(table, styles) {
-            doc.push(Node::Table(t));
+        add_ods_sheet(table, doc);
+    }
+}
+
+/// Split an ODS sheet into its disconnected data regions and emit each as a
+/// separate table — a port of docling's `_convert_sheet_table` /
+/// `_find_data_tables_in_sheet` (strict `gap_tolerance = 0` flood fill, singleton
+/// cells kept as 1×1 tables). Numeric columns right-align via the shared table
+/// serializer.
+fn add_ods_sheet(table: XmlNode, doc: &mut DoclingDocument) {
+    // Build a sparse content grid: (row, col) → cell text, expanding
+    // `number-{rows,columns}-repeated` (empty repeats only advance the index, so a
+    // sheet padded to millions of empty cells stays cheap).
+    let mut cells: HashMap<(usize, usize), String> = HashMap::new();
+    let mut row_idx = 0usize;
+    for row in table.children().filter(|c| c.has_tag_name("table-row")) {
+        let rrep = repeat(row, "number-rows-repeated");
+        let mut row_cells: Vec<(usize, String)> = Vec::new();
+        let mut col_idx = 0usize;
+        let mut row_has_content = false;
+        for cell in row
+            .children()
+            .filter(|c| c.has_tag_name("table-cell") || c.has_tag_name("covered-table-cell"))
+        {
+            let crep = repeat(cell, "number-columns-repeated");
+            let covered = cell.has_tag_name("covered-table-cell");
+            let text = ods_cell_text(cell);
+            if !text.is_empty() || covered {
+                row_has_content = true;
+                for c in 0..crep.min(1024) {
+                    row_cells.push((col_idx + c, text.clone()));
+                }
+            }
+            col_idx += crep;
+        }
+        if row_has_content {
+            for r in 0..rrep.min(1024) {
+                for (c, text) in &row_cells {
+                    cells.insert((row_idx + r, *c), text.clone());
+                }
+            }
+        }
+        row_idx += rrep;
+    }
+    if cells.is_empty() {
+        return;
+    }
+
+    let min_row = cells.keys().map(|(r, _)| *r).min().unwrap();
+    let max_row = cells.keys().map(|(r, _)| *r).max().unwrap();
+    let min_col = cells.keys().map(|(_, c)| *c).min().unwrap();
+    let max_col = cells.keys().map(|(_, c)| *c).max().unwrap();
+
+    // Flood-fill connected content cells (4-directional, immediate neighbours
+    // only) in row-major scan order, so region order matches docling's.
+    let mut visited: HashSet<(usize, usize)> = HashSet::new();
+    for ri in min_row..=max_row {
+        for ci in min_col..=max_col {
+            if visited.contains(&(ri, ci)) || !cells.contains_key(&(ri, ci)) {
+                continue;
+            }
+            let mut region: HashSet<(usize, usize)> = HashSet::new();
+            let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
+            queue.push_back((ri, ci));
+            region.insert((ri, ci));
+            let (mut rmin, mut rmax, mut cmin, mut cmax) = (ri, ri, ci, ci);
+            while let Some((r, c)) = queue.pop_front() {
+                rmin = rmin.min(r);
+                rmax = rmax.max(r);
+                cmin = cmin.min(c);
+                cmax = cmax.max(c);
+                for (dr, dc) in [(0i64, 1i64), (0, -1), (1, 0), (-1, 0)] {
+                    let nr = r as i64 + dr;
+                    let nc = c as i64 + dc;
+                    if nr < 0 || nc < 0 {
+                        continue;
+                    }
+                    let key = (nr as usize, nc as usize);
+                    if !region.contains(&key) && cells.contains_key(&key) {
+                        region.insert(key);
+                        queue.push_back(key);
+                    }
+                }
+            }
+            visited.extend(region.iter().copied());
+
+            let rows: Vec<Vec<String>> = (rmin..=rmax)
+                .map(|r| {
+                    (cmin..=cmax)
+                        .map(|c| cells.get(&(r, c)).cloned().unwrap_or_default())
+                        .collect()
+                })
+                .collect();
+            doc.push(Node::Table(Table { rows }));
         }
     }
+}
+
+/// A `number-*-repeated` attribute, at least 1.
+fn repeat(node: XmlNode, name: &str) -> usize {
+    attr(node, name)
+        .and_then(|v| v.parse().ok())
+        .filter(|&n: &usize| n >= 1)
+        .unwrap_or(1)
+}
+
+/// An ODS cell's plain text — its paragraphs' text, newline-joined (github tables
+/// are unescaped, matching docling's `_odf_cell_text` display).
+fn ods_cell_text(cell: XmlNode) -> String {
+    cell.children()
+        .filter(|c| c.has_tag_name("p") || c.has_tag_name("h"))
+        .map(|p| {
+            p.descendants()
+                .filter(|n| n.is_text())
+                .filter_map(|n| n.text())
+                .collect::<String>()
+        })
+        .filter(|s| !s.trim().is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 // ---------------------------------------------------------------- presentation
@@ -462,9 +738,7 @@ fn walk_presentation(pres: XmlNode, styles: &Styles, doc: &mut DoclingDocument) 
     for page in pres.children().filter(|c| c.has_tag_name("page")) {
         for frame in page.descendants().filter(|n| n.has_tag_name("frame")) {
             for tb in frame.children().filter(|c| c.has_tag_name("text-box")) {
-                for el in tb.children().filter(XmlNode::is_element) {
-                    handle_block(el, styles, doc, 0, &mut Vec::new());
-                }
+                walk_blocks(tb.children().filter(XmlNode::is_element), styles, doc);
             }
             for table in frame.children().filter(|c| c.has_tag_name("table")) {
                 if let Some(t) = parse_table(table, styles) {
@@ -503,5 +777,88 @@ mod tests {
         assert!(f.bold && !f.italic, "bold inherited through P2→P1→Strong");
         let t = resolve_fmt(&styles, Some("T1"), Fmt::default());
         assert!(t.italic && !t.bold);
+    }
+
+    #[test]
+    fn ods_sheet_splits_into_regions() {
+        // A title cell (isolated by an empty row) and a 2×2 data block become two
+        // separate tables (strict gap-tolerance flood fill).
+        let xml = r#"<root xmlns:table="t" xmlns:text="x">
+          <table:table>
+            <table:table-row><table:table-cell/>
+              <table:table-cell><text:p>Title</text:p></table:table-cell></table:table-row>
+            <table:table-row><table:table-cell/></table:table-row>
+            <table:table-row><table:table-cell/>
+              <table:table-cell><text:p>H1</text:p></table:table-cell>
+              <table:table-cell><text:p>H2</text:p></table:table-cell></table:table-row>
+            <table:table-row><table:table-cell/>
+              <table:table-cell><text:p>1</text:p></table:table-cell>
+              <table:table-cell><text:p>2</text:p></table:table-cell></table:table-row>
+          </table:table></root>"#;
+        let dom = Document::parse(xml).unwrap();
+        let table = dom.descendants().find(|n| n.has_tag_name("table")).unwrap();
+        let mut doc = DoclingDocument::new("t");
+        add_ods_sheet(table, &mut doc);
+        let tables: Vec<&Table> = doc
+            .nodes
+            .iter()
+            .filter_map(|n| match n {
+                Node::Table(t) => Some(t),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(tables.len(), 2, "title singleton + data region");
+        assert_eq!(tables[0].rows, vec![vec!["Title".to_string()]]);
+        assert_eq!(tables[1].rows.len(), 2, "header + one data row");
+        assert_eq!(tables[1].rows[0], vec!["H1".to_string(), "H2".to_string()]);
+    }
+
+    #[test]
+    fn list_continues_across_empty_nested_item() {
+        // A numbered `<text:list>` followed by a second list that opens with an
+        // empty item wrapping a nested list continues the numbering (3.) while the
+        // nested bullets collapse under the previous item (level 1).
+        let xml = r#"<root xmlns:text="x" xmlns:style="s">
+          <style:list-style style:name="L1">
+            <text:list-level-style-number text:level="1"/></style:list-style>
+          <style:list-style style:name="L2">
+            <text:list-level-style-bullet text:level="1"/>
+            <text:list-level-style-bullet text:level="2"/></style:list-style>
+          <office:body xmlns:office="o"><office:text>
+            <text:list text:style-name="L1">
+              <text:list-item><text:p>one</text:p></text:list-item>
+              <text:list-item><text:p>two</text:p></text:list-item>
+            </text:list>
+            <text:list text:style-name="L2">
+              <text:list-item><text:list>
+                <text:list-item><text:p>bullet</text:p></text:list-item>
+              </text:list></text:list-item>
+              <text:list-item><text:p>three</text:p></text:list-item>
+            </text:list>
+          </office:text></office:body></root>"#;
+        let dom = Document::parse(xml).unwrap();
+        let styles = parse_styles(&dom, None);
+        let body = dom.descendants().find(|n| n.has_tag_name("text")).unwrap();
+        let mut doc = DoclingDocument::new("t");
+        walk_text(body, &styles, &mut doc);
+        let items: Vec<(u64, u8, &str)> = doc
+            .nodes
+            .iter()
+            .filter_map(|n| match n {
+                Node::ListItem {
+                    number, level, text, ..
+                } => Some((*number, *level, text.as_str())),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            items,
+            vec![
+                (1, 0, "one"),
+                (2, 0, "two"),
+                (0, 1, "bullet"),
+                (3, 0, "three"),
+            ]
+        );
     }
 }

@@ -30,7 +30,27 @@ This is a secondary data analysis using existing data, collected for programmati
 
 Building on previous work, we delineated five domains of variables that could influence pre-TAS outcomes: prevalence, agent, environment, MDA, and pre-TAS implementation (Table 1) [6–8]. We prioritized key concepts that could be measured through our data or captured through publicly available global geospatial data sets.
 
-EVI = enhanced vegetation index; MDA = mass drug administration; TAS = transmission assessment survey; DEC = diethylcarbamazine; ALB = albendazole; IVM = ivermectin; Mf = microfilaremia; Ag = antigenemia; FTS = Filariasis Test Strips; ICT = Immunochromatographic Card Test
+Table 1 Categorization of potential factors influencing pre-TAS results.
+
+| Domain                 | Factor                | Covariate                     | Description                                                     | Reference Group      | Summary statistic   | Temporal Resolution   | Source             |
+|------------------------|-----------------------|-------------------------------|-----------------------------------------------------------------|----------------------|---------------------|-----------------------|--------------------|
+| Prevalence             | Baseline prevalence   | 5% cut off                    | Maximum reported mapping or baseline sentinel site prevalence   | <5%                  | Maximum             | Varies                | Programmatic data  |
+| Prevalence             | Baseline prevalence   | 10% cut off                   | Maximum reported mapping or baseline sentinel site prevalence   | <10%                 | Maximum             | Varies                | Programmatic data  |
+| Agent                  | Parasite              | Parasite                      | Predominate parasite in district                                | W. bancrofti & mixed | Binary value        | 2018                  | Programmatic data  |
+| Environment            | Vector                | Vector                        | Predominate vector in district                                  | Anopheles & Mansonia | Binary value        | 2018                  | Country expert     |
+| Environment            | Geography             | Elevation                     | Elevation measured in meters                                    | >350                 | Mean                | 2000                  | CGIAR-CSI SRTM [9] |
+| Environment            | Geography             | District area                 | Area measured in km2                                            | >2,500               | Maximum sum         | Static                | Programmatic data  |
+| Environment            | Climate               | EVI                           | Enhanced vegetation index                                       | > 0.3                | Mean                | 2015                  | MODIS [10]         |
+| Environment            | Climate               | Rainfall                      | Annual rainfall measured in mm                                  | ≤ 700                | Mean                | 2015                  | CHIRPS [11]        |
+| Environment            | Socio-economic        | Population density            | Number of people per km2                                        | ≤ 100                | Mean                | 2015                  | WorldPop [12]      |
+| Environment            | Socio-economic        | Nighttime lights              | Nighttime light index from 0 to 63                              | >1.5                 | Mean                | 2015                  | VIIRS [13]         |
+| Environment            | Co-endemicity         | Co-endemic for onchocerciasis | Part or all of district is also endemic for onchocerciases      | Non-endemic          | Binary value        | 2018                  | Programmatic data  |
+| MDA                    | Drug efficacy         | Drug package                  | DEC-ALB or IVM-ALB                                              | DEC-ALB              | Binary value        | 2018                  | Programmatic data  |
+| MDA                    | Implementation of MDA | Coverage                      | Median MDA coverage for last 5 rounds                           | ≥ 65%                | Median              | Varies                | Programmatic data  |
+| MDA                    | Implementation of MDA | Sufficient rounds             | Number of rounds of sufficient (≥ 65% coverage) in last 5 years | ≥ 3                  | Count               | Varies                | Programmatic data  |
+| MDA                    | Implementation of MDA | Number of rounds              | Maximum number of recorded rounds of MDA                        | ≥ 6                  | Maximum             | Varies                | Programmatic data  |
+| Pre-TAS implementation | Quality of survey     | Diagnostic method             | Using Mf or Ag                                                  | Mf                   | Binary value        | Varies                | Programmatic data  |
+| Pre-TAS implementation | Quality of survey     | Diagnostic test               | Using Mf, ICT, or FTS                                           | Mf                   | Categorical         | Varies                | Programmatic data  |
 
 ### Data sources
 
@@ -82,19 +102,50 @@ Sensitivity analysis was performed for the final log-binomial model to test for 
 
 The overall pre-TAS pass rate for the districts included in this analysis was 87% (74 failures in 554 districts). Nearly 40% of the 554 districts were from Cameroon (134) and Tanzania (87) (Fig 1). No districts in Bangladesh, Cameroon, Mali, or Uganda failed a pre-TAS in this data set; over 25% of districts in Burkina Faso, Ghana, Haiti, Nepal, and Sierra Leone failed pre-TAS in this data set. Baseline prevalence varied widely within and between the 13 countries. Fig 2 shows the highest, lowest, and median baseline prevalence in the study districts by country. Burkina Faso had the highest median baseline prevalence at 52% and Burkina Faso, Tanzania, and Ghana all had at least one district with a very high baseline of over 70%. In Mali, Indonesia, Benin, and Bangladesh, all districts had baseline prevalences below 20%.
 
+Fig 1 Number of pre-TAS by country.
+
+<!-- image -->
+
+Fig 2 District-level baseline prevalence by country.
+
+<!-- image -->
+
 Fig 3 shows the unadjusted analysis for key variables by pre-TAS result. Variables statistically significantly associated with failure (p-value ≤0.05) included higher baseline prevalence at or above 5% or 10%, FTS diagnostic test, primary vector of Culex, treatment with DEC-ALB, higher elevation, higher population density, higher EVI, higher annual rainfall, and six or more rounds of MDA. Variables that were not significantly associated with pre-TAS failure included diagnostic method used (Ag or Mf), parasite, co-endemicity for onchocerciasis, median MDA coverage, and sufficient rounds of MDA.
+
+Fig 3 Percent pre-TAS failure by each characteristic (unadjusted).
+
+<!-- image -->
 
 The final log-binomial model included the variables of baseline prevalence ≥10%, the diagnostic test used (FTS and ICT), and elevation. The final model also included a significant interaction term between high baseline and diagnostic test used.
 
 Fig 4 shows the risk ratio results with their corresponding confidence intervals. In a model with interaction between baseline and diagnostic test the baseline parameter was significant while diagnostic test and the interaction term were not. Districts with high baseline had a statistically significant (p-value ≤0.05) 2.52 times higher risk of failure (95% CI 1.37–4.64) compared to those with low baseline prevalence. The FTS diagnostic test or ICT diagnostic test alone were not significant nor was the interaction term. Additionally, districts with an elevation below 350 meters had a statistically significant (p-value ≤0.05) 3.07 times higher risk of failing pre-TAS (95% CI 1.95–4.83).
 
+Fig 4 Adjusted risk ratios for pre-TAS failure with 95% Confidence Interval from log-binomial model.
+
+<!-- image -->
+
 Sensitivity analyses were conducted using the same model with different subsets of the dataset including (1) all districts except for districts in Cameroon (134 total with no failures), (2) only districts in Africa, (3) only districts with W. bancrofti, and (4) only districts with Anopheles as primary vector. The results of the sensitivity models (Table 2) indicate an overall robust model. High baseline and lower elevation remained significant across all the models. The ICT diagnostic test used remains insignificant across all models. The FTS diagnostic test was positively significant in model 1 and negatively significant in model 4. The interaction term of baseline prevalence and FTS diagnostic test was significant in three models though the estimate was unstable in the W. bancrofti-only and Anopheles-only models (models 3 and 4 respectively), as signified by large confidence intervals.
 
-NOTE: Table shows adjusted Risk Ratio (RR) of failing pre-TAS.
+Table 2 Adjusted risk ratios for pre-TAS failure from log-binomial model sensitivity analysis.
 
-Gray shading &amp; + denote interaction terms, Bold text denotes statistically significant results with p-values ≤0.05
+|                                             |                  | (1)                        | (2)                      | (3)                                  | (4)                             |
+|---------------------------------------------|------------------|----------------------------|--------------------------|--------------------------------------|---------------------------------|
+|                                             | Full Model       | Without Cameroon districts | Only districts in Africa | Only W. bancrofti parasite districts | Only Anopheles vector districts |
+| Number of Failures                          | 74               | 74                         | 44                       | 72                                   | 46                              |
+| Number of total districts                   | (N = 554)        | (N = 420)                  | (N = 407)                | (N = 518)                            | (N = 414)                       |
+| Covariate                                   | RR (95% CI)      | RR (95% CI)                | RR (95% CI)              | RR (95% CI)                          | RR (95% CI)                     |
+| Baseline prevalence > = 10% & used FTS test | 2.38 (0.96–5.90) | 1.23 (0.52–2.92)           | 14.52 (1.79–117.82)      | 2.61 (1.03–6.61)                     | 15.80 (1.95–127.67)             |
+| Baseline prevalence > = 10% & used ICT test | 0.80 (0.20–3.24) | 0.42 (0.11–1.68)           | 1.00 (0.00–0.00)         | 0.88 (0.21–3.60)                     | 1.00 (0.00–0.00)                |
+| +Used FTS test                              | 1.16 (0.52–2.59) | 2.40 (1.12–5.11)           | 0.15 (0.02–1.11)         | 1.03 (0.45–2.36)                     | 0.13 (0.02–0.96)                |
+| +Used ICT test                              | 0.92 (0.32–2.67) | 1.47 (0.51–4.21)           | 0.33 (0.04–2.54)         | 0.82 (0.28–2.43)                     | 0.27 (0.03–2.04)                |
+| +Baseline prevalence > = 10%                | 2.52 (1.37–4.64) | 2.42 (1.31–4.47)           | 2.03 (1.06–3.90)         | 2.30 (1.21–4.36)                     | 2.01 (1.07–3.77)                |
+| Elevation < 350m                            | 3.07 (1.95–4.83) | 2.21 (1.42–3.43)           | 4.68 (2.22–9.87)         | 3.04 (1.93–4.79)                     | 3.76 (1.92–7.37)                |
 
 Overall 74 districts in the dataset failed pre-TAS. Fig 5 summarizes the likelihood of failure by variable combinations identified in the log-binomial model. For those districts with a baseline prevalence ≥10% that used a FTS diagnostic test and have an average elevation below 350 meters (Combination C01), 87% of the 23 districts failed. Of districts with high baseline that used an ICT diagnostic test and have a low average elevation (C02) 45% failed. Overall, combinations with high baseline and low elevation C01, C02, and C04 accounted for 51% of all the failures (38 of 74).
+
+Fig 5 Analysis of failures by model combinations.
+
+<!-- image -->
 
 ## Discussion
 
@@ -116,6 +167,62 @@ As this analysis used data across a variety of countries and epidemiological sit
 
 This paper provides evidence from analysis of 554 districts and 13 countries on the factors associated with pre-TAS results. Baseline prevalence, elevation, vector, population density, EVI, rainfall, and number of MDA rounds were all significant in either bivariate or multivariate analyses. This information along with knowledge of local context can help countries more effectively plan pre-TAS and forecast program activities, such as the potential need for more than five rounds of MDA in areas with high baseline and/or low elevation.
 
-## Acknowledgements
+## Acknowledgments
 
 The authors would like to thank all those involved from the Ministries of Health, volunteers and community members in the sentinel and spot-check site surveys for their tireless commitment to ridding the world of LF. In addition, gratitude is given to Joseph Koroma and all the partners, including USAID, RTI International, FHI 360, IMA World Health, and Helen Keller International, who supported the surveys financially and technically.
+
+## References
+
+- World Health Organization. Lymphatic filariasis: progress report 2000–2009 and strategic plan 2010–2020. Geneva; 2010.
+- World Health Organization. Validation of elimination of lymphatic filariasis as a public health problem. Geneva; 2017.
+- World Health Organization. Global programme to eliminate lymphatic filariasis: progress report, 2018. Wkly Epidemiol Rec. 2019;94: 457–472.
+- World Health Organization. Global programme to eliminate lymphatic filariasis: monitoring and epidemiological assessment of mass drug administration. Geneva; 2011.
+- World Health Organization. Strengthening the assessment of lymphatic filariasis transmission and documenting the achievement of elimination—Meeting of the Neglected Tropical Diseases Strategic and Technical Advisory Group’s Monitoring and Evaluation Subgroup on Disease-specific Indicators. 2016; 42.
+- KyelemD, BiswasG, BockarieMJ, BradleyMH, El-SetouhyM, FischerPU, et al Determinants of success in national programs to eliminate lymphatic filariasis: a perspective identifying essential elements and research needs. Am J Trop Med Hyg. 2008;79: 480–4. 18840733
+- GoldbergEM, KingJD, MupfasoniD, KwongK, HaySI, PigottDM, et al Ecological and socioeconomic predictors of transmission assessment survey failure for lymphatic filariasis. Am J Trop Med Hyg. 2019; 10.4269/ajtmh.18-0721 31115301
+- CanoJ, RebolloMP, GoldingN, PullanRL, CrellenT, SolerA, et al The global distribution and transmission limits of lymphatic filariasis: past and present. Parasites and Vectors. 2014;7: 1–19. 10.1186/1756-3305-7-1 24411014
+- CGIAR-CSI. CGIAR-CSI SRTM 90m DEM Digital Elevation Database. In: http://Srtm.Csi.Cgiar.Org/ [Internet]. 2008 [cited 1 May 2018]. Available: http://srtm.csi.cgiar.org/
+- USGS NASA. Vegetation indices 16-DAy L3 global 500 MOD13A1 dataset [Internet]. [cited 1 May 2018]. Available: https://lpdaac.usgs.gov/products/myd13a1v006/
+- FunkC, PetersonP, LandsfeldM, PedrerosD, VerdinJ, ShuklaS, et al The climate hazards infrared precipitation with stations—A new environmental record for monitoring extremes. Sci Data. Nature Publishing Groups; 2015;2 10.1038/sdata.2015.66 26646728
+- LloydCT, SorichettaA, TatemAJ. High resolution global gridded data for use in population studies. Sci Data. 2017;4: 170001 10.1038/sdata.2017.1 28140386
+- ElvidgeCD, BaughKE, ZhizhinM, HsuF-C. Why VIIRS data are superior to DMSP for mapping nighttime lights. Proc Asia-Pacific Adv Netw. Proceedings of the Asia-Pacific Advanced Network; 2013;35: 62 10.7125/apan.35.7
+- JambulingamP, SubramanianS, De VlasSJ, VinubalaC, StolkWA. Mathematical modelling of lymphatic filariasis elimination programmes in India: required duration of mass drug administration and post-treatment level of infection indicators. Parasites and Vectors. 2016;9: 1–18. 10.1186/s13071-015-1291-6 26728523
+- MichaelE, Malecela-LazaroMN, SimonsenPE, PedersenEM, BarkerG, KumarA, et al Mathematical modelling and the control of lymphatic filariasis. Lancet Infect Dis. 2004;4: 223–234. 10.1016/S1473-3099(04)00973-9 15050941
+- StolkWA, SwaminathanS, van OortmarssenGJ, DasPK, HabbemaJDF. Prospects for elimination of bancroftian filariasis by mass drug treatment in Pondicherry, India: a simulation study. J Infect Dis. 2003;188: 1371–81. 10.1086/378354 14593597
+- GradyCA, De RocharsMB, DirenyAN, OrelusJN, WendtJ, RaddayJ, et al Endpoints for lymphatic filariasis programs. Emerg Infect Dis. 2007;13: 608–610. 10.3201/eid1304.061063 17553278
+- EvansD, McFarlandD, AdamaniW, EigegeA, MiriE, SchulzJ, et al Cost-effectiveness of triple drug administration (TDA) with praziquantel, ivermectin and albendazole for the prevention of neglected tropical diseases in Nigeria. Ann Trop Med Parasitol. 2011;105: 537–47. 10.1179/2047773211Y.0000000010 22325813
+- RichardsFO, EigegeA, MiriES, KalA, UmaruJ, PamD, et al Epidemiological and entomological evaluations after six years or more of mass drug administration for lymphatic filariasis elimination in Nigeria. PLoS Negl Trop Dis. 2011;5: e1346 10.1371/journal.pntd.0001346 22022627
+- BiritwumNK, YikpoteyP, MarfoBK, OdoomS, MensahEO, AsieduO, et al Persistent “hotspots” of lymphatic filariasis microfilaraemia despite 14 years of mass drug administration in Ghana. Trans R Soc Trop Med Hyg. 2016;110: 690–695. 10.1093/trstmh/trx007 28938053
+- MoragaP, CanoJ, BaggaleyRF, GyapongJO, NjengaSM, NikolayB, et al Modelling the distribution and transmission intensity of lymphatic filariasis in sub-Saharan Africa prior to scaling up interventions: integrated use of geostatistical and mathematical modelling. Parasites and Vectors. 2015;8: 1–16. 10.1186/s13071-014-0608-1 25561160
+- IrvineMA, NjengaSM, GunawardenaS, WamaeCN, CanoJ, BrookerSJ, et al Understanding the relationship between prevalence of microfilariae and antigenaemia using a model of lymphatic filariasis infection. Trans R Soc Trop Med Hyg. 2016;110: 118–124. 10.1093/trstmh/trv096 26822604
+- OttesenEA. Efficacy of diethylcarbamazine in eradicating infection with lymphatic-dwelling filariae in humans. Rev Infect Dis. 1985;7.
+- GambhirM, BockarieM, TischD, KazuraJ, RemaisJ, SpearR, et al Geographic and ecologic heterogeneity in elimination thresholds for the major vector-borne helminthic disease, lymphatic filariasis. BMC Biol. 2010;8 10.1186/1741-7007-8-22 20236528
+- World Health Organization. Global programme to eliminate lymphatic filariasis: practical entomology handbook. Geneva; 2013.
+- SlaterH, MichaelE. Predicting the current and future potential distributions of lymphatic filariasis in Africa using maximum entropy ecological niche modelling. PLoS One. 2012;7: e32202 10.1371/journal.pone.0032202 22359670
+- SlaterH, MichaelE. Mapping, Bayesian geostatistical analysis and spatial prediction of lymphatic filariasis prevalence in Africa. PLoS One. 2013;8: 28–32. 10.1371/journal.pone.0071574 23951194
+- SabesanS, RajuKHK, SubramanianS, SrivastavaPK, JambulingamP. Lymphatic filariasis transmission risk map of India, based on a geo-environmental risk model. Vector-Borne Zoonotic Dis. 2013;13: 657–665. 10.1089/vbz.2012.1238 23808973
+- StantonMC, MolyneuxDH, KyelemD, BougmaRW, KoudouBG, Kelly-HopeLA. Baseline drivers of lymphatic filariasis in Burkina Faso. Geospat Health. 2013;8: 159–173. 10.4081/gh.2013.63 24258892
+- ManhenjeI, Teresa Galán-PuchadesM, FuentesM V. Socio-environmental variables and transmission risk of lymphatic filariasis in central and northern Mozambique. Geospat Health. 2013;7: 391–398. 10.4081/gh.2013.96 23733300
+- NgwiraBM, TambalaP, Perez aM, BowieC, MolyneuxDH. The geographical distribution of lymphatic filariasis infection in Malawi. Filaria J. 2007;6: 12 10.1186/1475-2883-6-12 18047646
+- SimonsenPE, MwakitaluME. Urban lymphatic filariasis. Parasitol Res. 2013;112: 35–44. 10.1007/s00436-012-3226-x 23239094
+- ProvilleJ, Zavala-AraizaD, WagnerG. Night-time lights: a global, long term look at links to socio-economic trends. PLoS One. Public Library of Science; 2017;12 10.1371/journal.pone.0174610 28346500
+- EndeshawT, TayeA, TadesseZ, KatabarwaMN, ShafiO, SeidT, et al Presence of Wuchereria bancrofti microfilaremia despite seven years of annual ivermectin monotherapy mass drug administration for onchocerciasis control: a study in north-west Ethiopia. Pathog Glob Health. 2015;109: 344–351. 10.1080/20477724.2015.1103501 26878935
+- RichardsFO, EigegeA, PamD, KalA, LenhartA, OneykaJOA, et al Mass ivermectin treatment for onchocerciasis: lack of evidence for collateral impact on transmission of Wuchereria bancrofti in areas of co-endemicity. Filaria J. 2005;4: 3–5. 10.1186/1475-2883-4-3 15916708
+- KyelemD, SanouS, BoatinB a., MedlockJ, CouibalyS, MolyneuxDH. Impact of long-term ivermectin (Mectizan) on Wuchereria bancrofti and Mansonella perstans infections in Burkina Faso: strategic and policy implications. Ann Trop Med Parasitol. 2003;97: 827–38. 10.1179/000349803225002462 14754495
+- WeilGJ, LammiePJ, RichardsFO, EberhardML. Changes in circulating parasite antigen levels after treatment of bancroftian filariasis with diethylcarbamazine and ivermectin. J Infect Dis. 1991;164: 814–816. 10.1093/infdis/164.4.814 1894943
+- KumarA, SachanP. Measuring impact on filarial infection status in a community study: role of coverage of mass drug administration. Trop Biomed. 2014;31: 225–229. 25134891
+- NjengaSM, MwandawiroCS, WamaeCN, MukokoDA, OmarAA, ShimadaM, et al Sustained reduction in prevalence of lymphatic filariasis infection in spite of missed rounds of mass drug administration in an area under mosquito nets for malaria control. Parasites and Vectors. 2011;4: 1–9. 10.1186/1756-3305-4-1 21205315
+- BoydA, WonKY, McClintockSK, DonovanC V., LaneySJ, WilliamsSA, et al A community-based study of factors associated with continuing transmission of lymphatic filariasis in Leogane, Haiti. PLoS Negl Trop Dis. 2010;4: 1–10. 10.1371/journal.pntd.0000640 20351776
+- IrvineMA, ReimerLJ, NjengaSM, GunawardenaS, Kelly-HopeL, BockarieM, et al Modelling strategies to break transmission of lymphatic filariasis—aggregation, adherence and vector competence greatly alter elimination. Parasites and Vectors. 2015;8: 1–19. 10.1186/s13071-014-0608-1 25561160
+- IrvineMA, StolkWA, SmithME, SubramanianS, SinghBK, WeilGJ, et al Effectiveness of a triple-drug regimen for global elimination of lymphatic filariasis: a modelling study. Lancet Infect Dis. 2017;17: 451–458. 10.1016/S1473-3099(16)30467-4 28012943
+- PionSD, MontavonC, ChesnaisCB, KamgnoJ, WanjiS, KlionAD, et al Positivity of antigen tests used for diagnosis of lymphatic filariasis in individuals without Wuchereria bancrofti infection but with high loa loa microfilaremia. Am J Trop Med Hyg. 2016;95: 1417–1423. 10.4269/ajtmh.16-0547 27729568
+- WanjiS, EsumME, NjouendouAJ, MbengAA, Chounna NdongmoPW, AbongRA, et al Mapping of lymphatic filariasis in loiasis areas: a new strategy shows no evidence for Wuchereria bancrofti endemicity in Cameroon. PLoS Negl Trop Dis. 2018;13: 1–15. 10.1371/journal.pntd.0007192 30849120
+- ChesnaisCB, Awaca-UvonNP, BolayFK, BoussinesqM, FischerPU, GankpalaL, et al A multi-center field study of two point-of-care tests for circulating Wuchereria bancrofti antigenemia in Africa. PLoS Negl Trop Dis. 2017;11: 1–15. 10.1371/journal.pntd.0005703 28892473
+- SilumbweA, ZuluJM, HalwindiH, JacobsC, ZgamboJ, DambeR, et al A systematic review of factors that shape implementation of mass drug administration for lymphatic filariasis in sub-Saharan Africa. BMC Public Health; 2017; 1–15. 10.1186/s12889-017-4414-5 28532397
+- AdamsAM, VuckovicM, BirchE, BrantTA, BialekS, YoonD, et al Eliminating neglected tropical diseases in urban areas: a review of challenges, strategies and research directions for successful mass drug administration. Trop Med Infect Dis. 2018;3 10.3390/tropicalmed3040122 30469342
+- RaoRU, SamarasekeraSD, NagodavithanaKC, DassanayakaTDM, PunchihewaMW, RanasingheUSB, et al Reassessment of areas with persistent lymphatic filariasis nine years after cessation of mass drug administration in Sri Lanka. PLoS Negl Trop Dis. 2017;11: 1–17. 10.1371/journal.pntd.0006066 29084213
+- XuZ, GravesPM, LauCL, ClementsA, GeardN, GlassK. GEOFIL: a spatially-explicit agent-based modelling framework for predicting the long-term transmission dynamics of lymphatic filariasis in American Samoa. Epidemics. 2018; 10.1016/j.epidem.2018.12.003 30611745
+- IdCM, TetteviEJ, MechanF, IdunB, BiritwumN, Osei-atweneboanaMY, et al Elimination within reach: a cross-sectional study highlighting the factors that contribute to persistent lymphatic filariasis in eight communities in rural Ghana. PLoS Negl Trop Dis. 2019; 1–17.
+- EigegeA, KalA, MiriE, SallauA, UmaruJ, MafuyaiH, et al Long-lasting insecticidal nets are synergistic with mass drug administration for interruption of lymphatic filariasis transmission in Nigeria. PLoS Negl Trop Dis. 2013;7: 7–10. 10.1371/journal.pntd.0002508 24205421
+- Van den BergH, Kelly-HopeLA, LindsaySW. Malaria and lymphatic filariasis: The case for integrated vector management. Lancet Infect Dis. 2013;13: 89–94. 10.1016/S1473-3099(12)70148-2 23084831
+- WebberR. Eradication of Wuchereria bancrofti infection through vector control. Trans R Soc Trop Med Hyg. 1979;73.
