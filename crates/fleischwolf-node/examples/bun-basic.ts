@@ -14,7 +14,7 @@ import {
   streamFileMarkdown,
   DocumentConverter,
   type ConvertResult,
-} from 'fleischwolf'
+} from '@artiz.ru/fleischwolf'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const html = join(here, 'inputs', 'sample.html')

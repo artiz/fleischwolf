@@ -14,7 +14,7 @@ import {
   convert,
   DocumentConverter,
   supportedFormats,
-} from 'fleischwolf'
+} from '@artiz.ru/fleischwolf'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
