@@ -61,7 +61,7 @@ jobs:
           - target: x86_64-pc-windows-msvc
             host: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref }}
 
@@ -75,7 +75,7 @@ jobs:
           key: ${{ matrix.target }}
           workspaces: "."
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -94,7 +94,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }} --js native.js --dts native.d.ts
 
       - name: Upload prebuilt binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: bindings-${{ matrix.target }}
           path: crates/fleischwolf-node/fleischwolf.*.node
@@ -104,7 +104,7 @@ jobs:
       # linux-x64 build) for the publish job to include in the main package.
       - name: Upload JS binding
         if: matrix.target == 'x86_64-unknown-linux-gnu'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: js-binding
           path: |
@@ -117,11 +117,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref }}
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
@@ -131,14 +131,14 @@ jobs:
 
       # Prebuilt binaries → artifacts/<name>/fleischwolf.<triple>.node
       - name: Download prebuilt binaries
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: bindings-*
           path: crates/fleischwolf-node/artifacts
 
       # The JS loader + types → the package root.
       - name: Download JS binding
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: js-binding
           path: crates/fleischwolf-node

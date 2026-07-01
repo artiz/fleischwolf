@@ -40,9 +40,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ inputs.tag }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -57,7 +57,7 @@ jobs:
       - name: Install TableFormer export deps
         continue-on-error: true
         id: tf-deps
-        run: pip install docling_ibm_models onnxscript onnxruntime huggingface_hub
+        run: pip install docling_ibm_models onnxscript onnxruntime huggingface_hub opencv-python-headless
 
       - name: Export TableFormer
         if: steps.tf-deps.outcome == 'success'
@@ -90,8 +90,8 @@ jobs:
         run: |
           mkdir -p release-assets
           stage() { # <source-path> <asset-name>
-            [ -f "$1" ] && cp "$1" "release-assets/$2"
-            [ -f "$1.data" ] && cp "$1.data" "release-assets/$2.data"
+            if [ -f "$1" ]; then cp "$1" "release-assets/$2"; fi
+            if [ -f "$1.data" ]; then cp "$1.data" "release-assets/$2.data"; fi
           }
           stage third-party/lib/libpdfium.so libpdfium.so
           stage third-party/ocr_rec.onnx ocr_rec.onnx

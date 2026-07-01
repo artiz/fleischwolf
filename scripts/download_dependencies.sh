@@ -23,9 +23,9 @@
 #   models/layout_heron.onnx
 #   models/ocr_rec.onnx
 #   models/ppocr_keys_v1.txt
-#   models/tableformer/encoder.onnx
-#   models/tableformer/decoder.onnx (+ decoder.onnx.data, if the export needs it)
-#   models/tableformer/bbox.onnx
+#   models/tableformer/encoder.onnx (+ .data, if the export needs it)
+#   models/tableformer/decoder.onnx (+ .data, if the export needs it)
+#   models/tableformer/bbox.onnx (+ .data, if the export needs it)
 #
 # pdfium is Linux x64 only for now, matching what's hosted in the release; for
 # other platforms (or to build the models from source) see scripts/pdf_setup.sh.
@@ -81,8 +81,10 @@ fetch "$BASE_URL/layout_heron.onnx" models/layout_heron.onnx
 fetch "$BASE_URL/ocr_rec.onnx" models/ocr_rec.onnx
 fetch "$BASE_URL/ppocr_keys_v1.txt" models/ppocr_keys_v1.txt
 fetch "$BASE_URL/encoder.onnx" models/tableformer/encoder.onnx
+fetch_optional "$BASE_URL/encoder.onnx.data" models/tableformer/encoder.onnx.data
 fetch "$BASE_URL/decoder.onnx" models/tableformer/decoder.onnx
 fetch_optional "$BASE_URL/decoder.onnx.data" models/tableformer/decoder.onnx.data
 fetch "$BASE_URL/bbox.onnx" models/tableformer/bbox.onnx
+fetch_optional "$BASE_URL/bbox.onnx.data" models/tableformer/bbox.onnx.data
 
 echo "done — models/ and .pdfium/lib populated in $(pwd)"
