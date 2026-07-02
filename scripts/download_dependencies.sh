@@ -26,6 +26,8 @@
 #   models/tableformer/encoder.onnx (+ .data, if the export needs it)
 #   models/tableformer/decoder.onnx (+ .data, if the export needs it)
 #   models/tableformer/bbox.onnx (+ .data, if the export needs it)
+#   models/asr/{encoder_model,decoder_model}.onnx + vocab.json   (Whisper tiny,
+#     from Hugging Face; skip with --no-asr)
 #
 # pdfium is Linux x64 only for now, matching what's hosted in the release; for
 # other platforms (or to build the models from source) see scripts/pdf_setup.sh.
@@ -34,13 +36,20 @@
 set -eu
 
 BASE_URL="${FLEISCHWOLF_MODELS_URL:-https://github.com/artiz/fleischwolf/releases/download/models-v1}"
+# Whisper tiny (docling's ASR default) for the audio pipeline, fetched straight
+# from the onnx-community export on Hugging Face (~150 MB). Override the base
+# with $FLEISCHWOLF_ASR_MODELS_URL (e.g. to re-host alongside the other models);
+# skip entirely with --no-asr.
+ASR_BASE_URL="${FLEISCHWOLF_ASR_MODELS_URL:-https://huggingface.co/onnx-community/whisper-tiny/resolve/main}"
 
 FORCE=false
+WITH_ASR=true
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=true ;;
+    --no-asr) WITH_ASR=false ;;
     *)
-      echo "usage: download_dependencies.sh [--force]" >&2
+      echo "usage: download_dependencies.sh [--force] [--no-asr]" >&2
       exit 2
       ;;
   esac
@@ -52,6 +61,9 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 mkdir -p .pdfium/lib models/tableformer
+if [ "$WITH_ASR" = true ]; then
+  mkdir -p models/asr
+fi
 
 fetch() { # <url> <dest>
   if [ "$FORCE" = false ] && [ -f "$2" ]; then
@@ -86,5 +98,15 @@ fetch "$BASE_URL/decoder.onnx" models/tableformer/decoder.onnx
 fetch_optional "$BASE_URL/decoder.onnx.data" models/tableformer/decoder.onnx.data
 fetch "$BASE_URL/bbox.onnx" models/tableformer/bbox.onnx
 fetch_optional "$BASE_URL/bbox.onnx.data" models/tableformer/bbox.onnx.data
+
+if [ "$WITH_ASR" = true ]; then
+  # Whisper tiny for audio/ASR: encoder + (cache-less) decoder + vocabulary;
+  # added_tokens.json only feeds non-English language selection, so a missing
+  # asset there is not fatal.
+  fetch "$ASR_BASE_URL/onnx/encoder_model.onnx" models/asr/encoder_model.onnx
+  fetch "$ASR_BASE_URL/onnx/decoder_model.onnx" models/asr/decoder_model.onnx
+  fetch "$ASR_BASE_URL/vocab.json" models/asr/vocab.json
+  fetch_optional "$ASR_BASE_URL/added_tokens.json" models/asr/added_tokens.json
+fi
 
 echo "done — models/ and .pdfium/lib populated in $(pwd)"

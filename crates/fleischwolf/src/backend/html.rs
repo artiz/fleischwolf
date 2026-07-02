@@ -267,18 +267,12 @@ fn handle_block(
         "table" => {
             if base.raw {
                 // A table nested in a cell is flattened to its grid cells joined
-                // with spaces (docling's `_collect_subtree_text`).
-                let text = parse_table(elem)
-                    .map(|t| {
-                        t.rows
-                            .iter()
-                            .flatten()
-                            .filter(|c| !c.is_empty())
-                            .cloned()
-                            .collect::<Vec<_>>()
-                            .join(" ")
-                    })
-                    .unwrap_or_default();
+                // with spaces (docling's `_collect_subtree_text`). Each grid
+                // cell's text is docling's raw `get_text` (source line breaks
+                // preserved as newlines), so a deeper nested table's structure
+                // survives as `\n` runs that the table serializer later flattens
+                // to spaces — reproducing docling's spacing byte-for-byte.
+                let text = flatten_nested_table(elem);
                 if !text.is_empty() {
                     nodes.push(Node::Paragraph { text });
                 }
@@ -732,6 +726,89 @@ fn lang_from_class(class: &str) -> Option<String> {
 }
 
 fn parse_table(table: ElementRef) -> Option<Table> {
+    parse_table_cells(table, render_cell)
+}
+
+/// Flatten a table nested inside another table's cell, the way docling's
+/// markdown serializer does (`_collect_subtree_text`): the nested table's own
+/// grid cells, joined with single spaces. Each grid cell's text is docling's
+/// raw `get_text` ([`subtree_text`]) rather than the Markdown-rendered cell, so
+/// a still-deeper table inside one of those cells contributes its raw subtree
+/// text — with source line breaks preserved as `\n` runs that the table
+/// serializer flattens to spaces at render time. Spanning cells repeat into
+/// every grid slot they cover, exactly as docling's grid walk does.
+fn flatten_nested_table(table: ElementRef) -> String {
+    parse_table_cells(table, |cell| {
+        let mut out = String::new();
+        subtree_text(cell, &mut out);
+        out.trim().to_string()
+    })
+    .map(|t| {
+        t.rows
+            .iter()
+            .flatten()
+            .filter(|c| !c.is_empty())
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(" ")
+    })
+    .unwrap_or_default()
+}
+
+/// docling's `HTMLDocumentBackend.get_text`, including BeautifulSoup's
+/// whitespace semantics: a whitespace-only text node collapses to a single
+/// newline when it spans a source line break (else a single space); any other
+/// text node is kept verbatim; the content of a `p`/`li`/`th`/`td` gets one
+/// trailing space; `<br>` becomes a newline. Only ASCII whitespace counts
+/// (BeautifulSoup leaves `&nbsp;` and friends untouched).
+fn subtree_text(elem: ElementRef, out: &mut String) {
+    for child in elem.children() {
+        match child.value() {
+            HtmlNode::Text(t) => {
+                let t: &str = t;
+                if t.chars().all(|c| c.is_ascii_whitespace()) {
+                    out.push(if t.contains('\n') { '\n' } else { ' ' });
+                } else {
+                    // docling's `_clean_unicode` replacements, applied to the
+                    // verbatim text (whitespace is deliberately NOT collapsed).
+                    for c in t.chars() {
+                        match c {
+                            '\u{200b}' | '\u{200c}' | '\u{200d}' | '\u{00ad}' | '\u{feff}'
+                            | '\u{2060}' => {}
+                            '\u{00a0}' | '\u{202f}' => out.push(' '),
+                            '\u{2010}'..='\u{2015}' => out.push('-'),
+                            '\u{2018}' | '\u{2019}' => out.push('\''),
+                            '\u{201c}' | '\u{201d}' => out.push('"'),
+                            '\u{2026}' => out.push_str("..."),
+                            _ => out.push(c),
+                        }
+                    }
+                }
+            }
+            HtmlNode::Element(e) => {
+                if is_skipped(e.name()) || is_hidden(e) {
+                    continue;
+                }
+                if e.name() == "br" {
+                    out.push('\n');
+                    continue;
+                }
+                if let Some(cref) = ElementRef::wrap(child) {
+                    subtree_text(cref, out);
+                    if matches!(e.name(), "p" | "li" | "th" | "td") {
+                        out.push(' ');
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn parse_table_cells(
+    table: ElementRef,
+    render_cell: impl Fn(ElementRef) -> String,
+) -> Option<Table> {
     // Collect this table's own rows without descending into nested tables (a
     // recursive `select` would pull a nested table's cells into the outer grid).
     let mut trs: Vec<ElementRef> = Vec::new();
@@ -1095,6 +1172,37 @@ mod tests {
         // aria-hidden leaves the element visually rendered, so its text stays.
         let aria = convert("<p aria-hidden=\"true\">still shown</p>");
         assert_eq!(aria.export_to_markdown(), "still shown\n");
+    }
+
+    #[test]
+    fn nested_table_flattens_with_docling_spacing() {
+        // A table nested in a cell flattens to its own grid joined with single
+        // spaces; a deeper table inside one of those cells contributes its raw
+        // subtree text, whose source line breaks survive as newlines (flattened
+        // to spaces by the table serializer). The `\n` here is the source line
+        // break between the innermost table's rows: docling renders `a  b`
+        // (td-trailing space + newline), not `a b`.
+        let doc = convert(
+            "<table><tr><td><table><tr><td>P</td><td>Q</td></tr>\n\
+             <tr><td>R</td><td><table><tr><td>a</td></tr>\n\
+             <tr><td>b</td></tr></table></td></tr></table></td><td>Z</td></tr></table>",
+        );
+        let table = doc
+            .nodes
+            .iter()
+            .find_map(|n| match n {
+                Node::Table(t) => Some(t),
+                _ => None,
+            })
+            .expect("outer table parsed");
+        assert_eq!(table.rows[0][0], "P Q R a \nb");
+        assert_eq!(table.rows[0][1], "Z");
+        // The markdown serializer flattens the newline to a space.
+        assert!(
+            doc.export_to_markdown().contains("P Q R a  b"),
+            "newline flattened to space in markdown: {}",
+            doc.export_to_markdown()
+        );
     }
 
     #[test]
