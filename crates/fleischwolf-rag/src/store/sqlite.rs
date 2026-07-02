@@ -258,6 +258,27 @@ impl VectorStore for SqliteStore {
             .collect()
     }
 
+    async fn delete_document(&self, doc_id: &str) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
+        // chunks_vec shares the chunks rowids; delete its rows first.
+        sqlx::query(
+            "DELETE FROM chunks_vec WHERE rowid IN (SELECT rowid FROM chunks WHERE doc_id = ?1)",
+        )
+        .bind(doc_id)
+        .execute(&mut *tx)
+        .await?;
+        sqlx::query("DELETE FROM chunks WHERE doc_id = ?1")
+            .bind(doc_id)
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("DELETE FROM documents WHERE id = ?1")
+            .bind(doc_id)
+            .execute(&mut *tx)
+            .await?;
+        tx.commit().await?;
+        Ok(())
+    }
+
     async fn clear(&self) -> Result<()> {
         sqlx::query("DELETE FROM chunks_vec")
             .execute(&self.pool)

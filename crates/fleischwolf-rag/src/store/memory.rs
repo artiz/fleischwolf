@@ -89,6 +89,12 @@ impl VectorStore for MemoryStore {
         Ok(self.docs.read().unwrap().clone())
     }
 
+    async fn delete_document(&self, doc_id: &str) -> Result<()> {
+        self.docs.write().unwrap().retain(|d| d.id != doc_id);
+        self.chunks.write().unwrap().retain(|c| c.doc_id != doc_id);
+        Ok(())
+    }
+
     async fn clear(&self) -> Result<()> {
         self.docs.write().unwrap().clear();
         self.chunks.write().unwrap().clear();

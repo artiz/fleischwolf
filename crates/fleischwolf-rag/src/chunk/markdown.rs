@@ -37,11 +37,33 @@ fn level_index(level: HeadingLevel) -> usize {
 
 /// Parse Markdown into sections. A new section starts at every heading; the
 /// heading path is maintained as a stack keyed by heading level.
+/// (Production code streams via [`parse_sections_with_stack`]; this remains as
+/// the batch entry point for tests.)
+#[cfg(test)]
 pub fn parse_sections(markdown: &str) -> Vec<Section> {
-    // heading_stack[i] holds the current heading text at level i+1 (may be empty).
-    let mut heading_stack: Vec<String> = Vec::new();
+    parse_sections_with_stack(markdown, Vec::new()).0
+}
+
+/// [`parse_sections`] with an explicit initial heading stack, returning the
+/// final stack — lets a streaming caller carry heading context across pieces.
+/// `heading_stack[i]` holds the current heading text at level `i+1` (may be
+/// empty when a level was skipped).
+pub fn parse_sections_with_stack(
+    markdown: &str,
+    initial_stack: Vec<String>,
+) -> (Vec<Section>, Vec<String>) {
+    let mut heading_stack: Vec<String> = initial_stack;
     let mut sections: Vec<Section> = Vec::new();
-    let mut current = Section::default();
+    // Text before the first heading of this piece continues the carried-over
+    // section, so it keeps the heading path in effect at the split point.
+    let mut current = Section {
+        heading_path: heading_stack
+            .iter()
+            .filter(|h| !h.is_empty())
+            .cloned()
+            .collect(),
+        words: Vec::new(),
+    };
 
     let mut in_heading = false;
     let mut heading_level = 0usize;
@@ -102,7 +124,7 @@ pub fn parse_sections(markdown: &str) -> Vec<Section> {
         }
     }
     flush(&mut sections, &mut current);
-    sections
+    (sections, heading_stack)
 }
 
 #[cfg(test)]

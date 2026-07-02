@@ -51,6 +51,10 @@ pub trait VectorStore: Send + Sync {
     /// Every stored document with its metadata (including processing metrics).
     async fn list_documents(&self) -> Result<Vec<Document>>;
 
+    /// Delete one document and all of its chunks (used to roll back a failed
+    /// streaming ingest). Deleting an unknown id is not an error.
+    async fn delete_document(&self, doc_id: &str) -> Result<()>;
+
     /// Remove all documents and chunks.
     async fn clear(&self) -> Result<()>;
 }

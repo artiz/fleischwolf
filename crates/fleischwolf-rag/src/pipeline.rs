@@ -49,6 +49,18 @@ pub struct Answer {
     pub sources: Vec<Scored>,
 }
 
+/// What the overlapped parse/chunk/embed stages produced for one document.
+/// Phase seconds are busy time (the stages overlap on the wall clock).
+struct StagedOutcome {
+    pages: Option<usize>,
+    parse_secs: f64,
+    chunk_secs: f64,
+    embed_secs: f64,
+    embedded_words: usize,
+    chunks: usize,
+    markdown: String,
+}
+
 impl Pipeline {
     /// Build every component from config. The LLM client is created only if
     /// `OPENROUTER_API_KEY` is set (LLM-backed modes error otherwise).
@@ -88,44 +100,60 @@ impl Pipeline {
             .with_multiquery_n(self.cfg.multiquery_n)
     }
 
-    /// Convert raw bytes to `(title, markdown, pages, parse_secs)` using
-    /// `fleischwolf`. Runs the sync converter on a blocking thread; `parse_secs`
-    /// times the conversion itself (page counting excluded).
-    async fn to_markdown(
-        name: String,
-        bytes: Vec<u8>,
-    ) -> Result<(String, String, Option<usize>, f64)> {
-        tokio::task::spawn_blocking(move || {
-            let ext = name.rsplit('.').next().unwrap_or("");
-            let fmt = InputFormat::from_extension(ext)
-                .ok_or_else(|| RagError::Conversion(format!("unsupported extension '.{ext}'")))?;
-            let pages = metrics::count_pages(fmt, &bytes);
-            let src = SourceDocument::from_bytes(name.clone(), fmt, bytes);
-            let start = std::time::Instant::now();
-            let result = DocumentConverter::new()
-                .convert(src)
-                .map_err(|e| RagError::Conversion(e.to_string()))?;
-            let md = result.document.export_to_markdown();
-            let parse_secs = start.elapsed().as_secs_f64();
-            let title = first_heading(&md).unwrap_or_else(|| stem(&name));
-            Ok((title, md, pages, parse_secs))
-        })
-        .await
-        .map_err(|e| RagError::Conversion(format!("convert join: {e}")))?
-    }
-
     /// Ingest a single document reference. Deduplicates on content hash, and
     /// records per-phase processing metrics in the document's JSON metadata.
+    ///
+    /// Processing is **streaming**: `fleischwolf`'s `convert_streaming` emits
+    /// Markdown as it is produced (per page for PDF), and chunking + embedding
+    /// run concurrently on the pieces — parsing of page N overlaps embedding of
+    /// pages < N. Phase timings measure busy time, so throughput metrics stay
+    /// meaningful even though the phases overlap on the wall clock.
     pub async fn ingest_ref(&self, r: &SourceRef) -> Result<IngestOutcome> {
         let bytes = self.source.fetch(r).await?;
         let hash = content_hash(&bytes);
         if self.store.find_document_by_hash(&hash).await?.is_some() {
+            tracing::debug!(uri = %r.uri, "skipping unchanged document");
             return Ok(IngestOutcome::Skipped);
         }
-
         let file_bytes = bytes.len() as u64;
-        let (title, markdown, pages, parse_secs) = Self::to_markdown(r.name.clone(), bytes).await?;
+        tracing::info!(
+            uri = %r.uri,
+            name = %r.name,
+            bytes = file_bytes,
+            "processing document"
+        );
+
+        // The document row must exist before its chunks (FK). Title is refined
+        // (first heading) and metrics attached with a final upsert.
+        let mut doc = Document::new(&r.uri, stem(&r.name), &hash)
+            .with_metadata(serde_json::json!({ "source": r.uri }));
+        self.store.upsert_document(&doc).await?;
+
+        // Run the staged pipeline; on failure roll back the document row and any
+        // partially-inserted chunks so a retry reprocesses from scratch instead
+        // of being skipped by the hash dedup.
+        let staged = self.ingest_streaming(r, &doc.id, bytes).await;
+        let out = match staged {
+            Ok(out) => out,
+            Err(e) => {
+                if let Err(del) = self.store.delete_document(&doc.id).await {
+                    tracing::warn!(uri = %r.uri, error = %del, "rollback of failed ingest also failed");
+                }
+                return Err(e);
+            }
+        };
+        let StagedOutcome {
+            pages,
+            parse_secs,
+            chunk_secs,
+            embed_secs,
+            embedded_words,
+            chunks: n,
+            markdown,
+        } = out;
+
         let words = markdown.split_whitespace().count();
+        let title = first_heading(&markdown).unwrap_or_else(|| stem(&r.name));
 
         // Optional local FS mirror of the parsed documents (RAG_DOCUMENTS_OUTPUT):
         // same directory structure as the source, `.md` appended to every name
@@ -135,30 +163,6 @@ impl Pipeline {
             if let Err(e) = dump_markdown(dir, &r.rel_path, &markdown).await {
                 tracing::warn!(uri = %r.uri, error = %e, "failed to write markdown dump");
             }
-        }
-
-        // The document row must exist before its chunks (FK); metrics are filled
-        // in with a second upsert once every phase has been timed.
-        let mut doc = Document::new(&r.uri, title, &hash)
-            .with_metadata(serde_json::json!({ "source": r.uri }));
-        self.store.upsert_document(&doc).await?;
-
-        let start = std::time::Instant::now();
-        let mut chunks = self.chunker.chunk(&doc.id, &markdown);
-        let chunk_secs = start.elapsed().as_secs_f64();
-
-        let mut embed_secs = 0.0;
-        let mut embedded_words = 0;
-        let n = chunks.len();
-        if !chunks.is_empty() {
-            let start = std::time::Instant::now();
-            self.embed_chunks(&mut chunks).await?;
-            embed_secs = start.elapsed().as_secs_f64();
-            embedded_words = chunks
-                .iter()
-                .map(|c| c.text.split_whitespace().count())
-                .sum::<usize>();
-            self.store.insert_chunks(&chunks).await?;
         }
 
         let m = ProcessingMetrics::compute(
@@ -182,9 +186,135 @@ impl Pipeline {
             embed_wps = ?m.embedding.words_per_sec,
             "ingested document"
         );
+        doc.title = title;
         doc.metadata = serde_json::json!({ "source": r.uri, "metrics": m.to_json() });
         self.store.upsert_document(&doc).await?;
         Ok(IngestOutcome::Ingested(n))
+    }
+
+    /// The overlapped parse → chunk → embed/insert stages for one document.
+    async fn ingest_streaming(
+        &self,
+        r: &SourceRef,
+        doc_id: &str,
+        bytes: Vec<u8>,
+    ) -> Result<StagedOutcome> {
+        // --- Stage 1: parser thread. Streams Markdown pieces as converted.
+        // Bounded channel: a slow consumer applies backpressure to the converter.
+        let (md_tx, mut md_rx) = tokio::sync::mpsc::channel::<String>(16);
+        let name = r.name.clone();
+        let parser = tokio::task::spawn_blocking(move || -> Result<(Option<usize>, f64)> {
+            let ext = name.rsplit('.').next().unwrap_or("");
+            let fmt = InputFormat::from_extension(ext)
+                .ok_or_else(|| RagError::Conversion(format!("unsupported extension '.{ext}'")))?;
+            let pages = metrics::count_pages(fmt, &bytes);
+            let src = SourceDocument::from_bytes(name, fmt, bytes);
+            let mut stream = DocumentConverter::new()
+                .convert_streaming(src)
+                .map_err(|e| RagError::Conversion(e.to_string()))?;
+            // parse_secs counts time inside the converter only, not time blocked
+            // on a full channel (that would bill consumer slowness to parsing).
+            let mut parse_secs = 0.0;
+            loop {
+                let t = std::time::Instant::now();
+                let item = stream.next();
+                parse_secs += t.elapsed().as_secs_f64();
+                match item {
+                    Some(Ok(piece)) => {
+                        if md_tx.blocking_send(piece).is_err() {
+                            break; // consumer failed; its error wins
+                        }
+                    }
+                    Some(Err(e)) => return Err(RagError::Conversion(e.to_string())),
+                    None => break,
+                }
+            }
+            Ok((pages, parse_secs))
+        });
+
+        // --- Stage 2: incremental chunking; completed chunks go to the embedder.
+        // --- Stage 3: embed + insert worker, concurrent with stages 1 and 2.
+        let (chunk_tx, chunk_rx) = tokio::sync::mpsc::channel::<Vec<crate::model::Chunk>>(4);
+        let embedder = self.embedder.clone();
+        let store = self.store.clone();
+        let embed_worker = tokio::spawn(async move {
+            let mut rx = chunk_rx;
+            let (mut embed_secs, mut embedded_words, mut n_chunks) = (0.0f64, 0usize, 0usize);
+            while let Some(mut batch) = rx.recv().await {
+                let texts: Vec<String> = batch.iter().map(|c| c.text.clone()).collect();
+                let t = std::time::Instant::now();
+                let embeddings = embedder.embed(&texts).await?;
+                embed_secs += t.elapsed().as_secs_f64();
+                if embeddings.len() != batch.len() {
+                    return Err(RagError::Embedding("embedding count mismatch".into()));
+                }
+                for (chunk, emb) in batch.iter_mut().zip(embeddings) {
+                    chunk.embedding = Some(emb);
+                }
+                embedded_words += texts
+                    .iter()
+                    .map(|t| t.split_whitespace().count())
+                    .sum::<usize>();
+                n_chunks += batch.len();
+                store.insert_chunks(&batch).await?;
+            }
+            Ok::<_, RagError>((embed_secs, embedded_words, n_chunks))
+        });
+
+        let mut streaming = self.chunker.streaming(doc_id);
+        let mut markdown = String::new();
+        let mut chunk_secs = 0.0f64;
+        let mut backlog: Vec<crate::model::Chunk> = Vec::new();
+        const BATCH: usize = 64;
+        let mut consume_failed = false;
+        while let Some(piece) = md_rx.recv().await {
+            let t = std::time::Instant::now();
+            let ready = streaming.push(&piece);
+            chunk_secs += t.elapsed().as_secs_f64();
+            markdown.push_str(&piece);
+            backlog.extend(ready);
+            while backlog.len() >= BATCH {
+                let batch: Vec<_> = backlog.drain(..BATCH).collect();
+                if chunk_tx.send(batch).await.is_err() {
+                    consume_failed = true; // embed worker died; surface its error
+                    break;
+                }
+            }
+            if consume_failed {
+                break;
+            }
+        }
+        // Drain: remaining markdown lands in a final section, then flush backlog.
+        drop(md_rx);
+        if !consume_failed {
+            let t = std::time::Instant::now();
+            backlog.extend(streaming.finish());
+            chunk_secs += t.elapsed().as_secs_f64();
+            for batch in backlog.chunks(BATCH) {
+                if chunk_tx.send(batch.to_vec()).await.is_err() {
+                    break;
+                }
+            }
+        }
+        drop(chunk_tx);
+
+        // Join stages; parser errors (bad document) take precedence.
+        let (pages, parse_secs) = parser
+            .await
+            .map_err(|e| RagError::Conversion(format!("convert join: {e}")))??;
+        let (embed_secs, embedded_words, n) = embed_worker
+            .await
+            .map_err(|e| RagError::Embedding(format!("embed join: {e}")))??;
+
+        Ok(StagedOutcome {
+            pages,
+            parse_secs,
+            chunk_secs,
+            embed_secs,
+            embedded_words,
+            chunks: n,
+            markdown,
+        })
     }
 
     /// Ingest every document the configured source lists.
@@ -205,23 +335,6 @@ impl Pipeline {
             }
         }
         Ok(report)
-    }
-
-    /// Embed chunk texts in batches, filling in each chunk's `embedding`.
-    async fn embed_chunks(&self, chunks: &mut [crate::model::Chunk]) -> Result<()> {
-        const BATCH: usize = 64;
-        let texts: Vec<String> = chunks.iter().map(|c| c.text.clone()).collect();
-        let mut embeddings = Vec::with_capacity(texts.len());
-        for batch in texts.chunks(BATCH) {
-            embeddings.extend(self.embedder.embed(batch).await?);
-        }
-        if embeddings.len() != chunks.len() {
-            return Err(RagError::Embedding("embedding count mismatch".into()));
-        }
-        for (chunk, emb) in chunks.iter_mut().zip(embeddings) {
-            chunk.embedding = Some(emb);
-        }
-        Ok(())
     }
 
     /// Retrieve the top `k` chunks for a query under `mode`.

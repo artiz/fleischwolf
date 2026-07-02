@@ -30,7 +30,8 @@ export RAG_API_KEYS=dev-key
 # 2. ingest: convert -> chunk -> embed -> store (SQLite at data/rag.db)
 cargo run -p fleischwolf-rag -- ingest
 
-# 3. search from the CLI ...
+# 3. search from the CLI — answers with the LLM when OPENROUTER_API_KEY is set,
+#    otherwise lists the retrieved chunks (--chunks forces the list)
 cargo run -p fleischwolf-rag -- query "what did I write about budgets?" --mode hybrid
 cargo run -p fleischwolf-rag -- stats
 
@@ -65,7 +66,11 @@ with an empty key list; `GET /health` is the only public route.
 
 With `"answer": true` (or `?answer=true`) the LLM synthesizes a grounded answer
 from the retrieved chunks (needs `OPENROUTER_API_KEY`; `multi-query`/`hyde` modes
-need it too). Responses are JSON: `{query, mode, results: [{score, chunk}], answer?}`.
+need it too). The LLM client speaks the OpenAI-compatible `/chat/completions`
+protocol, so any such endpoint works — e.g. a native DeepSeek key with
+`OPENROUTER_BASE_URL=https://api.deepseek.com` and `RAG_LLM_MODEL=deepseek-chat`
+(OpenRouter keys start with `sk-or-`; a `sk-…` DeepSeek key sent to openrouter.ai
+gets 401). Responses are JSON: `{query, mode, results: [{score, chunk}], answer?}`.
 
 ```bash
 curl -s -H 'X-Api-Key: dev-key' \

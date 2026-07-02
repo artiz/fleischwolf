@@ -213,6 +213,22 @@ impl VectorStore for PostgresStore {
             .collect()
     }
 
+    async fn delete_document(&self, doc_id: &str) -> Result<()> {
+        // chunks reference documents ON DELETE CASCADE, but delete explicitly so
+        // behavior matches even if the FK was created without the cascade.
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("DELETE FROM chunks WHERE doc_id = $1")
+            .bind(doc_id)
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("DELETE FROM documents WHERE id = $1")
+            .bind(doc_id)
+            .execute(&mut *tx)
+            .await?;
+        tx.commit().await?;
+        Ok(())
+    }
+
     async fn clear(&self) -> Result<()> {
         sqlx::query("DELETE FROM chunks")
             .execute(&self.pool)

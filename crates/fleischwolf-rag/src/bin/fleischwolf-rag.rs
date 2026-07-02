@@ -38,7 +38,8 @@ enum Cmd {
         path: Option<String>,
     },
 
-    /// Retrieve chunks for a query (and optionally synthesize an answer).
+    /// Retrieve for a query and answer with the LLM (falls back to listing the
+    /// retrieved chunks when no OPENROUTER_API_KEY is configured).
     Query {
         /// The question / search query.
         query: String,
@@ -48,9 +49,9 @@ enum Cmd {
         /// Number of results.
         #[arg(long, short = 'k')]
         top_k: Option<usize>,
-        /// Also synthesize an answer with the LLM (needs OPENROUTER_API_KEY).
+        /// List only the retrieved chunks; skip LLM answer synthesis.
         #[arg(long)]
-        answer: bool,
+        chunks: bool,
     },
 
     /// Sweep chunk sizes / overlaps / modes over a labelled dataset.
@@ -140,19 +141,32 @@ async fn run() -> Result<()> {
             query,
             mode,
             top_k,
-            answer,
+            chunks,
         } => {
             let mode = match mode {
                 Some(m) => RetrievalMode::from_str(&m)?,
                 None => cfg.retrieval_mode,
             };
             let k = top_k.unwrap_or(cfg.top_k);
+            let have_llm = cfg.openrouter_api_key.is_some();
             let pipeline = Pipeline::from_config(&cfg).await?;
-            if answer {
+            if !chunks && have_llm {
+                // Default: synthesize a grounded answer, then show the sources.
                 let a = pipeline.answer(&query, mode, k).await?;
-                println!("{}\n", a.text);
-                println!("— grounded in {} passage(s) —", a.sources.len());
+                println!("{}\n", a.text.trim());
+                println!("— sources ({} passage(s), mode: {mode}) —", a.sources.len());
+                for (i, h) in a.sources.iter().enumerate() {
+                    let preview = h.chunk.text.replace('\n', " ");
+                    let preview: String = preview.chars().take(120).collect();
+                    println!("{:>2}. [{:.4}] {}", i + 1, h.score, preview);
+                }
             } else {
+                if !chunks {
+                    eprintln!(
+                        "note: no OPENROUTER_API_KEY configured — listing retrieved \
+                         chunks only (set the key to get an LLM answer)"
+                    );
+                }
                 let hits = pipeline.query(mode, &query, k).await?;
                 if hits.is_empty() {
                     println!("(no results)");

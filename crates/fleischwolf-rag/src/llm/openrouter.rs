@@ -58,6 +58,7 @@ impl OpenRouterClient {
 impl ChatModel for OpenRouterClient {
     async fn complete(&self, messages: &[Message]) -> Result<String> {
         let url = format!("{}/chat/completions", self.base_url);
+        tracing::debug!(url = %url, model = %self.model, "llm chat request");
         let resp = self
             .client
             .post(&url)
@@ -71,13 +72,29 @@ impl ChatModel for OpenRouterClient {
                 temperature: 0.2,
             })
             .send()
-            .await?
-            .error_for_status()?;
+            .await?;
+        // Surface the provider's error body — a bare 401 without it is
+        // undiagnosable (wrong key kind, wrong base URL, unknown model, …).
+        let status = resp.status();
+        if !status.is_success() {
+            let body = resp.text().await.unwrap_or_default();
+            let snippet: String = body.chars().take(400).collect();
+            let hint = if status.as_u16() == 401 {
+                " (hint: OpenRouter keys start with 'sk-or-'; for a native \
+                 DeepSeek key set OPENROUTER_BASE_URL=https://api.deepseek.com \
+                 and RAG_LLM_MODEL=deepseek-chat)"
+            } else {
+                ""
+            };
+            return Err(RagError::Llm(format!(
+                "{url} returned {status}: {snippet}{hint}"
+            )));
+        }
         let body: ChatResp = resp.json().await?;
         body.choices
             .into_iter()
             .next()
             .map(|c| c.message.content)
-            .ok_or_else(|| RagError::Llm("openrouter returned no choices".into()))
+            .ok_or_else(|| RagError::Llm("llm returned no choices".into()))
     }
 }
