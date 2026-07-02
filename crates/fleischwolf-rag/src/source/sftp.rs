@@ -73,9 +73,15 @@ impl DocumentSource for SftpSource {
                         .file_name()
                         .map(|n| n.to_string_lossy().into_owned())
                         .unwrap_or_default();
+                    let rel = path
+                        .strip_prefix(&this.dir)
+                        .unwrap_or(&path)
+                        .to_string_lossy()
+                        .into_owned();
                     SourceRef {
                         uri: format!("sftp://{}{}", this.addr, path.display()),
                         name,
+                        rel_path: rel,
                     }
                 })
                 .collect())

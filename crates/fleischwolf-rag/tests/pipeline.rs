@@ -30,19 +30,35 @@ async fn ingest_then_retrieve_offline() {
          search can find passages by meaning rather than exact keywords.",
     )
     .unwrap();
+    std::fs::create_dir_all(dir.join("recipes")).unwrap();
     std::fs::write(
-        dir.join("smoothie.md"),
+        dir.join("recipes/smoothie.md"),
         "# Smoothie\n\nBlend a banana with yogurt and honey for a quick breakfast smoothie.",
     )
     .unwrap();
 
-    let cfg = offline_config(&dir);
+    let out_dir = std::env::temp_dir().join(format!("rag-out-{}", uuid_like()));
+    let mut cfg = offline_config(&dir);
+    cfg.documents_output = Some(out_dir.display().to_string());
     let pipeline = Pipeline::from_config(&cfg).await.unwrap();
 
     // First ingest stores both documents.
     let report = pipeline.ingest_all().await.unwrap();
     assert_eq!(report.documents_ingested, 2, "both docs ingested");
     assert!(report.chunks_added >= 2);
+
+    // RAG_DOCUMENTS_OUTPUT mirrors the source structure with `.md` appended
+    // (also for original .md inputs, which may be reformatted).
+    assert!(
+        out_dir.join("vectors.md.md").exists(),
+        "markdown dump written with .md appended"
+    );
+    assert!(
+        std::fs::read_to_string(out_dir.join("recipes/smoothie.md.md"))
+            .unwrap()
+            .contains("banana"),
+        "subdirectory structure mirrored"
+    );
     assert_eq!(pipeline.store().count_documents().await.unwrap(), 2);
 
     // Processing metrics are recorded in each document's JSON metadata.

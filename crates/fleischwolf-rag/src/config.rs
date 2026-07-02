@@ -93,6 +93,9 @@ pub struct RagConfig {
     pub source_url: Option<String>,
     pub source_user: Option<String>,
     pub source_password: Option<String>,
+    /// Optional folder to dump each ingested document's converted Markdown into
+    /// (for debugging / re-ingestion). `None` disables the dump.
+    pub documents_output: Option<String>,
 
     // --- queue ---
     pub queue: QueueKind,
@@ -144,6 +147,7 @@ impl Default for RagConfig {
             source_url: None,
             source_user: None,
             source_password: None,
+            documents_output: None,
             queue: QueueKind::Memory,
             rabbitmq_url: None,
             redis_url: None,
@@ -208,6 +212,7 @@ impl RagConfig {
             source_url: env_str("RAG_SOURCE_URL"),
             source_user: env_str("RAG_SOURCE_USER"),
             source_password: env_str("RAG_SOURCE_PASSWORD"),
+            documents_output: env_str("RAG_DOCUMENTS_OUTPUT"),
             queue: match env_str("RAG_QUEUE") {
                 Some(s) => parse_queue_kind(&s)?,
                 None => d.queue,

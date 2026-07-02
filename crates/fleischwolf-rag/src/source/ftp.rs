@@ -66,9 +66,14 @@ impl DocumentSource for FtpSource {
                 .into_iter()
                 .map(|name| {
                     let file = name.rsplit('/').next().unwrap_or(&name).to_string();
+                    let rel = name
+                        .strip_prefix(this.dir.trim_end_matches('/'))
+                        .map(|s| s.trim_start_matches('/').to_string())
+                        .unwrap_or_else(|| name.clone());
                     SourceRef {
                         uri: format!("ftp://{}/{}", this.addr, name),
                         name: file,
+                        rel_path: rel,
                     }
                 })
                 .collect())

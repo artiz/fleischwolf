@@ -20,6 +20,9 @@ pub struct SourceRef {
     pub uri: String,
     /// A short display name, typically the file name.
     pub name: String,
+    /// Path relative to the source root (`sub/dir/report.pdf`). Used to mirror
+    /// the source structure into `RAG_DOCUMENTS_OUTPUT`.
+    pub rel_path: String,
 }
 
 /// A place documents are read from.

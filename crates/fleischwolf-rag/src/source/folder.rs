@@ -58,6 +58,11 @@ impl DocumentSource for FolderSource {
                     .file_name()
                     .map(|n| n.to_string_lossy().into_owned())
                     .unwrap_or_default(),
+                rel_path: p
+                    .strip_prefix(&self.root)
+                    .unwrap_or(&p)
+                    .to_string_lossy()
+                    .into_owned(),
                 uri: format!("file://{}", p.display()),
             })
             .collect())

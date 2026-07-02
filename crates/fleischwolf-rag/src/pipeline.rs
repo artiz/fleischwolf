@@ -127,6 +127,16 @@ impl Pipeline {
         let (title, markdown, pages, parse_secs) = Self::to_markdown(r.name.clone(), bytes).await?;
         let words = markdown.split_whitespace().count();
 
+        // Optional local FS mirror of the parsed documents (RAG_DOCUMENTS_OUTPUT):
+        // same directory structure as the source, `.md` appended to every name
+        // (also for original .md inputs — conversion may reformat them).
+        // Best-effort: a failed write never fails ingest.
+        if let Some(dir) = &self.cfg.documents_output {
+            if let Err(e) = dump_markdown(dir, &r.rel_path, &markdown).await {
+                tracing::warn!(uri = %r.uri, error = %e, "failed to write markdown dump");
+            }
+        }
+
         // The document row must exist before its chunks (FK); metrics are filled
         // in with a second upsert once every phase has been timed.
         let mut doc = Document::new(&r.uri, title, &hash)
@@ -243,6 +253,29 @@ impl Pipeline {
             sources: hits,
         })
     }
+}
+
+/// Mirror a parsed document into the output folder: `<dir>/<rel_path>.md`, with
+/// the source's directory structure preserved and `.md` always appended
+/// (`report.pdf` → `report.pdf.md`, `notes.md` → `notes.md.md`).
+async fn dump_markdown(dir: &str, rel_path: &str, markdown: &str) -> Result<()> {
+    // Never let a hostile rel_path escape the output root.
+    let rel: std::path::PathBuf = std::path::Path::new(rel_path)
+        .components()
+        .filter(|c| matches!(c, std::path::Component::Normal(_)))
+        .collect();
+    let file_name = if rel.as_os_str().is_empty() {
+        std::path::PathBuf::from("document")
+    } else {
+        rel
+    };
+    let path = std::path::Path::new(dir).join(format!("{}.md", file_name.display()));
+    if let Some(parent) = path.parent() {
+        tokio::fs::create_dir_all(parent).await?;
+    }
+    tokio::fs::write(&path, markdown).await?;
+    tracing::debug!(path = %path.display(), "wrote markdown dump");
+    Ok(())
 }
 
 /// First `# `/`## ` heading text in a Markdown string.
