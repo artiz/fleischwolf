@@ -38,6 +38,7 @@ pub mod error;
 pub mod eval;
 pub mod llm;
 pub mod math;
+pub mod metrics;
 pub mod model;
 pub mod pipeline;
 pub mod queue;

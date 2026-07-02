@@ -168,7 +168,41 @@ async fn run() -> Result<()> {
             let pipeline = Pipeline::from_config(&cfg).await?;
             let docs = pipeline.store().count_documents().await?;
             let chunks = pipeline.store().count_chunks().await?;
-            println!("documents: {docs}\nchunks:    {chunks}");
+            println!("documents: {docs}\nchunks:    {chunks}\n");
+            let documents = pipeline.store().list_documents().await?;
+            if !documents.is_empty() {
+                println!(
+                    "| title | KiB | pages | words | chunks | parse w/s | parse p/s | chunk w/s | embed w/s |"
+                );
+                println!(
+                    "|-------|----:|------:|------:|-------:|----------:|----------:|----------:|----------:|"
+                );
+                for d in &documents {
+                    let m = &d.metadata["metrics"];
+                    let num = |v: &serde_json::Value| {
+                        v.as_f64().map(|x| format!("{x:.1}")).unwrap_or_else(|| "-".into())
+                    };
+                    let int = |v: &serde_json::Value| {
+                        v.as_u64().map(|x| x.to_string()).unwrap_or_else(|| "-".into())
+                    };
+                    let kib = m["file_bytes"]
+                        .as_u64()
+                        .map(|b| format!("{:.1}", b as f64 / 1024.0))
+                        .unwrap_or_else(|| "-".into());
+                    println!(
+                        "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+                        d.title,
+                        kib,
+                        int(&m["pages"]),
+                        int(&m["words"]),
+                        int(&m["chunks"]),
+                        num(&m["parsing"]["words_per_sec"]),
+                        num(&m["parsing"]["pages_per_sec"]),
+                        num(&m["chunking"]["words_per_sec"]),
+                        num(&m["embedding"]["words_per_sec"]),
+                    );
+                }
+            }
         }
     }
     Ok(())

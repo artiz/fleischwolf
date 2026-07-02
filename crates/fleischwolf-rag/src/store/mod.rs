@@ -48,6 +48,9 @@ pub trait VectorStore: Send + Sync {
     /// Total number of stored documents.
     async fn count_documents(&self) -> Result<usize>;
 
+    /// Every stored document with its metadata (including processing metrics).
+    async fn list_documents(&self) -> Result<Vec<Document>>;
+
     /// Remove all documents and chunks.
     async fn clear(&self) -> Result<()>;
 }

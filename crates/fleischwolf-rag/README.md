@@ -35,6 +35,26 @@ tables**.
   queries; each is retrieved and the results are fused with RRF.
 - **HyDE** — the LLM writes a hypothetical answer whose embedding drives the search.
 
+## Processing metrics
+
+Every ingested document records per-phase processing metrics in its JSON
+`metadata` column (under `"metrics"`), so new metrics can be added later without
+a schema migration: source file size, page count (PDF pages, PPTX slides, XLSX
+sheets), word count, chunk count, and per-phase `seconds` / `words_per_sec` for
+**parsing**, **chunking** and **embedding** — plus `pages_per_sec` for parsing
+when the format has pages.
+
+```json
+"metrics": {
+  "file_bytes": 170934, "pages": 4, "words": 311, "chunks": 2, "embedded_words": 316,
+  "parsing":   { "seconds": 0.006, "words_per_sec": 51262.6, "pages_per_sec": 659.3 },
+  "chunking":  { "seconds": 0.0,   "words_per_sec": 1119506.4 },
+  "embedding": { "seconds": 0.0,   "words_per_sec": 1730381.9 }
+}
+```
+
+`fleischwolf-rag stats` prints these as a per-document table.
+
 ## Configuration
 
 All settings come from the environment (or a `.env` file). See

@@ -45,6 +45,23 @@ async fn ingest_then_retrieve_offline() {
     assert!(report.chunks_added >= 2);
     assert_eq!(pipeline.store().count_documents().await.unwrap(), 2);
 
+    // Processing metrics are recorded in each document's JSON metadata.
+    let docs = pipeline.store().list_documents().await.unwrap();
+    assert_eq!(docs.len(), 2);
+    for d in &docs {
+        let m = &d.metadata["metrics"];
+        assert!(m["file_bytes"].as_u64().unwrap() > 0, "file_bytes for {}", d.title);
+        assert!(m["words"].as_u64().unwrap() > 0, "words for {}", d.title);
+        assert!(m["chunks"].as_u64().unwrap() > 0, "chunks for {}", d.title);
+        assert!(m["embedded_words"].as_u64().unwrap() > 0);
+        // All three phases have timings; rates exist when the phase was measurable.
+        for phase in ["parsing", "chunking", "embedding"] {
+            assert!(m[phase]["seconds"].is_number(), "{phase} seconds for {}", d.title);
+        }
+        // Markdown has no page notion, so no pages / pages_per_sec keys.
+        assert!(m.get("pages").is_none());
+    }
+
     // Re-ingest is a no-op thanks to content-hash dedup.
     let again = pipeline.ingest_all().await.unwrap();
     assert_eq!(again.documents_ingested, 0);

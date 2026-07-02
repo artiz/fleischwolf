@@ -4,6 +4,7 @@
 use crate::chunk::Chunker;
 use crate::embed::{self, Embedder};
 use crate::llm::{self, ChatModel, Message};
+use crate::metrics::{self, ProcessingMetrics, Timings};
 use crate::model::{content_hash, Document, RetrievalMode, Scored};
 use crate::retrieve::Retriever;
 use crate::source::{self, DocumentSource, SourceRef};
@@ -75,26 +76,31 @@ impl Pipeline {
             .with_multiquery_n(self.cfg.multiquery_n)
     }
 
-    /// Convert raw bytes to `(title, markdown)` using `fleischwolf`. Runs the sync
-    /// converter on a blocking thread.
-    async fn to_markdown(name: String, bytes: Vec<u8>) -> Result<(String, String)> {
+    /// Convert raw bytes to `(title, markdown, pages, parse_secs)` using
+    /// `fleischwolf`. Runs the sync converter on a blocking thread; `parse_secs`
+    /// times the conversion itself (page counting excluded).
+    async fn to_markdown(name: String, bytes: Vec<u8>) -> Result<(String, String, Option<usize>, f64)> {
         tokio::task::spawn_blocking(move || {
             let ext = name.rsplit('.').next().unwrap_or("");
             let fmt = InputFormat::from_extension(ext)
                 .ok_or_else(|| RagError::Conversion(format!("unsupported extension '.{ext}'")))?;
+            let pages = metrics::count_pages(fmt, &bytes);
             let src = SourceDocument::from_bytes(name.clone(), fmt, bytes);
+            let start = std::time::Instant::now();
             let result = DocumentConverter::new()
                 .convert(src)
                 .map_err(|e| RagError::Conversion(e.to_string()))?;
             let md = result.document.export_to_markdown();
+            let parse_secs = start.elapsed().as_secs_f64();
             let title = first_heading(&md).unwrap_or_else(|| stem(&name));
-            Ok((title, md))
+            Ok((title, md, pages, parse_secs))
         })
         .await
         .map_err(|e| RagError::Conversion(format!("convert join: {e}")))?
     }
 
-    /// Ingest a single document reference. Deduplicates on content hash.
+    /// Ingest a single document reference. Deduplicates on content hash, and
+    /// records per-phase processing metrics in the document's JSON metadata.
     pub async fn ingest_ref(&self, r: &SourceRef) -> Result<IngestOutcome> {
         let bytes = self.source.fetch(r).await?;
         let hash = content_hash(&bytes);
@@ -102,22 +108,51 @@ impl Pipeline {
             return Ok(IngestOutcome::Skipped);
         }
 
-        let byte_len = bytes.len();
-        let (title, markdown) = Self::to_markdown(r.name.clone(), bytes).await?;
+        let file_bytes = bytes.len() as u64;
+        let (title, markdown, pages, parse_secs) = Self::to_markdown(r.name.clone(), bytes).await?;
+        let words = markdown.split_whitespace().count();
 
-        let doc = Document::new(&r.uri, title, &hash).with_metadata(serde_json::json!({
-            "bytes": byte_len,
-            "source": r.uri,
-        }));
+        // The document row must exist before its chunks (FK); metrics are filled
+        // in with a second upsert once every phase has been timed.
+        let mut doc = Document::new(&r.uri, title, &hash)
+            .with_metadata(serde_json::json!({ "source": r.uri }));
         self.store.upsert_document(&doc).await?;
 
+        let start = std::time::Instant::now();
         let mut chunks = self.chunker.chunk(&doc.id, &markdown);
-        if chunks.is_empty() {
-            return Ok(IngestOutcome::Ingested(0));
-        }
-        self.embed_chunks(&mut chunks).await?;
+        let chunk_secs = start.elapsed().as_secs_f64();
+
+        let mut embed_secs = 0.0;
+        let mut embedded_words = 0;
         let n = chunks.len();
-        self.store.insert_chunks(&chunks).await?;
+        if !chunks.is_empty() {
+            let start = std::time::Instant::now();
+            self.embed_chunks(&mut chunks).await?;
+            embed_secs = start.elapsed().as_secs_f64();
+            embedded_words =
+                chunks.iter().map(|c| c.text.split_whitespace().count()).sum::<usize>();
+            self.store.insert_chunks(&chunks).await?;
+        }
+
+        let m = ProcessingMetrics::compute(
+            file_bytes,
+            pages,
+            words,
+            n,
+            embedded_words,
+            Timings { parse_secs, chunk_secs, embed_secs },
+        );
+        tracing::info!(
+            uri = %r.uri,
+            pages = ?m.pages,
+            words = m.words,
+            chunks = m.chunks,
+            parse_wps = ?m.parsing.words_per_sec,
+            embed_wps = ?m.embedding.words_per_sec,
+            "ingested document"
+        );
+        doc.metadata = serde_json::json!({ "source": r.uri, "metrics": m.to_json() });
+        self.store.upsert_document(&doc).await?;
         Ok(IngestOutcome::Ingested(n))
     }
 

@@ -188,6 +188,26 @@ impl VectorStore for PostgresStore {
         Ok(row.get::<i64, _>("n") as usize)
     }
 
+    async fn list_documents(&self) -> Result<Vec<Document>> {
+        let rows = sqlx::query(
+            "SELECT id, source_uri, title, hash, metadata, created_at FROM documents",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        rows.iter()
+            .map(|row| {
+                Ok(Document {
+                    id: row.try_get("id")?,
+                    source_uri: row.try_get("source_uri")?,
+                    title: row.try_get("title")?,
+                    hash: row.try_get("hash")?,
+                    metadata: row.try_get("metadata")?,
+                    created_at: row.try_get("created_at")?,
+                })
+            })
+            .collect()
+    }
+
     async fn clear(&self) -> Result<()> {
         sqlx::query("DELETE FROM chunks").execute(&self.pool).await?;
         sqlx::query("DELETE FROM documents").execute(&self.pool).await?;

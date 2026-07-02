@@ -79,6 +79,10 @@ impl VectorStore for MemoryStore {
         Ok(self.docs.read().unwrap().len())
     }
 
+    async fn list_documents(&self) -> Result<Vec<Document>> {
+        Ok(self.docs.read().unwrap().clone())
+    }
+
     async fn clear(&self) -> Result<()> {
         self.docs.write().unwrap().clear();
         self.chunks.write().unwrap().clear();
