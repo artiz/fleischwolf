@@ -34,10 +34,10 @@ rabbitmq = ["dep:lapin", "dep:futures-lite"]
 redis = ["dep:redis", "dep:futures-lite"]
 
 [dependencies]
-fleischwolf = { path = "../fleischwolf", version = "0.10.0" }
+fleischwolf = { path = "../fleischwolf", version = "0.11.0" }
 # Direct dep only for pdfium_backend::page_count (PDF page metrics); already in
 # the graph via fleischwolf, so this adds no compile cost.
-fleischwolf-pdf = { path = "../fleischwolf-pdf", version = "0.10.0" }
+fleischwolf-pdf = { path = "../fleischwolf-pdf", version = "0.11.0" }
 # Counting slides/sheets in OOXML containers for page metrics (names only).
 zip = { version = "2.2", default-features = false, features = ["deflate"] }
 
