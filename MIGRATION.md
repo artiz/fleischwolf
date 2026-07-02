@@ -66,7 +66,7 @@ PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
 |---|---|---|
 | Markdown | `markdown.rs` (pulldown-cmark) | **10/10 exact** |
 | CSV | `csv.rs` (`csv` crate) | **9/9 exact** |
-| HTML | `html.rs` (scraper/html5ever) | **30/32 exact** (rest need a headless browser — §5) |
+| HTML | `html.rs` (scraper/html5ever) | **31/32 exact** (the last needs the page's external CSS at render time — §5) |
 | AsciiDoc | `asciidoc.rs` (regex) | **4/4 exact** |
 | DeepSeek-OCR Markdown | `deepseek.rs` | **3/3 exact** (auto-detected VLM-token variant) |
 | XLSX | `xlsx.rs` (calamine) | **9/9 exact** |
@@ -187,62 +187,55 @@ These are deliberate or unavoidable divergences, not bugs.
    the converter routes by content markers (`us-patent` → USPTO, `us-gaap`/`dei`
    → XBRL, else JATS) rather than the extension alone.
 
-8. **Headless-browser pass is opt-in.** Form key-value regions and inline
-   visibility are handled statically by default. Stylesheet-driven (CSS-cascade)
-   nav/visibility suppression needs a rendered page, available behind the
-   optional `web-browser` feature / `--use-web-browser` flag (Rust-driven
-   Chromium); rendered-bounding-box nested-table padding is still out — see §5.
+8. **Headless-browser pass is opt-in.** Form key-value regions, inline
+   visibility, and nested-table cell flattening (docling's exact spacing) are
+   all handled statically by default — no browser. Only stylesheet-driven
+   (CSS-cascade) visibility suppression needs a rendered page, available behind
+   the optional `web-browser` feature / `--use-web-browser` flag (Rust-driven
+   Chromium) — see §5.
 
 ---
 
 ## 5. Not migrated / out of scope
 
-Explicitly **not done**, with the reason:
+Nothing here blocks day-to-day conversion: every remaining item is either a
+deliberate scope boundary or a cosmetic, single-fixture polish gap.
+
+**Out of scope by design:**
 
 - **Audio / ASR.** docling's Whisper-based speech path. A separate ML boundary
   like PDF; deferred by design.
 - **VLM pipelines** (SmolDocling / remote VLM) and **enrichment models** (picture
   classification, formula understanding, code understanding). Model-bound; out of
   scope for the discriminative port.
-
 - **XML DocLang / DocTags** input backend — no `.dclg` sources in the corpus to
   verify against, and not in the requested scope.
 - **Older patent schemas.** USPTO covers the modern `v4x` XML only; the
   `pap-v1` / 2001-era `pa`/`pg` schemas and the legacy **APS text** (`pftaps`)
   format are not handled (two files even use HTML entities roxmltree rejects).
-- **ODF presentation title/shape/notes** — slide-title heading detection, free
-  shape-text extraction and the drop of speaker-notes on `.odp` slides. The
-  mixed-style **list continuation**, empty-list-item level collapse,
-  **ODS sheet→table region detection with numeric alignment**, and **rich table
-  cells** are now done (a flood-fill splits a sheet into its disconnected data
-  regions; `<text:list>` siblings continue numbering across an empty nested item;
-  a cell holding lists/nested tables/images/multiple paragraphs renders its full
-  block content flattened into the cell while a plain cell stays unformatted, and
-  merged cells leave their covered columns blank). What remains on `.odt` is
-  charts/embedded-object frames (`text_document_02`).
+
+**Minor known gaps (cosmetic, tracked per-fixture):**
+
+- **ODF presentation/chart frames** — slide-title heading detection, free
+  shape-text extraction and the speaker-notes drop on `.odp` slides, and `.odt`
+  chart/embedded-object frames (`text_document_02`). Everything else on ODF is
+  done: mixed-style list continuation, empty-list-item level collapse, ODS
+  sheet→table region detection with numeric alignment, and rich table cells.
 - **DOCX grouped/anchored drawings** — position-sorted layout of grouped shapes
-  and `<mc:AlternateContent>` image de-duplication (`drawingml` fixture). The
-  Word multilevel list/heading *shared* numbering and **advanced OMML +
-  inline-equation spacing** are now done (inline equations reproduce docling's
-  inline-group spacing and stay attached to their list item; `\operatorname`
-  functions, limit-label space escaping and the two-space symbol padding match
-  pylatexenc byte-for-byte).
-- **HTML browser-render subsystem** — the browser-free parts are **done**: form
-  key-value regions (`kvp_data_example`, detected statically from docling's
-  `keyN` / `keyN_valueM` / `keyN_marker` `id`-convention), docling-faithful
-  inline-image handling (inline images emit nothing; only block / `<a>`-wrapped
-  / `<figure>` images become pictures), and inline visibility suppression
-  (`hidden` / inline `display:none` / `visibility:hidden`).
-  For stylesheet-driven (CSS-cascade) visibility — `wiki_duck`'s collapsed
-  menus, kept distinct from the still-visible table of contents — there is now
-  an **optional headless-browser pre-render** behind the `web-browser` Cargo
-  feature / `--use-web-browser` flag: it drives the system Chromium from Rust
-  (via `headless_chrome`, no Node/Playwright), strips computed-`display:none`
-  subtrees, and hands the cleaned HTML back to the Rust backend. It resolves the
-  cascade only when the page's CSS is reachable (inline `<style>`, or external
-  stylesheets fetchable with a base host), so a saved page whose stylesheets are
-  external + offline still needs the real network. Deep nested-table cell
-  padding from rendered bounding boxes remains the last rendered-geometry gap.
+  and `<mc:AlternateContent>` image de-duplication (`drawingml` fixture).
+  Multilevel shared list/heading numbering and advanced OMML/inline-equation
+  spacing are done (byte-for-byte against pylatexenc).
+- **`wiki_duck` offline rendering.** The HTML subsystem itself is complete
+  (31/32 exact): key-value form regions, docling-faithful inline-image
+  handling, inline visibility suppression, deep nested-table cell flattening
+  with docling's exact spacing (which turned out to be BeautifulSoup whitespace
+  semantics, not rendered geometry — pure Rust, no browser needed), and —
+  behind the optional `web-browser` feature / `--use-web-browser` flag —
+  CSS-cascade visibility suppression via Rust-driven Chromium. The one fixture
+  still short of exact is `wiki_duck`, whose collapsed menus are hidden by
+  external, host-relative stylesheets: resolving them requires those
+  stylesheets to be fetchable at render time (`--use-web-browser` with network
+  access), which a fully-offline conversion inherently cannot do.
 
 
 ---
