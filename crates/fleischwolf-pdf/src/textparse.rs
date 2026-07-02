@@ -702,9 +702,10 @@ pub fn pdf_all_cells(bytes: &[u8]) -> Vec<PageParserCells> {
         .map(|(_, pid)| {
             let (_w, h) = page_size(&doc, pid);
             let glyphs = page_glyphs(&doc, pid);
+            let (prose, words) = crate::dp_lines::line_and_word_cells(&glyphs, h, true);
             PageParserCells {
-                prose: crate::dp_lines::line_cells(&glyphs, h, true),
-                words: crate::dp_lines::word_cells(&glyphs, h, true),
+                prose,
+                words,
                 code: crate::pdfium_backend::code_cells_from_glyphs(&glyphs, h),
             }
         })

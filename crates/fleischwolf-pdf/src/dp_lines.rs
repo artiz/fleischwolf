@@ -342,11 +342,47 @@ fn build_cells(glyphs: &[Glyph], euclidean: bool) -> Vec<Cell> {
 
 /// Build line cells from a page's glyph stream via the docling-parse contraction.
 pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<TextCell> {
+    line_and_word_cells(glyphs, page_h, euclidean).0
+}
+
+/// Build **word** cells from a page's glyph stream via the same contraction as
+/// [`line_cells`]: each line splits into its constituent words at exactly the
+/// points where the contraction inserted a separator space. This reproduces
+/// docling-parse's `word_cells` (the per-word tokens TableFormer matches against
+/// table-grid cells), letting the pipeline drop pdfium's text path entirely
+/// (roadmap item 6). Empty words (overprint-cleared) are skipped.
+pub(crate) fn word_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<TextCell> {
+    line_and_word_cells(glyphs, page_h, euclidean).1
+}
+
+/// Build the line cells **and** the word cells from one shared contraction — the
+/// build+contract pass is the expensive step and is identical for both views, so
+/// callers that need both (the default text layer) pay it once. Line cells come
+/// from each contracted cell's text/box; word cells from its recorded word
+/// segments.
+pub(crate) fn line_and_word_cells(
+    glyphs: &[Glyph],
+    page_h: f32,
+    euclidean: bool,
+) -> (Vec<TextCell>, Vec<TextCell>) {
     let mut cells = build_cells(glyphs, euclidean);
     contract(&mut cells, euclidean);
-    cells
+    let mut words = Vec::new();
+    let lines = cells
         .into_iter()
         .map(|c| {
+            for w in c.words {
+                if w.text.trim().is_empty() {
+                    continue;
+                }
+                words.push(TextCell {
+                    text: w.text,
+                    l: w.l as f32,
+                    t: page_h - w.t as f32,
+                    r: w.r as f32,
+                    b: page_h - w.b as f32,
+                });
+            }
             let l = c.rx0.min(c.rx1).min(c.rx2).min(c.rx3) as f32;
             let r = c.rx0.max(c.rx1).max(c.rx2).max(c.rx3) as f32;
             let top = c.ry0.max(c.ry1).max(c.ry2).max(c.ry3) as f32;
@@ -359,34 +395,8 @@ pub(crate) fn line_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<
                 b: page_h - bot,
             }
         })
-        .collect()
-}
-
-/// Build **word** cells from a page's glyph stream via the same contraction as
-/// [`line_cells`], then split each line into its constituent words at exactly the
-/// points where the contraction inserted a separator space. This reproduces
-/// docling-parse's `word_cells` (the per-word tokens TableFormer matches against
-/// table-grid cells), letting the pipeline drop pdfium's text path entirely
-/// (roadmap item 6). Empty words (overprint-cleared) are skipped.
-pub(crate) fn word_cells(glyphs: &[Glyph], page_h: f32, euclidean: bool) -> Vec<TextCell> {
-    let mut cells = build_cells(glyphs, euclidean);
-    contract(&mut cells, euclidean);
-    let mut out = Vec::new();
-    for c in cells {
-        for w in c.words {
-            if w.text.trim().is_empty() {
-                continue;
-            }
-            out.push(TextCell {
-                text: w.text,
-                l: w.l as f32,
-                t: page_h - w.t as f32,
-                r: w.r as f32,
-                b: page_h - w.b as f32,
-            });
-        }
-    }
-    out
+        .collect();
+    (lines, words)
 }
 
 fn is_rtl_char(c: char) -> bool {
