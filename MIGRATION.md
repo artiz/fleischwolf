@@ -5,11 +5,11 @@ Rust. This document is the **current status**: what is migrated, how it compares
 to upstream docling, and what is intentionally not done yet. (The original
 phased plan is kept at the end as history.)
 
-> **Status: the format migration is essentially complete.** Every document
-> format in docling's pipeline except **audio/ASR** is supported, plus Markdown
-> (legacy + a Rust-only *strict* mode), docling-native **JSON** output, **image
-> extraction**, and **MHTML** (a fleischwolf-only extension docling doesn't
-> have). The declarative formats are pure-Rust and checked byte-for-byte
+> **Status: the format migration is complete.** Every document format in
+> docling's pipeline is supported — including **audio/ASR** (Whisper via ONNX,
+> in `fleischwolf-asr`) — plus Markdown (legacy + a Rust-only *strict* mode),
+> docling-native **JSON** output, **image extraction**, and **MHTML** (a
+> fleischwolf-only extension docling doesn't have). The declarative formats are pure-Rust and checked byte-for-byte
 > against *live* docling; the PDF/image/METS ML path lives in `fleischwolf-pdf`
 > (a pure-Rust PDF text parser + pdfium rasterization + ONNX
 > layout/TableFormer/OCR + a port of docling-parse's line sanitizer) and is also
@@ -30,6 +30,7 @@ Four layers, mirroring docling's:
 | **Converter** | `docling/document_converter.py` | `fleischwolf` — `converter.rs` (format dispatch + XML content sniffing) |
 | **Backends** | `docling/backend/*` | `fleischwolf` — `backend/*` (one per format) |
 | **PDF/ML pipeline** | `docling/pipeline/*`, `docling/models/*` | `fleischwolf-pdf` — pdfium + ONNX layout/OCR + assembly |
+| **Audio/ASR pipeline** | `docling/pipeline/asr_pipeline.py` | `fleischwolf-asr` — symphonia decode + log-mel + ONNX Whisper |
 | **CLI** | `docling/cli` | `fleischwolf-cli` |
 
 ```text
@@ -37,6 +38,7 @@ crates/
 ├── fleischwolf-core/   # DoclingDocument, Node model, markdown.rs, json.rs, base64.rs, labels.rs
 ├── fleischwolf/        # DocumentConverter, source/format detection, backend/*.rs, ooxml.rs
 ├── fleischwolf-pdf/    # pdfium_backend, layout (RT-DETR/ONNX), ocr (PP-OCRv3/ONNX), assemble, mets
+├── fleischwolf-asr/    # audio decode (symphonia), mel.rs, whisper.rs (ONNX), tokenizer.rs
 ├── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
 └── fleischwolf-node/   # Node.js/Bun N-API bindings (napi-rs), published to npm as `fleischwolf`
 ```
@@ -66,7 +68,7 @@ PyPI; run via `scripts/conformance.sh <fmt>`), not the committed groundtruth
 |---|---|---|
 | Markdown | `markdown.rs` (pulldown-cmark) | **10/10 exact** |
 | CSV | `csv.rs` (`csv` crate) | **9/9 exact** |
-| HTML | `html.rs` (scraper/html5ever) | **30/32 exact** (rest need a headless browser — §5) |
+| HTML | `html.rs` (scraper/html5ever) | **31/32 exact** (the last needs the page's external CSS at render time — §5) |
 | AsciiDoc | `asciidoc.rs` (regex) | **4/4 exact** |
 | DeepSeek-OCR Markdown | `deepseek.rs` | **3/3 exact** (auto-detected VLM-token variant) |
 | XLSX | `xlsx.rs` (calamine) | **9/9 exact** |
@@ -99,6 +101,7 @@ close — see `PDF_CONFORMANCE.md`. A deterministic snapshot baseline
 | PDF | **pure-Rust text parser** (`textparse.rs`, font-advance glyph boxes) + pdfium page render → RT-DETR layout (ONNX) → **TableFormer** table structure (ONNX) → PP-OCRv3 OCR for scanned pages → **docling-parse line sanitizer** (`dp_lines.rs`) + reading-order assembly |
 | Images (tiff/webp/png/jpeg) | the same pipeline, image as a single page |
 | METS / Google Books | `.tar.gz` of per-page hOCR + TIFF → cells from hOCR → the same layout+assembly path (no OCR needed) |
+| Audio (wav/mp3/flac/ogg/aac/m4a + mp4/mov audio tracks) | `fleischwolf-asr`: **symphonia** decode (no ffmpeg) → 16 kHz mono → ported log-mel front-end → **Whisper tiny** encoder/decoder (ONNX, greedy with OpenAI's timestamp rules — docling's ASR defaults) → `[time: start-end] text` paragraphs. AVI is the one container symphonia can't demux. |
 
 ---
 
@@ -187,62 +190,54 @@ These are deliberate or unavoidable divergences, not bugs.
    the converter routes by content markers (`us-patent` → USPTO, `us-gaap`/`dei`
    → XBRL, else JATS) rather than the extension alone.
 
-8. **Headless-browser pass is opt-in.** Form key-value regions and inline
-   visibility are handled statically by default. Stylesheet-driven (CSS-cascade)
-   nav/visibility suppression needs a rendered page, available behind the
-   optional `web-browser` feature / `--use-web-browser` flag (Rust-driven
-   Chromium); rendered-bounding-box nested-table padding is still out — see §5.
+8. **Headless-browser pass is opt-in.** Form key-value regions, inline
+   visibility, and nested-table cell flattening (docling's exact spacing) are
+   all handled statically by default — no browser. Only stylesheet-driven
+   (CSS-cascade) visibility suppression needs a rendered page, available behind
+   the optional `web-browser` feature / `--use-web-browser` flag (Rust-driven
+   Chromium) — see §5.
 
 ---
 
 ## 5. Not migrated / out of scope
 
-Explicitly **not done**, with the reason:
+Nothing here blocks day-to-day conversion: every remaining item is either a
+deliberate scope boundary or a cosmetic, single-fixture polish gap.
 
-- **Audio / ASR.** docling's Whisper-based speech path. A separate ML boundary
-  like PDF; deferred by design.
+**Out of scope by design:**
+
 - **VLM pipelines** (SmolDocling / remote VLM) and **enrichment models** (picture
   classification, formula understanding, code understanding). Model-bound; out of
-  scope for the discriminative port.
-
+  scope for the discriminative port. (**Audio/ASR is now done** — see §2; the
+  only container gap is AVI, which symphonia cannot demux.)
 - **XML DocLang / DocTags** input backend — no `.dclg` sources in the corpus to
   verify against, and not in the requested scope.
 - **Older patent schemas.** USPTO covers the modern `v4x` XML only; the
   `pap-v1` / 2001-era `pa`/`pg` schemas and the legacy **APS text** (`pftaps`)
   format are not handled (two files even use HTML entities roxmltree rejects).
-- **ODF presentation title/shape/notes** — slide-title heading detection, free
-  shape-text extraction and the drop of speaker-notes on `.odp` slides. The
-  mixed-style **list continuation**, empty-list-item level collapse,
-  **ODS sheet→table region detection with numeric alignment**, and **rich table
-  cells** are now done (a flood-fill splits a sheet into its disconnected data
-  regions; `<text:list>` siblings continue numbering across an empty nested item;
-  a cell holding lists/nested tables/images/multiple paragraphs renders its full
-  block content flattened into the cell while a plain cell stays unformatted, and
-  merged cells leave their covered columns blank). What remains on `.odt` is
-  charts/embedded-object frames (`text_document_02`).
+
+**Minor known gaps (cosmetic, tracked per-fixture):**
+
+- **ODF presentation/chart frames** — slide-title heading detection, free
+  shape-text extraction and the speaker-notes drop on `.odp` slides, and `.odt`
+  chart/embedded-object frames (`text_document_02`). Everything else on ODF is
+  done: mixed-style list continuation, empty-list-item level collapse, ODS
+  sheet→table region detection with numeric alignment, and rich table cells.
 - **DOCX grouped/anchored drawings** — position-sorted layout of grouped shapes
-  and `<mc:AlternateContent>` image de-duplication (`drawingml` fixture). The
-  Word multilevel list/heading *shared* numbering and **advanced OMML +
-  inline-equation spacing** are now done (inline equations reproduce docling's
-  inline-group spacing and stay attached to their list item; `\operatorname`
-  functions, limit-label space escaping and the two-space symbol padding match
-  pylatexenc byte-for-byte).
-- **HTML browser-render subsystem** — the browser-free parts are **done**: form
-  key-value regions (`kvp_data_example`, detected statically from docling's
-  `keyN` / `keyN_valueM` / `keyN_marker` `id`-convention), docling-faithful
-  inline-image handling (inline images emit nothing; only block / `<a>`-wrapped
-  / `<figure>` images become pictures), and inline visibility suppression
-  (`hidden` / inline `display:none` / `visibility:hidden`).
-  For stylesheet-driven (CSS-cascade) visibility — `wiki_duck`'s collapsed
-  menus, kept distinct from the still-visible table of contents — there is now
-  an **optional headless-browser pre-render** behind the `web-browser` Cargo
-  feature / `--use-web-browser` flag: it drives the system Chromium from Rust
-  (via `headless_chrome`, no Node/Playwright), strips computed-`display:none`
-  subtrees, and hands the cleaned HTML back to the Rust backend. It resolves the
-  cascade only when the page's CSS is reachable (inline `<style>`, or external
-  stylesheets fetchable with a base host), so a saved page whose stylesheets are
-  external + offline still needs the real network. Deep nested-table cell
-  padding from rendered bounding boxes remains the last rendered-geometry gap.
+  and `<mc:AlternateContent>` image de-duplication (`drawingml` fixture).
+  Multilevel shared list/heading numbering and advanced OMML/inline-equation
+  spacing are done (byte-for-byte against pylatexenc).
+- **`wiki_duck` offline rendering.** The HTML subsystem itself is complete
+  (31/32 exact): key-value form regions, docling-faithful inline-image
+  handling, inline visibility suppression, deep nested-table cell flattening
+  with docling's exact spacing (which turned out to be BeautifulSoup whitespace
+  semantics, not rendered geometry — pure Rust, no browser needed), and —
+  behind the optional `web-browser` feature / `--use-web-browser` flag —
+  CSS-cascade visibility suppression via Rust-driven Chromium. The one fixture
+  still short of exact is `wiki_duck`, whose collapsed menus are hidden by
+  external, host-relative stylesheets: resolving them requires those
+  stylesheets to be fetchable at render time (`--use-web-browser` with network
+  access), which a fully-offline conversion inherently cannot do.
 
 
 ---
@@ -300,9 +295,9 @@ The port followed roughly: **Phase 0** skeleton & API → **Phase 2** text/marku
 (Markdown, CSV, HTML, AsciiDoc, DeepSeek) → **Phase 3** Office & e-book (DOCX,
 PPTX, XLSX, EPUB, ODF) → **Phase 4** long tail (XML families, LaTeX, Email,
 WebVTT, JSON) → **Phase 5–6** the PDF/image ML pipeline (pdfium + ONNX layout/OCR
-+ geometric tables) → output formats (strict Markdown, JSON, image extraction).
-Audio/ASR (the old "Phase 7" tail) and PyO3 interop bindings remain the main
-unbuilt pieces.
++ geometric tables) → output formats (strict Markdown, JSON, image extraction) →
+**Phase 7** audio/ASR (symphonia + ONNX Whisper). PyO3 interop bindings remain
+the one unbuilt piece.
 
 ## Why "Fleischwolf"? 🦀
 

@@ -292,6 +292,10 @@ impl DocumentConverter {
                 self.no_ocr,
             )
             .map_err(|e| ConversionError::Parse(e.to_string()))?,
+            // Audio → Whisper ASR (symphonia decode + ONNX inference); each
+            // transcribed segment becomes a `[time: start-end] text` paragraph.
+            InputFormat::Audio => fleischwolf_asr::convert_audio(&source.bytes, &source.name)
+                .map_err(|e| ConversionError::Parse(e.to_string()))?,
             other => return Err(ConversionError::UnsupportedFormat(other)),
         };
         // Carry the mode so `result.document.export_to_markdown()` reflects it.
@@ -321,11 +325,13 @@ mod tests {
 
     #[test]
     fn rejects_unimplemented_format() {
-        let src = SourceDocument::from_bytes("doc", InputFormat::Audio, b"RIFF".to_vec());
+        // XML DocLang is the one remaining format without a backend (audio now
+        // routes to the ASR pipeline).
+        let src = SourceDocument::from_bytes("doc", InputFormat::XmlDoclang, b"<doc>".to_vec());
         let err = DocumentConverter::new().convert(src).unwrap_err();
         assert!(matches!(
             err,
-            ConversionError::UnsupportedFormat(InputFormat::Audio)
+            ConversionError::UnsupportedFormat(InputFormat::XmlDoclang)
         ));
     }
 }
