@@ -1,9 +1,10 @@
 # Fleischwolf — a Rust port of docling.
 #
-# A Cargo workspace of four crates:
+# A Cargo workspace of five crates:
 #   fleischwolf-core  — the DoclingDocument data model + Markdown/JSON serializers
 #   fleischwolf       — the DocumentConverter and the per-format backends
 #   fleischwolf-pdf   — the PDF/image ML pipeline (pdfium text + ONNX layout/OCR)
+#   fleischwolf-asr   — the audio/ASR pipeline (symphonia decode + ONNX Whisper)
 #   fleischwolf-cli   — the `fleischwolf` command-line binary
 # See MIGRATION.md for the Python → Rust mapping and what is / isn't ported.
 
@@ -12,6 +13,7 @@ resolver = "2"
 members = [
     "crates/fleischwolf-core",
     "crates/fleischwolf",
+    "crates/fleischwolf-asr",
     "crates/fleischwolf-cli",
     "crates/fleischwolf-pdf",
     # Node.js / Bun N-API bindings (published to npm, not crates.io).

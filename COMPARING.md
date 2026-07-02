@@ -181,7 +181,7 @@ case — see the divergence table below.
 | **XLSX** | **9 / 9** ✅ | 9 / 9 |
 | **PPTX** | **7 / 7** ✅ | 7 / 7 |
 | **DOCX** | **25 / 26** | 25 / 26 |
-| **HTML** | **28 / 33** | 28 / 33 |
+| **HTML** | **31 / 32** ‡ | 31 / 32 |
 | **PDF** | **6 / 14** † | 7 / 14 |
 
 > † The pure-parse backends above are scored against **live** docling. **PDF** is a
@@ -193,6 +193,16 @@ case — see the divergence table below.
 > 7th (`amt_handbook_sample`) differs only by docling's spurious double space in a
 > `1⁄4` fraction, where the Rust output's single space is the more faithful
 > rendering.
+
+> ‡ **HTML** is scored against the committed groundtruth
+> (`tests/data/html/groundtruth`, regenerated from live docling — which now
+> emits *compact* markdown tables) with the **deliberate** padded-vs-compact
+> table divergence (§4 of `MIGRATION.md`) normalized; the cell *content* is
+> byte-identical, including docling's exact multi-space seams in deeply nested
+> table cells. The one remaining miss is `wiki_duck`: its menus are collapsed
+> by external, host-relative stylesheets, so suppressing them requires those
+> stylesheets to be fetchable at render time (`--use-web-browser` with network
+> access) — inherently out of reach for a fully-offline conversion.
 
 **PDF** (`*.pdf`) ports docling's *standard* (discriminative) PDF pipeline. A
 **pure-Rust text parser** (`textparse.rs`, on `lopdf`) reconstructs each glyph's
@@ -261,10 +271,13 @@ the drawing parts via the shared `ooxml` zip/rels helper). The one miss
 all-empty table.
 
 CSV, Markdown, AsciiDoc, and the DeepSeek-OCR Markdown variant are fully
-one-to-one. HTML's 5 remaining misses are a tail of docling-internal behaviours —
-some requiring **headless-browser rendering**, others (a large Wikipedia page,
-key-value form extraction) needing substantial structural work — see below. 28/33
-is roughly the ceiling for a pure-parse port.
+one-to-one. HTML is at **31/32**: key-value form regions, docling-faithful
+inline-image handling, inline visibility suppression, and deep nested-table
+cell flattening (docling's exact spacing — BeautifulSoup whitespace semantics,
+not rendered geometry) are all reproduced statically, and CSS-cascade
+visibility suppression is available behind the optional `web-browser` feature.
+The single remaining miss (`wiki_duck`) needs the page's external stylesheets
+fetchable at render time — see below.
 
 **AsciiDoc** (`*.asciidoc`/`*.adoc`) ports docling's line-oriented
 `AsciiDocBackend`: titles/sections, nested bullet/numbered lists (all rendered
@@ -293,22 +306,17 @@ tail of docling-specific quirks (below), each typically 1–2 lines.
 
 ### HTML
 
-Against live docling: **10 / 32** exact, **12 / 32** whitespace-normalized. (The
-older committed groundtruth would report a lower 6/32 — it predates docling's
-padded-table serializer; see §A.) The remaining real differences trace to a
-small number of *systematic* behaviours below, not to parsing errors — closing
-each tends to fix several fixtures at once.
+**31 / 32** content-exact against the committed groundtruth (regenerated from
+live docling); the table-padding divergence is deliberate (§4 of
+`MIGRATION.md`). The four gaps once thought browser-bound have all been closed,
+three of them **without any browser**:
 
-### Known divergences (tracked conformance gaps)
-
-HTML — remaining gaps (4 of 32), all blocked or impractical:
-
-| # | Difference | Example | Why it's blocked |
+| # | Former gap | Example | Resolution |
 |---|---|---|---|
-| 1 | Browser-rendering visibility / nav suppression | `wiki_duck` | docling renders the page in a headless browser to drop nav/menu/sidebar cruft — not replicable from parsing alone |
-| 2 | Key-value-pair / form extraction | `kvp_data_example` | docling's `form_region` subsystem builds key/marker/value relations using rendered bounding boxes and synthesizes `<!-- missing-text -->` placeholders — browser-bbox-dependent |
-| 3 | Browser-hidden image (mobile nav) dropped | `hyperlink_02` | docling drops it via rendered visibility |
-| 4 | Deeply-nested-table padding when flattened into a cell | `table_06` | docling pads the rich-cell text using rendered table bounding boxes; shallow nesting matches, ≥3-level deep padding does not |
+| 1 | Key-value-pair / form extraction | `kvp_data_example` | detected statically from docling's `keyN` / `keyN_valueM` / `keyN_marker` `id`-convention → `field_region`/`field_item` nodes + `<!-- missing-text -->` markers; no bboxes involved |
+| 2 | Browser-hidden image (mobile nav) dropped | `hyperlink_02` | docling never emits inline image markers; restricting the wrapper→picture path to `<a>` and dropping inline images reproduces it statically |
+| 3 | Deeply-nested-table cell padding | `table_06` | not rendered geometry after all — BeautifulSoup collapses whitespace-only text nodes to `\n`/`' '`, docling's `get_text` adds a trailing space per cell, and the `\n` runs flatten to spaces at render; ported byte-exact |
+| 4 | Stylesheet-collapsed nav/menus | `wiki_duck` | CSS-cascade visibility genuinely needs a rendered page: available behind the `web-browser` feature / `--use-web-browser` (Rust-driven Chromium). The saved fixture's stylesheets are external + host-relative, so offline conversion cannot resolve them — the one remaining miss |
 
 Markdown — **10/10**. Both former gaps fixed: `signature`/`stamp` → image blocks,
 and the `2\.` escape via contiguity-aware text merging (pulldown splits both

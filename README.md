@@ -28,7 +28,7 @@ the full architecture, the Python → Rust mapping, and the phased plan.
 
 The public API works end to end across **Markdown, CSV, HTML, AsciiDoc, DOCX,
 PPTX, XLSX, EPUB, ODF, WebVTT, Email, MHTML, JATS, USPTO, XBRL, LaTeX, JSON,
-PDF, images and METS** — plus Markdown / docling-JSON output and image
+PDF, images, METS and audio** — plus Markdown / docling-JSON output and image
 extraction. MHTML is a fleischwolf-only extension (docling has no MHTML
 backend): saved-webpage `.mhtml`/`.mht` archives are parsed as a MIME message
 with [`mail-parser`](https://crates.io/crates/mail-parser) (which conforms to
@@ -39,8 +39,16 @@ lives in `fleischwolf-pdf`: a pure-Rust PDF text parser, pdfium for page
 rasterization, and an ONNX layout/TableFormer/OCR stack. TableFormer is ported
 to ONNX and run on every detected table region to recover its structure;
 geometric reconstruction from cell positions remains only as the fallback when
-the TableFormer graphs aren't present (see `PDF_CONFORMANCE.md`). Audio/ASR is
-the main format still on the roadmap (see `MIGRATION.md`).
+the TableFormer graphs aren't present (see `PDF_CONFORMANCE.md`).
+
+**Audio/ASR** (docling's Whisper pipeline) lives in `fleischwolf-asr`, and it is
+Rust all the way down: [`symphonia`](https://crates.io/crates/symphonia)
+demuxes/decodes the container in-process (wav, mp3, flac, ogg, aac, m4a — plus
+the audio track of mp4/mov; no ffmpeg), a ported log-mel front-end feeds a
+**Whisper tiny** encoder/decoder exported to ONNX (run on `ort`, greedy with
+OpenAI's timestamp rules — docling's ASR defaults), and each segment becomes a
+`[time: start-end] text` paragraph. `FLEISCHWOLF_ASR_LANG` picks the language
+(default `en`). AVI is the one container symphonia cannot demux.
 
 Output is checked against upstream Python docling — declarative formats
 byte-for-byte against live docling, the ML pipeline against a deterministic
@@ -271,10 +279,13 @@ curl -fsSL https://raw.githubusercontent.com/artiz/fleischwolf/master/scripts/do
 | RT-DETR layout | `models/layout_heron.onnx` |
 | PP-OCRv3 rec + dictionary | `models/ocr_rec.onnx`, `models/ppocr_keys_v1.txt` |
 | TableFormer (optional) | `models/tableformer/{encoder,decoder,bbox}.onnx` (+ `.data` sidecars where the export needs them) |
+| Whisper tiny (audio/ASR; skip with `--no-asr`) | `models/asr/{encoder_model,decoder_model}.onnx`, `models/asr/vocab.json` (+ `added_tokens.json` for language selection) |
 
 Idempotent — safe to re-run; it skips files already on disk. Pass `--force` to
 re-fetch everything, or set `$FLEISCHWOLF_MODELS_URL` to fetch from a
-different host (your own export, an internal mirror, …). pdfium is Linux x64
+different host (your own export, an internal mirror, …); the Whisper assets
+come from Hugging Face (`$FLEISCHWOLF_ASR_MODELS_URL` overrides, or point
+`DOCLING_ASR_{ENCODER,DECODER,VOCAB}` at explicit files). pdfium is Linux x64
 only for now — other platforms, or building the models from source, need
 [`scripts/pdf_setup.sh`](#testing) instead.
 
@@ -367,6 +378,10 @@ cargo run -p fleischwolf-cli -- --to json crates/fleischwolf/sample.html > out.j
 # PDF/image conversion needs the ML models — see "Getting the ML models" above.
 scripts/download_dependencies.sh
 cargo run -p fleischwolf-cli -- document.pdf
+
+# transcribe audio (wav/mp3/flac/ogg/aac/m4a, or an mp4/mov audio track) — the
+# Whisper models come from the same download script
+cargo run -p fleischwolf-cli -- recording.mp3
 
 # extract pictures (PDF/image inputs): embed as data URIs, or write ./artifacts/*.png
 cargo run -p fleischwolf-cli -- --images embedded   document.pdf

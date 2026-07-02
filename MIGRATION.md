@@ -5,11 +5,11 @@ Rust. This document is the **current status**: what is migrated, how it compares
 to upstream docling, and what is intentionally not done yet. (The original
 phased plan is kept at the end as history.)
 
-> **Status: the format migration is essentially complete.** Every document
-> format in docling's pipeline except **audio/ASR** is supported, plus Markdown
-> (legacy + a Rust-only *strict* mode), docling-native **JSON** output, **image
-> extraction**, and **MHTML** (a fleischwolf-only extension docling doesn't
-> have). The declarative formats are pure-Rust and checked byte-for-byte
+> **Status: the format migration is complete.** Every document format in
+> docling's pipeline is supported — including **audio/ASR** (Whisper via ONNX,
+> in `fleischwolf-asr`) — plus Markdown (legacy + a Rust-only *strict* mode),
+> docling-native **JSON** output, **image extraction**, and **MHTML** (a
+> fleischwolf-only extension docling doesn't have). The declarative formats are pure-Rust and checked byte-for-byte
 > against *live* docling; the PDF/image/METS ML path lives in `fleischwolf-pdf`
 > (a pure-Rust PDF text parser + pdfium rasterization + ONNX
 > layout/TableFormer/OCR + a port of docling-parse's line sanitizer) and is also
@@ -30,6 +30,7 @@ Four layers, mirroring docling's:
 | **Converter** | `docling/document_converter.py` | `fleischwolf` — `converter.rs` (format dispatch + XML content sniffing) |
 | **Backends** | `docling/backend/*` | `fleischwolf` — `backend/*` (one per format) |
 | **PDF/ML pipeline** | `docling/pipeline/*`, `docling/models/*` | `fleischwolf-pdf` — pdfium + ONNX layout/OCR + assembly |
+| **Audio/ASR pipeline** | `docling/pipeline/asr_pipeline.py` | `fleischwolf-asr` — symphonia decode + log-mel + ONNX Whisper |
 | **CLI** | `docling/cli` | `fleischwolf-cli` |
 
 ```text
@@ -37,6 +38,7 @@ crates/
 ├── fleischwolf-core/   # DoclingDocument, Node model, markdown.rs, json.rs, base64.rs, labels.rs
 ├── fleischwolf/        # DocumentConverter, source/format detection, backend/*.rs, ooxml.rs
 ├── fleischwolf-pdf/    # pdfium_backend, layout (RT-DETR/ONNX), ocr (PP-OCRv3/ONNX), assemble, mets
+├── fleischwolf-asr/    # audio decode (symphonia), mel.rs, whisper.rs (ONNX), tokenizer.rs
 ├── fleischwolf-cli/    # `--strict`, `--to md|json`, `--images placeholder|embedded|referenced`
 └── fleischwolf-node/   # Node.js/Bun N-API bindings (napi-rs), published to npm as `fleischwolf`
 ```
@@ -99,6 +101,7 @@ close — see `PDF_CONFORMANCE.md`. A deterministic snapshot baseline
 | PDF | **pure-Rust text parser** (`textparse.rs`, font-advance glyph boxes) + pdfium page render → RT-DETR layout (ONNX) → **TableFormer** table structure (ONNX) → PP-OCRv3 OCR for scanned pages → **docling-parse line sanitizer** (`dp_lines.rs`) + reading-order assembly |
 | Images (tiff/webp/png/jpeg) | the same pipeline, image as a single page |
 | METS / Google Books | `.tar.gz` of per-page hOCR + TIFF → cells from hOCR → the same layout+assembly path (no OCR needed) |
+| Audio (wav/mp3/flac/ogg/aac/m4a + mp4/mov audio tracks) | `fleischwolf-asr`: **symphonia** decode (no ffmpeg) → 16 kHz mono → ported log-mel front-end → **Whisper tiny** encoder/decoder (ONNX, greedy with OpenAI's timestamp rules — docling's ASR defaults) → `[time: start-end] text` paragraphs. AVI is the one container symphonia can't demux. |
 
 ---
 
@@ -203,11 +206,10 @@ deliberate scope boundary or a cosmetic, single-fixture polish gap.
 
 **Out of scope by design:**
 
-- **Audio / ASR.** docling's Whisper-based speech path. A separate ML boundary
-  like PDF; deferred by design.
 - **VLM pipelines** (SmolDocling / remote VLM) and **enrichment models** (picture
   classification, formula understanding, code understanding). Model-bound; out of
-  scope for the discriminative port.
+  scope for the discriminative port. (**Audio/ASR is now done** — see §2; the
+  only container gap is AVI, which symphonia cannot demux.)
 - **XML DocLang / DocTags** input backend — no `.dclg` sources in the corpus to
   verify against, and not in the requested scope.
 - **Older patent schemas.** USPTO covers the modern `v4x` XML only; the
@@ -293,9 +295,9 @@ The port followed roughly: **Phase 0** skeleton & API → **Phase 2** text/marku
 (Markdown, CSV, HTML, AsciiDoc, DeepSeek) → **Phase 3** Office & e-book (DOCX,
 PPTX, XLSX, EPUB, ODF) → **Phase 4** long tail (XML families, LaTeX, Email,
 WebVTT, JSON) → **Phase 5–6** the PDF/image ML pipeline (pdfium + ONNX layout/OCR
-+ geometric tables) → output formats (strict Markdown, JSON, image extraction).
-Audio/ASR (the old "Phase 7" tail) and PyO3 interop bindings remain the main
-unbuilt pieces.
++ geometric tables) → output formats (strict Markdown, JSON, image extraction) →
+**Phase 7** audio/ASR (symphonia + ONNX Whisper). PyO3 interop bindings remain
+the one unbuilt piece.
 
 ## Why "Fleischwolf"? 🦀
 
